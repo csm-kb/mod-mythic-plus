@@ -132,3 +132,41 @@ MythicPlus.DiminishingThreshold.Ascendant = 40000
 MythicPlus.ElementalMeleeReducer = 0.50
 MythicPlus.NormalEnemyReducer = 0.50
 MythicPlus.NonCreatureSpellReducer = 0.50
+
+##########################################################
+#
+# World Boss Settings
+#   - These settings control Mythic+ scaling for world bosses in open-world zones
+#   - World bosses work differently than dungeons:
+#     * Multiple groups can engage the same boss
+#     * Boss scales to the highest difficulty of participating groups
+#     * Proximity-based group detection (players within range)
+#     * Summoned creatures (adds) are automatically scaled
+#
+##########################################################
+
+# Enable Mythic+ scaling for world bosses
+# Default: 0 (disabled)
+MythicPlus.WorldBoss.Enabled = 0
+
+# Comma-separated list of zone IDs where world boss scaling is enabled
+# Examples: 16 (Azshara), 490 (Moonglade), 28 (Western Plaguelands), 139 (Eastern Plaguelands)
+# Leave empty to allow all zones
+# Default: empty (all zones allowed when enabled)
+MythicPlus.WorldBoss.EnabledZones = 16,28,139,490
+
+# Comma-separated list of specific world boss creature entries to enable
+# Examples: 6109 (Azuregos), 14889 (Emeriss), 14890 (Taerar), 14887 (Ysondre), 14888 (Lethon)
+# Leave empty to allow all world bosses in enabled zones
+# Default: empty (all world bosses in enabled zones)
+MythicPlus.WorldBoss.EnabledBosses = 6109,14889,14890,14887,14888
+
+# Proximity range in yards for detecting groups near world bosses
+# Groups within this range will be registered to the encounter
+# Default: 100 yards
+MythicPlus.WorldBoss.ProximityRange = 100
+
+# Scale boss difficulty based on number of participating groups
+# If enabled, boss gets additional scaling per group beyond the first
+# Default: 0 (disabled - uses highest difficulty only)
+MythicPlus.WorldBoss.ScaleWithGroupCount = 0

@@ -42,43 +42,28 @@ public:
             return;
         }
 
-        // get the item to scale up
+        // get the original item template
         ItemTemplate const* origItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
         if (!origItem) {
-
-            // If there is not a scaled up item and the item is a below quality green then set an invalid item_id so it is not added to loot
-            ItemTemplate const* nonMythicItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
-            if (nonMythicItem->Quality < 2) {
-                LootStoreItem->itemid = 0;
-                return;
-            }
-
-            // otherwise roll a chance to see a shadowy remains item is provided instead only if there is not already a shadowy remains item on the corpse
-            bool hasShadowyRemains = false;
-            for (auto& item : loot.items) {
-                if(item.itemid == MpConstants::SHADOWY_REMAINS) {
-                    hasShadowyRemains = true;
-                    break;
-                }
-            }
-
-            if (!hasShadowyRemains) {
-                LootStoreItem->itemid = MpConstants::SHADOWY_REMAINS;
-                return;
-            } else {
-                LootStoreItem->itemid = 0;
-                return;
-            }
+            // Original item doesn't exist in database - this shouldn't happen
+            MpLogger::warn("Original item template not found for itemid {} in OnBeforeDropAddItem()", LootStoreItem->itemid);
+            LootStoreItem->itemid = 0;
+            return;
         }
 
+        // Calculate the scaled mythic+ item ID
         uint32 newItemId = origItem->ItemId + mythicSettings->itemOffset;
         ItemTemplate const* newItemTempl = sObjectMgr->GetItemTemplate(newItemId);
 
         if(!newItemTempl) {
             MpLogger::warn("New Loot Item not found for itemid {} original item: {} ({})", newItemId, origItem->Name1, origItem->ItemId);
+            
+            // Scaled item doesn't exist - keep the original item
+            // LootStoreItem->itemid is already set to the original, so just return
             return;
         }
 
+        // Scaled item exists - use it
         LootStoreItem->itemid = newItemId;
 
         // Revalidate the LootStoreItem to ensure consistency

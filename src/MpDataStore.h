@@ -10,6 +10,7 @@
 #include "ObjectGuid.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
 #include <string>
 #include <vector>
@@ -23,6 +24,26 @@ enum MpDifficulty
     MP_DIFFICULTY_MYTHIC    = 3,
     MP_DIFFICULTY_LEGENDARY = 4,
     MP_DIFFICULTY_ASCENDANT = 5
+};
+
+struct MpWorldBossEncounter
+{
+    ObjectGuid bossGuid;
+    uint32 bossEntry = 0;
+    uint32 zoneId = 0;
+    bool isActive = false;
+    MpDifficulty difficulty = MP_DIFFICULTY_MYTHIC;
+    MpDifficulty scaledDifficulty = MP_DIFFICULTY_NORMAL;
+    std::unordered_map<ObjectGuid, MpDifficulty> participatingGroups;
+    std::unordered_set<ObjectGuid> scaledCreatures;
+
+    MpWorldBossEncounter() = default;
+
+    MpWorldBossEncounter(ObjectGuid guid, uint32 entry, uint32 zone)
+        : bossGuid(guid), bossEntry(entry), zoneId(zone), isActive(true) {}
+
+    void AddGroup(ObjectGuid groupGuid, MpDifficulty groupDifficulty);
+    void AddScaledCreature(ObjectGuid creatureGuid);
 };
 
 class MpDataStore;
@@ -304,7 +325,8 @@ private:
       _instanceData(std::make_unique<std::map<std::pair<uint32, uint32>, MpInstanceData>>()),
       _groupData(std::make_unique<std::unordered_map<ObjectGuid, MpGroupData>>()),
       _instanceCreatureData(std::make_unique<std::unordered_map<ObjectGuid, MpCreatureData>>()),
-      _scaleFactors(std::make_unique<std::map<std::pair<int32, int32>,MpScaleFactor>>())
+      _scaleFactors(std::make_unique<std::map<std::pair<int32, int32>,MpScaleFactor>>()),
+      _worldBossEncounters(std::make_unique<std::unordered_map<ObjectGuid, MpWorldBossEncounter>>())
       {
         _playerData->reserve(32);
         _groupData->reserve(32);
@@ -332,6 +354,9 @@ private:
 
     // use to mimic pattern normals scale to heroic  (loaded at server start)
     std::unique_ptr<std::map<std::pair<int32,int32>,MpScaleFactor>> _scaleFactors; // {mapId,difficulty}
+
+    // Active world boss encounters keyed by boss GUID
+    std::unique_ptr<std::unordered_map<ObjectGuid, MpWorldBossEncounter>> _worldBossEncounters;
 
     // Player mapping of level to average amount of health for that level, this is used for scaling against
     // percentages to more consistently scale damage from spells and healing from creatures.
@@ -405,6 +430,11 @@ public:
     // Retrieves the average players hp pool for a player level
     uint32 GetPlayerHealthAvg(uint32 level) const;
 
+    // Debug method to get map sizes
+    std::tuple<size_t, size_t, size_t> GetMapSizes() const {
+        return {_instanceData->size(), _groupData->size(), _instanceCreatureData->size()};
+    }
+
     // Individual Creature Scaling Multipliers
     // void AddCreatureOverride(uint32 entry, CreatureOverride* override);
     // MpMultipliers* GetCreatureOverride(uint32 entry);
@@ -418,6 +448,15 @@ public:
 
     // Used at initial server load
     int32 LoadScaleFactors();
+
+    // Load world boss scaling configuration from database
+    int32 LoadWorldBossConfig();
+
+    // World boss encounter management
+    void AddWorldBossEncounter(ObjectGuid bossGuid, uint32 bossEntry, uint32 zoneId);
+    MpWorldBossEncounter* GetWorldBossEncounter(ObjectGuid bossGuid);
+    MpWorldBossEncounter* GetWorldBossEncounterByZone(uint32 zoneId);
+    void RemoveWorldBossEncounter(ObjectGuid bossGuid);
 
     // Load the player health average from the database
     void LoadPlayerHealthAvg();

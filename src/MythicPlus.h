@@ -82,6 +82,11 @@ public:
     float normalEnemyReducer;
     float nonCreatureSpellReducer;
 
+    // World Boss Settings
+    bool EnableWorldBoss;
+    std::vector<uint32> enabledWorldBossZones;
+    std::vector<uint32> enabledWorldBosses;
+    uint32 worldBossProximityRange;
 
     enum MP_UNIT_EVENT_TYPE
     {
@@ -94,6 +99,18 @@ public:
 
     // Map is eligible for mythic+ scaling
     bool IsMapEligible(Map* map);
+
+    // Check if a zone is enabled for world boss scaling
+    bool IsWorldBossZone(uint32 zoneId);
+
+    // Check if a specific world boss is enabled for scaling
+    bool IsWorldBossEnabled(uint32 creatureEntry);
+
+    // Scan for groups near a world boss and register them to the encounter
+    void ScanForNearbyGroups(Creature* worldBoss);
+
+    // Handle world boss encounter creation and scaling
+    void HandleWorldBossEncounter(Creature* worldBoss);
 
     // If a player difficulty is set that is eligible for mythic+ scaling
     bool IsDifficultySet(Player const* player);

@@ -39,6 +39,7 @@ public:
             {"mp", commandTableMain},
             {"mythicplus", commandTableMain},
             {"mp debug", HandleDebug, SEC_PLAYER, Console::No},
+            {"mp debug maps", HandleDebugMaps, SEC_PLAYER, Console::No},
             {"mp reload", HandleReload, SEC_GAMEMASTER, Console::No},
             {"advancement", HandleAdvancement, SEC_PLAYER, Console::No}
         };
@@ -103,6 +104,18 @@ public:
 
         return true;
 
+    }
+
+    static bool HandleDebugMaps(ChatHandler* handler)
+    {
+        auto [instanceDataSize, groupDataSize, creatureDataSize] = sMpDataStore->GetMapSizes();
+        
+        handler->PSendSysMessage("=== MpDataStore Map Sizes ===");
+        handler->PSendSysMessage("Instance Data (_instanceData): {}", instanceDataSize);
+        handler->PSendSysMessage("Group Data (_groupData): {}", groupDataSize);
+        handler->PSendSysMessage("Creature Data (_instanceCreatureData): {}", creatureDataSize);
+        
+        return true;
     }
 
     // sets the difficluty for the group

@@ -1,9 +1,72 @@
+#include <algorithm>
 #include "CharacterDatabase.h"
 #include "MpDataStore.h"
 #include "Chat.h"
 #include "Group.h"
 #include "MpLogger.h"
 #include "Chat.h"
+
+void MpWorldBossEncounter::AddGroup(ObjectGuid groupGuid, MpDifficulty groupDifficulty)
+{
+    if (!groupGuid)
+        return;
+
+    // Store the highest difficulty among participating groups
+    auto it = participatingGroups.find(groupGuid);
+    if (it == participatingGroups.end() || it->second < groupDifficulty) {
+        participatingGroups[groupGuid] = groupDifficulty;
+        if (groupDifficulty > difficulty) {
+            difficulty = groupDifficulty;
+        }
+    }
+}
+
+void MpWorldBossEncounter::AddScaledCreature(ObjectGuid creatureGuid)
+{
+    if (creatureGuid) {
+        scaledCreatures.insert(creatureGuid);
+    }
+}
+
+void MpDataStore::AddWorldBossEncounter(ObjectGuid bossGuid, uint32 bossEntry, uint32 zoneId)
+{
+    if (!bossGuid || !bossEntry) {
+        return;
+    }
+
+    MpWorldBossEncounter encounter(bossGuid, bossEntry, zoneId);
+    encounter.isActive = true;
+    (*_worldBossEncounters)[bossGuid] = encounter;
+}
+
+MpWorldBossEncounter* MpDataStore::GetWorldBossEncounter(ObjectGuid bossGuid)
+{
+    if (!_worldBossEncounters->contains(bossGuid)) {
+        return nullptr;
+    }
+
+    return &(*_worldBossEncounters)[bossGuid];
+}
+
+MpWorldBossEncounter* MpDataStore::GetWorldBossEncounterByZone(uint32 zoneId)
+{
+    for (auto& [guid, encounter] : *_worldBossEncounters) {
+        if (encounter.zoneId == zoneId && encounter.isActive) {
+            return &encounter;
+        }
+    }
+
+    return nullptr;
+}
+
+void MpDataStore::RemoveWorldBossEncounter(ObjectGuid bossGuid)
+{
+    if (!bossGuid) {
+        return;
+    }
+
+    _worldBossEncounters->erase(bossGuid);
+}
 
 // Adds an entry for the group difficult to memory and updats database
 void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
@@ -312,6 +375,48 @@ int32 MpDataStore::LoadScaleFactors() {
     } while (result->NextRow());
 
     return int32(_scaleFactors->size());
+}
+
+int32 MpDataStore::LoadWorldBossConfig() {
+    //                                                 0      1     2       3        4            5            6           7         8
+    QueryResult result = WorldDatabase.Query("SELECT entry, name, zoneId, enabled, melee_bonus, spell_bonus, heal_bonus, hp_bonus, difficulty FROM mp_world_boss_config WHERE enabled = 1");
+
+    if (!result) {
+        MpLogger::warn("No world boss configuration found in database (table may not exist or is empty)");
+        return 0;
+    }
+
+    int32 count = 0;
+    do {
+        Field* fields = result->Fetch();
+        uint32 entry = fields[0].Get<uint32>();
+        std::string name = fields[1].Get<std::string>();
+        uint32 zoneId = fields[2].Get<uint32>();
+        bool enabled = fields[3].Get<bool>();
+        float meleeBonus = fields[4].Get<float>();
+        float spellBonus = fields[5].Get<float>();
+        float healBonus = fields[6].Get<float>();
+        float hpBonus = fields[7].Get<float>();
+        int32 difficulty = fields[8].Get<int32>();
+
+        // Store scale factors for this world boss using its zone ID and difficulty
+        MpScaleFactor scaleFactor = {
+            .meleeBonus = meleeBonus,
+            .spellBonus = spellBonus,
+            .healBonus = healBonus,
+            .healthBonus = hpBonus
+        };
+
+        // Use zone ID as the "map" for world bosses
+        _scaleFactors->emplace(GetScaleFactorKey(zoneId, difficulty), scaleFactor);
+
+        MpLogger::debug("Loaded world boss config: {} (entry: {}, zone: {}, difficulty: {})",
+            name, entry, zoneId, difficulty);
+
+        count++;
+    } while (result->NextRow());
+
+    return count;
 }
 
 void MpDataStore::LoadPlayerHealthAvg() {

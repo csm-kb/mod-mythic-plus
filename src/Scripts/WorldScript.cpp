@@ -7,6 +7,8 @@
 #include "ScriptMgr.h"
 #include "MpEventHandlers.cpp"
 
+#include <sstream>
+
 class MythicPlus_WorldScript : public WorldScript
 {
 public:
@@ -100,12 +102,58 @@ public:
         sMythicPlus->elementalMeleeReducer = sConfigMgr->GetOption<float>("MythicPlus.ElementalMeleeReducer", 0.50f);
         sMythicPlus->normalEnemyReducer = sConfigMgr->GetOption<float>("MythicPlus.NormalEnemyReducer", 0.50f);
         sMythicPlus->nonCreatureSpellReducer = sConfigMgr->GetOption<float>("MythicPlus.NonCreatureSpellReducer", 0.50f);
+
+        // World Boss Settings
+        sMythicPlus->EnableWorldBoss = sConfigMgr->GetOption<bool>("MythicPlus.WorldBoss.Enabled", true);
+        sMythicPlus->worldBossProximityRange = sConfigMgr->GetOption<uint32>("MythicPlus.WorldBoss.ProximityRange", 100);
+
+        // Parse enabled zones (comma-separated list)
+        std::string zonesStr = sConfigMgr->GetOption<std::string>("MythicPlus.WorldBoss.EnabledZones", "");
+        if (!zonesStr.empty()) {
+            std::istringstream zoneStream(zonesStr);
+            std::string zone;
+            while (std::getline(zoneStream, zone, ',')) {
+                // Trim whitespace
+                zone.erase(0, zone.find_first_not_of(" \t"));
+                zone.erase(zone.find_last_not_of(" \t") + 1);
+                if (!zone.empty()) {
+                    sMythicPlus->enabledWorldBossZones.push_back(std::stoul(zone));
+                }
+            }
+        }
+
+        // Parse enabled bosses (comma-separated list)
+        std::string bossesStr = sConfigMgr->GetOption<std::string>("MythicPlus.WorldBoss.EnabledBosses", "");
+        if (!bossesStr.empty()) {
+            std::istringstream bossStream(bossesStr);
+            std::string boss;
+            while (std::getline(bossStream, boss, ',')) {
+                // Trim whitespace
+                boss.erase(0, boss.find_first_not_of(" \t"));
+                boss.erase(boss.find_last_not_of(" \t") + 1);
+                if (!boss.empty()) {
+                    sMythicPlus->enabledWorldBosses.push_back(std::stoul(boss));
+                }
+            }
+        }
+
+        if (sMythicPlus->EnableWorldBoss) {
+            MpLogger::info("World Boss scaling enabled for {} zones and {} specific bosses",
+                sMythicPlus->enabledWorldBossZones.size(),
+                sMythicPlus->enabledWorldBosses.size());
+        }
     }
 
     void OnStartup() override
     {
         int32 size = sMpDataStore->LoadScaleFactors();
         MpLogger::info("Loaded {} Mythic+ Scaling Factors from database...", size);
+
+        // Load world boss configuration if enabled
+        if (sMythicPlus->EnableWorldBoss) {
+            size = sMpDataStore->LoadWorldBossConfig();
+            MpLogger::info("Loaded {} World Boss configurations from database...", size);
+        }
 
         size = sAdvancementMgr->LoadAdvancementRanks();
         MpLogger::info("Loaded {} advancement ranks...", size);

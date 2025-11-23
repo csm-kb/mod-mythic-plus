@@ -8,6 +8,9 @@
 #include "WorldPacket.h"
 #include "UpdateMask.h"
 #include "MpScriptAI.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CellImpl.h"
 
 #include <algorithm>
 #include <cmath>
@@ -17,15 +20,165 @@ const uint32 HEADLESS_HORSEMAN = 23682;
 
 bool MythicPlus::IsMapEligible(Map* map)
 {
-    if (!Enabled) {
+    if (!Enabled || !map) {
         return false;
     }
 
+    // Existing dungeon support
     if (map->IsDungeon()) {
         return true;
     }
 
+    // World boss encounters happen on outdoor maps; allow them when the feature is enabled
+    if (EnableWorldBoss && !map->Instanceable()) {
+        return true;
+    }
+
     return false;
+}
+
+bool MythicPlus::IsWorldBossZone(uint32 zoneId)
+{
+    return std::find(enabledWorldBossZones.begin(), enabledWorldBossZones.end(), zoneId) != enabledWorldBossZones.end();
+}
+
+bool MythicPlus::IsWorldBossEnabled(uint32 creatureEntry)
+{
+    // If no specific bosses are configured, all world bosses in enabled zones are allowed
+    if (enabledWorldBosses.empty()) {
+        return true;
+    }
+
+    return std::find(enabledWorldBosses.begin(), enabledWorldBosses.end(), creatureEntry) != enabledWorldBosses.end();
+}
+
+void MythicPlus::ScanForNearbyGroups(Creature* worldBoss)
+{
+    if (!worldBoss || !worldBoss->isWorldBoss()) {
+        return;
+    }
+
+    Map* map = worldBoss->GetMap();
+    if (!map) {
+        return;
+    }
+
+    MpWorldBossEncounter* encounter = sMpDataStore->GetWorldBossEncounter(worldBoss->GetGUID());
+    if (!encounter) {
+        MpLogger::warn("ScanForNearbyGroups: No encounter found for world boss {}", worldBoss->GetName());
+        return;
+    }
+
+    // Get all players in range
+    std::list<Player*> playersInRange;
+    Acore::AnyPlayerInObjectRangeCheck checker(worldBoss, worldBossProximityRange);
+    Acore::PlayerListSearcher<Acore::AnyPlayerInObjectRangeCheck> searcher(worldBoss, playersInRange, checker);
+    Cell::VisitWorldObjects(worldBoss, searcher, worldBossProximityRange);
+
+    // Process each player's group
+    for (Player* player : playersInRange) {
+        Group* group = player->GetGroup();
+        if (!group) {
+            continue;
+        }
+
+        MpGroupData* groupData = sMpDataStore->GetGroupData(group->GetGUID());
+        if (!groupData) {
+            continue; // Group doesn't have Mythic+ difficulty set
+        }
+
+        // Add group to encounter
+        encounter->AddGroup(group->GetGUID(), groupData->difficulty);
+
+        MpLogger::debug("World boss {}: Added group {} with difficulty {}",
+            worldBoss->GetName(),
+            group->GetGUID().ToString(),
+            static_cast<int>(groupData->difficulty));
+    }
+}
+
+void MythicPlus::HandleWorldBossEncounter(Creature* worldBoss)
+{
+    if (!worldBoss || !worldBoss->isWorldBoss()) {
+        return;
+    }
+
+    Map* map = worldBoss->GetMap();
+    if (!map) {
+        return;
+    }
+
+    ObjectGuid bossGuid = worldBoss->GetGUID();
+    uint32 bossEntry = worldBoss->GetEntry();
+    uint32 zoneId = worldBoss->GetZoneId();
+    if (!zoneId) {
+        zoneId = worldBoss->GetAreaId();
+    }
+    if (!zoneId) {
+        zoneId = map->GetId();
+    }
+
+    // Check if encounter already exists
+    MpWorldBossEncounter* encounter = sMpDataStore->GetWorldBossEncounter(bossGuid);
+
+    if (!encounter) {
+        // Create new encounter
+        sMpDataStore->AddWorldBossEncounter(bossGuid, bossEntry, zoneId);
+        encounter = sMpDataStore->GetWorldBossEncounter(bossGuid);
+
+        if (!encounter) {
+            MpLogger::error("Failed to create world boss encounter for {}", worldBoss->GetName());
+            return;
+        }
+
+        MpLogger::info("Created world boss encounter: {} in zone {}", worldBoss->GetName(), zoneId);
+    }
+
+    // Scan for nearby groups
+    ScanForNearbyGroups(worldBoss);
+
+    // If no groups are participating, don't scale
+    if (encounter->participatingGroups.empty()) {
+        MpLogger::debug("World boss {}: No groups in range with Mythic+ difficulty", worldBoss->GetName());
+        return;
+    }
+
+    // Get the highest difficulty from participating groups
+    MpDifficulty difficulty = encounter->difficulty;
+
+    // Get appropriate multipliers based on difficulty
+    MpMultipliers* multipliers = nullptr;
+    switch (difficulty) {
+        case MP_DIFFICULTY_MYTHIC:
+            multipliers = &mythicBossModifiers;
+            break;
+        case MP_DIFFICULTY_LEGENDARY:
+            multipliers = &legendaryBossModifiers;
+            break;
+        case MP_DIFFICULTY_ASCENDANT:
+            multipliers = &ascendantBossModifiers;
+            break;
+        default:
+            MpLogger::warn("World boss {}: Invalid difficulty {}", worldBoss->GetName(), static_cast<int>(difficulty));
+            return;
+    }
+
+    bool alreadyScaled = encounter->scaledCreatures.contains(bossGuid) && encounter->scaledDifficulty == difficulty;
+    if (alreadyScaled) {
+        return;
+    }
+
+    // Scale the world boss
+    ScaleCreature(multipliers->avgLevel, worldBoss, multipliers, difficulty);
+
+    // Track this creature as scaled
+    encounter->AddScaledCreature(bossGuid);
+    encounter->scaledDifficulty = difficulty;
+
+    MpLogger::info("Scaled world boss {} to difficulty {} for {} groups",
+        worldBoss->GetName(),
+        static_cast<int>(difficulty),
+        encounter->participatingGroups.size());
 }
 
 bool MythicPlus::IsDifficultySet(Player const* player)
@@ -128,6 +281,18 @@ bool MythicPlus::IsCreatureEligible(Creature* creature)
 
     if (creature->GetEntry() == HEADLESS_HORSEMAN) {
         return true;
+    }
+
+    // NEW: World boss eligibility check
+    if (EnableWorldBoss && creature->isWorldBoss()) {
+        uint32 zoneId = creature->GetZoneId();
+        if (!zoneId) {
+            zoneId = creature->GetAreaId();
+        }
+
+        if (zoneId && IsWorldBossZone(zoneId) && IsWorldBossEnabled(creature->GetEntry())) {
+            return true;
+        }
     }
 
     // Check if the creature is a pet or summon controlled by a player
@@ -251,12 +416,9 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
     CreatureTemplate const* cInfo = creature->GetCreatureTemplate();
     uint32 mapId = creature->GetMapId();
 
-    // get the map difficulty from the map instance to see if it is a heroic or normal set instance
-    InstanceMap *instanceMap = creature->GetMap()->ToInstanceMap();
-    if (!instanceMap) {
-        MpLogger::error("Invalid instance map ScaleCreature()");
-        return;
-    }
+    // When inside an instanced map we can access additional info (heroic, 25-man, etc.)
+    // but world bosses run on outdoor maps, so tolerate the lack of InstanceMap here.
+    InstanceMap* instanceMap = creature->GetMap()->ToInstanceMap();
 
     creature->SetLevel(level);
     CreatureBaseStats const* stats = sObjectMgr->GetCreatureBaseStats(
@@ -291,13 +453,17 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
         creature->SetModifierValue(UNIT_MOD_MANA, BASE_VALUE, (float)mana * 3.0f);
     }
 
-    MpInstanceData *instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    MpInstanceData* instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
 
     // Handle new melee/range scaling with simple formula (for simplicity range will just be 80% of melee bonus)
-    float meleeMultiplier = sMpDataStore->GetMeleeScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    float meleeMultiplier = multipliers->melee;
+
+    if (instanceData) {
+        meleeMultiplier = sMpDataStore->GetMeleeScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    }
 
     // Since Heroic Scaling can get out of hand. Reduce the instance multiplier by way too much 10%
-    if(instanceMap->IsHeroic() || instanceMap->Is25ManRaid()) {
+    if(instanceMap && (instanceMap->IsHeroic() || instanceMap->Is25ManRaid())) {
         // if the enemy is a boss reduce it by less
         meleeMultiplier *= 0.9f;
     }
@@ -394,13 +560,31 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
         return damage;
     }
 
-    MpInstanceData *instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
-    if (!instanceData) {
-        MpLogger::debug("No instance data found for spell scaling, using original damage");
-        return damage;
-    }
+    MpInstanceData* instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    float scaleFactor = 1.0f;
 
-    float scaleFactor = sMpDataStore->GetSpellScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    if (instanceData) {
+        scaleFactor = sMpDataStore->GetSpellScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    } else {
+        MpWorldBossEncounter* encounter = sMpDataStore->GetWorldBossEncounter(creature->GetGUID());
+        if (!encounter) {
+            uint32 zoneId = creature->GetZoneId();
+            if (!zoneId) {
+                zoneId = creature->GetAreaId();
+            }
+            if (zoneId) {
+                encounter = sMpDataStore->GetWorldBossEncounterByZone(zoneId);
+            }
+        }
+
+        if (!encounter) {
+            MpLogger::debug("No scaling context found for spell damage (map {}), leaving damage unchanged", creature->GetMapId());
+            return damage;
+        }
+
+        uint32 scaleKey = encounter->zoneId ? encounter->zoneId : creature->GetMapId();
+        scaleFactor = sMpDataStore->GetSpellScaleFactor(scaleKey, encounter->difficulty);
+    }
 
     MpLogger::debug("DAMAGE SPELL: >> ScaleFactor: {} DamageMultiplier: {}", scaleFactor, damageMultiplier);
 

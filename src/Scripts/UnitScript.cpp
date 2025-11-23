@@ -152,12 +152,19 @@ private:
     #endif
 
         Creature* creatureCaster = attacker->ToCreature();
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureCaster->GetGUID());
 
         if (!creatureCaster) {
             MpLogger::error("Creature caster is null in map {}", attacker ? attacker->GetMap()->GetId() : 0);
             return;
         }
+
+        // Only scale spells for creatures that Mythic+ tracks (instances or world-boss encounters)
+        Map* casterMap = creatureCaster->GetMap();
+        if (!casterMap || !sMythicPlus->IsMapEligible(casterMap) || !sMythicPlus->IsCreatureEligible(creatureCaster)) {
+            return;
+        }
+
+        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureCaster->GetGUID());
         if (!creatureData) {
             MpLogger::error("Failed to get creature data for {} in map {}", creatureCaster->GetName(), attacker ? attacker->GetMap()->GetId() : 0);
             return;

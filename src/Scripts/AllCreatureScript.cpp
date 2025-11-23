@@ -66,6 +66,14 @@ public:
         }
         m_creatureUpdateTimers[creatureGuid] = 0;
 
+        // NEW: Handle world boss encounters (non-instanced)
+        if (sMythicPlus->EnableWorldBoss && creature->isWorldBoss()) {
+            // Only scan when boss is in combat to avoid unnecessary overhead
+            if (creature->IsInCombat()) {
+                sMythicPlus->HandleWorldBossEncounter(creature);
+            }
+            return; // World bosses don't use instance data
+        }
 
         auto instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
         // no instance data yet means dont scale.
@@ -97,8 +105,6 @@ public:
                 sMythicPlus->AddScaledCreature(creature, instanceData);
             }
         }
-
-
     }
 
     // When a new creature is added into a mythic+ map add it to the list of creatures to scale later.
@@ -110,6 +116,46 @@ public:
         }
 
         if (!sMythicPlus->IsCreatureEligible(creature)) {
+            // NEW: Check if this is a summon/add for a world boss encounter
+            if (sMythicPlus->EnableWorldBoss && creature->IsSummon()) {
+                // Ignore invisible triggers / non-combat helpers
+                if (creature->IsTrigger() || creature->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE) || creature->IsCritter()) {
+                    return;
+                }
+
+                // Check if there's an active world boss encounter in this zone
+                uint32 zoneId = creature->GetZoneId();
+                if (!zoneId) {
+                    zoneId = creature->GetAreaId();
+                }
+                MpWorldBossEncounter* encounter = sMpDataStore->GetWorldBossEncounterByZone(zoneId);
+                if (encounter && encounter->isActive) {
+                    // This is likely an add for the world boss - scale it
+                    MpDifficulty difficulty = encounter->difficulty;
+                    MpMultipliers* multipliers = nullptr;
+
+                    switch (difficulty) {
+                        case MP_DIFFICULTY_MYTHIC:
+                            multipliers = &sMythicPlus->mythicDungeonModifiers;
+                            break;
+                        case MP_DIFFICULTY_LEGENDARY:
+                            multipliers = &sMythicPlus->legendaryDungeonModifiers;
+                            break;
+                        case MP_DIFFICULTY_ASCENDANT:
+                            multipliers = &sMythicPlus->ascendantDungeonModifiers;
+                            break;
+                        default:
+                            return;
+                    }
+
+                    sMythicPlus->ScaleCreature(multipliers->avgLevel, creature, multipliers, difficulty);
+                    encounter->AddScaledCreature(creature->GetGUID());
+
+                    MpLogger::debug("Scaled world boss add: {} for encounter in zone {}",
+                        creature->GetName(), map->GetId());
+                    return;
+                }
+            }
             return;
         }
 
@@ -126,6 +172,18 @@ public:
     // Cleanup the creature from custom data used for mythic+ mod
     void OnCreatureRemoveWorld(Creature* creature) override
     {
+        // NEW: Clean up world boss encounters
+        if (sMythicPlus->EnableWorldBoss && creature->isWorldBoss()) {
+            MpWorldBossEncounter* encounter = sMpDataStore->GetWorldBossEncounter(creature->GetGUID());
+            if (encounter) {
+                encounter->isActive = false;
+                MpLogger::info("World boss {} removed - encounter marked inactive", creature->GetName());
+            }
+        }
+
+        // Remove any throttling state for this creature
+        m_creatureUpdateTimers.erase(creature->GetGUID());
+
         sMythicPlus->RemoveCreature(creature);
     }
 
