@@ -133,22 +133,22 @@ VALUES (9500568, 0.35, 1.25, 1, 0);
 
 -- Supporting Cast Spawns
 -- Agatha
-DELETE FROM `creature` WHERE (`id1` = 9500567);
-INSERT INTO `creature` (`guid`, `id1`, `id2`, `id3`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
-(9101011, 9500567, 0, 0, 530, 0, 0, 1, 1, 0, -1990.6, 5214.14, -44.0752, 0.978763, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
-(9101014, 9500567, 0, 0, 571, 0, 0, 1, 1, 0, 5804.06, 639.865, 609.886, 5.98164, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
+DELETE FROM `creature` WHERE (`id` = 9500567);
+INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
+(9101011, 9500567, 530, 0, 0, 1, 1, 0, -1990.6, 5214.14, -44.0752, 0.978763, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
+(9101014, 9500567, 571, 0, 0, 1, 1, 0, 5804.06, 639.865, 609.886, 5.98164, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
 
 -- Vaeric
-DELETE FROM `creature` WHERE (`id1` = 9500566);
-INSERT INTO `creature` (`guid`, `id1`, `id2`, `id3`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
-(9101013, 9500566, 0, 0, 530, 0, 0, 1, 1, 1, -1989.96, 5225.28, -44.6008, 5.71627, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
-(9101015, 9500566, 0, 0, 571, 0, 0, 1, 1, 1, 5826.64, 674.772, 609.885, 5.53385, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
+DELETE FROM `creature` WHERE (`id` = 9500566);
+INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
+(9101013, 9500566, 530, 0, 0, 1, 1, 1, -1989.96, 5225.28, -44.6008, 5.71627, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
+(9101015, 9500566, 571, 0, 0, 1, 1, 1, 5826.64, 674.772, 609.885, 5.53385, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
 
 -- Slyvia
-DELETE FROM `creature` WHERE (`id1` = 9500568);
-INSERT INTO `creature` (`guid`, `id1`, `id2`, `id3`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
-(9101010, 9500568, 0, 0, 530, 0, 0, 1, 1, 1, -1994.38, 5219.83, -44.2111, 0.597826, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
-(9101016, 9500568, 0, 0, 571, 0, 0, 1, 1, 1, 5831.89, 678.204, 609.885, 5.0846, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
+DELETE FROM `creature` WHERE (`id` = 9500568);
+INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
+(9101010, 9500568, 530, 0, 0, 1, 1, 1, -1994.38, 5219.83, -44.2111, 0.597826, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
+(9101016, 9500568, 571, 0, 0, 1, 1, 1, 5831.89, 678.204, 609.885, 5.0846, 300, 0, 0, 1333900, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
 
 
 -- Gossip Texts
