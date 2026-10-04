@@ -36,6 +36,7 @@ struct MpPlayerInstanceData
 struct MpPlayerData
 {
     Player* player;
+    ObjectGuid guid;
     MpDifficulty difficulty;
     uint32 groupId;
 
@@ -43,7 +44,7 @@ struct MpPlayerData
     std::map<std::pair<uint32,uint32>,MpPlayerInstanceData> instanceData;
 
     MpPlayerData(Player* p, MpDifficulty diff, uint32_t groupId)
-        : player(p), difficulty(diff), groupId(groupId)  {
+        : player(p), guid(p ? p->GetGUID() : ObjectGuid::Empty), difficulty(diff), groupId(groupId)  {
         }
 
     void AddDeath(uint32 mapId, uint32 instanceId) {
@@ -55,7 +56,7 @@ struct MpPlayerData
             instanceData[key] = MpPlayerInstanceData{.deaths = 1};
         }
 
-        MpLogger::info("========= Player {} added death to instance data {}", player->GetName(), instanceData[key].deaths);
+        MpLogger::info("========= Player {} added death to instance data {}", guid.GetCounter(), instanceData[key].deaths);
     }
 
     uint32 GetDeaths(uint32 mapId, uint32 instanceId) const {
