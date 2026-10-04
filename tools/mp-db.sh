@@ -7,14 +7,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/mp-lib.sh"
 mp_require_docker
 case "${1:-}" in
   up)
-    docker compose -f "$MP_ROOT/docker-compose.yml" up -d --wait ac-database >/dev/null
+    docker ps --format '{{.Names}}' | grep -qx ac-database \
+      || docker compose -f "$MP_ROOT/docker-compose.yml" up -d --wait ac-database >/dev/null
     NET="$(mp_compose_network)"
     docker rm -f "$MP_DB_CONTAINER" >/dev/null 2>&1 || true
     docker volume rm "$MP_DB_VOLUME" >/dev/null 2>&1 || true
     mp_say "starting $MP_DB_CONTAINER on network $NET"
     docker run -d --name "$MP_DB_CONTAINER" --network "$NET" -e MYSQL_ROOT_PASSWORD="$MP_DB_PW" \
       -v "$MP_DB_VOLUME:/var/lib/mysql" mysql:8.4 >/dev/null
-    until docker exec "$MP_DB_CONTAINER" mysqladmin -uroot -p"$MP_DB_PW" ping --silent >/dev/null 2>&1; do
+    # TCP login, not ping: the image's temporary init server (skip-networking) answers ping before the real one.
+    until docker exec "$MP_DB_CONTAINER" mysql -h127.0.0.1 -uroot -p"$MP_DB_PW" -e 'SELECT 1' >/dev/null 2>&1; do
       sleep 2
     done
     DBS=$(docker exec ac-database sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -N -e "SHOW DATABASES"' \
