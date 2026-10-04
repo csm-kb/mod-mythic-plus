@@ -1,5 +1,5 @@
-#ifndef MYTHICPLUS_H
-#define MYTHICPLUS_H
+#ifndef MP_SCALER_H
+#define MP_SCALER_H
 
 #include "Creature.h"
 #include "Define.h"
@@ -9,43 +9,26 @@
 #include "Player.h"
 #include "SpellInfo.h"
 #include "Unit.h"
-#include "TaskScheduler.h"
-
-#include <map>
-#include <string>
-#include <vector>
-#include <unordered_map>
-
-// Used to limit the total advancment rank and allow for changing the max rank in one place.
-inline const uint8 MP_MAX_ADVANCEMENT_RANK = 50;
 
 /**
- * Main Class for the mod responsible for controls related to scaling instances,
- * handling logic related to setting up instances for MythicPlus to work.
+ * Scales instance creatures and their damage/heal output for Mythic+ instances.
  *
  * Runtime state lives in MpRuntimeState (sMpState); database access and loaded tables in
  * MpRepository (sMpRepo).
  *
- * This is a singleton instance that can be accessed through sMythicPlus.
+ * This is a singleton instance that can be accessed through sMpScaler.
  */
-class MythicPlus
+class MpScaler
 {
 public:
-
-    // accessor for this singleton
-    static MythicPlus* instance()
+    static MpScaler* instance()
     {
-        static MythicPlus instance;
+        static MpScaler instance;
         return &instance;
     }
 
-    // ensure we only ever have one instance of this class
-    MythicPlus(const MythicPlus&) = delete;
-    MythicPlus& operator=(const MythicPlus&) = delete;
-
-    // Scaling modifiers (Deprecated)
-    uint32 meleeAttackPowerDampener;
-    uint32 meleeAttackPowerStart;
+    MpScaler(MpScaler const&) = delete;
+    MpScaler& operator=(MpScaler const&) = delete;
 
     enum MP_UNIT_EVENT_TYPE
     {
@@ -71,7 +54,7 @@ public:
     // The creature should be given Mythic+ scaling and powers check for pets, npcs, etc
     bool IsCreatureEligible(Creature* creature);
 
-    // Adds the creature if eligible to be scaled
+    // Adds the creature's record to sMpState if it is eligible to be scaled
     void AddCreatureForScaling(Creature* creature);
 
     /**
@@ -85,7 +68,7 @@ public:
     // Rescales all creatures for an instance based on set data
     void ScaleAll(Player* player, MpInstanceData const& instanceData);
 
-    // This will attempt to scale a creature using instancedata
+    // Stores a scaled record in sMpState, then scales the creature using instancedata
     void AddScaledCreature(Creature* creature, MpInstanceData const& instanceData);
 
     // Scales the creature based on the level and the creature base stats
@@ -106,21 +89,19 @@ public:
     int32 CalculateHealScaling(uint32 baseHeal, uint32 originalHealth, uint32 currentMaxHealth);
 
     static bool IsFinalBoss(Creature* creature);
-    static void GroupReset(Group* group, Map* map);
 
-    private:
-        MythicPlus() { }
-        ~MythicPlus() { }
+private:
+    MpScaler() { }
+    ~MpScaler() { }
+
+    static float GetTypeHealthModifier(int32 rank);
+    static float GetTypeDamageModifier(int32 rank);
+    static float CalculateScaling(int levelDifference, float scaleFactor, float constant = 1.25f,
+        float growthFactor = 20.0f);
+    static uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId,
+        MpDifficulty difficulty, uint32 origHealth, float confHPMod);
 };
 
-float GetTypeHealthModifier(int32 rank);
-float GetTypeDamageModifier(int32 rank);
-float CalculateScaling(int levelDifference, float scaleFactor, float constant = 1.25f, float growthFactor = 20.0f);
-uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, uint32 origHealth, float confHPMod);
-float CalculateNewBaseDamage(CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, float origDamage);
+#define sMpScaler MpScaler::instance()
 
-
-
-#define sMythicPlus MythicPlus::instance()
-
-#endif // MYTHICPLUS_H
+#endif // MP_SCALER_H

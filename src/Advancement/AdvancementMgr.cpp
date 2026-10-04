@@ -3,7 +3,6 @@
 #include "WorldDatabase.h"
 #include "Player.h"
 #include "MpLog.h"
-#include "MythicPlus.h"
 #include "MpConstants.h"
 
 #include <string_view>

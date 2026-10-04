@@ -1,5 +1,4 @@
 #include "MpLog.h"
-#include "MythicPlus.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "AdvancementMgr.h"

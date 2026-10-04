@@ -1,6 +1,5 @@
 
 #include "MpEventProcessor.h"
-#include "MythicPlus.h"
 #include "MpLog.h"
 #include "MpClientDispatcher.h"
 #include "Player.h"

@@ -1,6 +1,6 @@
 #include "MpEvent.h"
 #include "MpLog.h"
-#include "../AdvancementMgr.h"
+#include "AdvancementMgr.h"
 #include "MpEventProcessor.h"
 #include "MpClientDispatcher.h"
 #include "Player.h"

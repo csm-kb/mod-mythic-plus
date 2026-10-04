@@ -3,6 +3,9 @@
 
 #include "AdvancementMgr.h"
 
+// Used to limit the total advancment rank and allow for changing the max rank in one place.
+inline const uint8 MP_MAX_ADVANCEMENT_RANK = 50;
+
 namespace MpConstants
 {
     // Spell IDs for passive stat and resist bonuses

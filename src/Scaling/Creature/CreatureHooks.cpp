@@ -1,5 +1,5 @@
 #include "CreatureHooks.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "MpLog.h"
 
 #include <optional>
@@ -64,7 +64,7 @@ void CreatureHooks::JustSpawned(Creature* creature) {
         creature->GetInstanceId());
 
     if(instanceData) {
-        sMythicPlus->AddScaledCreature(creature, *instanceData);
+        sMpScaler->AddScaledCreature(creature, *instanceData);
     }
 
     if (_OnSpawnHandlers->contains(entry)) {

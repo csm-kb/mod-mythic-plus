@@ -1,5 +1,5 @@
 #include "MpLog.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "MpConstants.h"
 #include "ScriptMgr.h"
 #include "Player.h"
@@ -21,13 +21,13 @@ public:
         }
 
         // Not playing on mythic+ difficulty skip doing loot
-        if(!sMythicPlus->IsDifficultySet(player)) {
+        if(!sMpScaler->IsDifficultySet(player)) {
             return;
         }
 
         // Not on an eligible map skip doing loot
         Map* map = player->GetMap();
-        if (!sMythicPlus->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map)) {
             return;
         }
 

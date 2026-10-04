@@ -1,4 +1,4 @@
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "MpBots.h"
 #include "MpConfig.h"
 #include "MpLog.h"
@@ -18,7 +18,7 @@
 // Special case for Headless Horseman Event
 const uint32 HEADLESS_HORSEMAN = 23682;
 
-bool MythicPlus::IsMapEligible(Map* map)
+bool MpScaler::IsMapEligible(Map* map)
 {
     if (!sMpConfig->enabled) {
         return false;
@@ -31,7 +31,7 @@ bool MythicPlus::IsMapEligible(Map* map)
     return false;
 }
 
-bool MythicPlus::IsDifficultySet(Player const* player)
+bool MpScaler::IsDifficultySet(Player const* player)
 {
     Group const* group = player->GetGroup();
     if (!group) {
@@ -41,7 +41,7 @@ bool MythicPlus::IsDifficultySet(Player const* player)
     return sMpState->GetGroupData(group->GetGUID()).has_value();
 }
 
-bool MythicPlus::EligibleHealTarget(Unit* target)
+bool MpScaler::EligibleHealTarget(Unit* target)
 {
     if (!target) {
         return false;
@@ -57,14 +57,14 @@ bool MythicPlus::EligibleHealTarget(Unit* target)
 
     // Ensure target is a valid creature before checking eligibility
     Creature* creatureTarget = target->ToCreature();
-    if (creatureTarget && sMythicPlus->IsCreatureEligible(creatureTarget)) {
+    if (creatureTarget && sMpScaler->IsCreatureEligible(creatureTarget)) {
         return true;
     }
 
     return false;
 }
 
-bool MythicPlus::EligibleDamageTarget(Unit* target)
+bool MpScaler::EligibleDamageTarget(Unit* target)
 {
     if (!target) {
         return false;
@@ -86,7 +86,7 @@ bool MythicPlus::EligibleDamageTarget(Unit* target)
     return false;
 }
 
-bool MythicPlus::IsCreatureEligible(Creature* creature)
+bool MpScaler::IsCreatureEligible(Creature* creature)
 {
     if (!creature) {
         return false;
@@ -141,7 +141,7 @@ bool MythicPlus::IsCreatureEligible(Creature* creature)
     return true;
 }
 
-void MythicPlus::AddCreatureForScaling(Creature* creature)
+void MpScaler::AddCreatureForScaling(Creature* creature)
 {
     if (!IsCreatureEligible(creature)) {
         return;
@@ -154,7 +154,7 @@ void MythicPlus::AddCreatureForScaling(Creature* creature)
     // );
 }
 
-void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData const& instanceData)
+void MpScaler::AddScaledCreature(Creature* creature, MpInstanceData const& instanceData)
 {
     MpCreatureData creatureData = MpCreatureData(creature);
     creatureData.SetScaled(true);
@@ -189,7 +189,7 @@ void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData const& ins
 }
 
 // Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.
-void MythicPlus::ScaleRemaining(Player* player, MpInstanceData const& instanceData)
+void MpScaler::ScaleRemaining(Player* player, MpInstanceData const& instanceData)
 {
     Map* map = player->GetMap();
     for (ObjectGuid const& guid : sMpState->GetInstanceCreatureGuids(map->GetId(), map->GetInstanceId(), true))
@@ -198,7 +198,7 @@ void MythicPlus::ScaleRemaining(Player* player, MpInstanceData const& instanceDa
 }
 
 // Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.
-void MythicPlus::ScaleAll(Player* player, MpInstanceData const& instanceData)
+void MpScaler::ScaleAll(Player* player, MpInstanceData const& instanceData)
 {
     Map* map = player->GetMap();
     for (ObjectGuid const& guid : sMpState->GetInstanceCreatureGuids(map->GetId(), map->GetInstanceId(), false))
@@ -210,7 +210,7 @@ void MythicPlus::ScaleAll(Player* player, MpInstanceData const& instanceData)
     }
 }
 
-void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers const* multipliers,
+void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers const* multipliers,
     MpDifficulty difficulty)
 {
     CreatureTemplate const* cInfo = creature->GetCreatureTemplate();
@@ -309,7 +309,7 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers co
     float updatedRangeAp = creature->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE);
 }
 
-int32 MythicPlus::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel) {
+int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel) {
     float origHpPool = sMpRepo->GetPlayerHealthAvg(originalLevel);
     float targetHpPool = sMpRepo->GetPlayerHealthAvg(targetLevel);
 
@@ -328,7 +328,7 @@ int32 MythicPlus::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int
     return scaledDamage;
 }
 
-int32 MythicPlus::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealth, uint32 targetMaxHealth) {
+int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealth, uint32 targetMaxHealth) {
     if (originalTargetHealth == 0) {
         MpLog::Debug(MpLog::Area::Combat, "Original target health is 0, returning base heal: {}", baseHeal);
         return baseHeal;
@@ -355,7 +355,7 @@ int32 MythicPlus::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHea
     return scaledHeal;
 }
 
-int32 MythicPlus::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCreatureData const* creatureData,
+int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCreatureData const* creatureData,
     Creature* creature, Unit* /* target */, float damageMultiplier)
 {
     if (!spellInfo) {
@@ -468,7 +468,7 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, Mp
     return damage + scaledAdditionalDamage;
 }
 
-int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatureData const* creatureData,
+int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatureData const* creatureData,
     Creature* creature, Creature* target, float healMultiplier)
 {
     if (!spellInfo) {
@@ -606,11 +606,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCrea
     return heal + scaledAdditionalHeal;
 }
 
-void MythicPlus::GroupReset(Group* /*group*/, Map* /* map */) {
-    // Stubbed out for later implementation
-}
-
-bool MythicPlus::IsFinalBoss(Creature* creature) {
+bool MpScaler::IsFinalBoss(Creature* creature) {
     std::array<uint32, 128> finalBosses = {
         // --- WoW Classic Dungeons ---
         11519,  /* Bazzalan Ragefire */
@@ -748,7 +744,7 @@ bool MythicPlus::IsFinalBoss(Creature* creature) {
 /**
  * Function is copied because was not accessible in core creature class
  */
-float GetTypeHealthModifier(int32 Rank)
+float MpScaler::GetTypeHealthModifier(int32 Rank)
 {
     switch (Rank)
     {
@@ -768,7 +764,7 @@ float GetTypeHealthModifier(int32 Rank)
 }
 
 // This takes the orignal health and scales flat based on the factor then applies the configuration modifier from the conf file
-uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, uint32 origHealth, float confHPMod)
+uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, uint32 origHealth, float confHPMod)
 {
     //
     int32 rank = 0;
@@ -833,7 +829,7 @@ uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uin
 }
 
 // Calculates a balanced growth curve that provides good scaling across all level ranges
-float CalculateScaling(int levelDifference, float scaleFactor, float constant, float /*growthFactor*/) {
+float MpScaler::CalculateScaling(int levelDifference, float scaleFactor, float constant, float /*growthFactor*/) {
     float levelMultiplier;
 
     if (levelDifference <= 0) {
@@ -854,7 +850,7 @@ float CalculateScaling(int levelDifference, float scaleFactor, float constant, f
     return scaling;
 }
 
-float GetTypeDamageModifier(int32 Rank)
+float MpScaler::GetTypeDamageModifier(int32 Rank)
 {
     switch (Rank)
     {

@@ -1,6 +1,6 @@
 #include "CreatureAI.h"
 #include "MpLog.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "MpScriptAI.h"
 #include "ScriptMgr.h"
 
@@ -14,25 +14,6 @@ public:
     // void OnBeforeCreatureSelectLevel(const CreatureTemplate* /*creatureTemplate*/, Creature* creature, uint8& level) override
     // {
     // }
-
-    void OnCreatureRespawn(Creature* creature)
-    {
-        Map* map = creature->GetMap();
-        if (!sMythicPlus->IsMapEligible(map)) {
-            return;
-        }
-
-        if (!sMythicPlus->IsCreatureEligible(creature)) {
-            return;
-        }
-
-        // If we have instance data, scale the creature, otherwise add it to be scaled later
-        if (auto instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId())) {
-            sMythicPlus->AddScaledCreature(creature, *instanceData);
-        } else {
-            sMythicPlus->AddCreatureForScaling(creature);
-        }
-    }
 
     /**
      * @brief This hook runs every update for all creatures in the world.
@@ -48,11 +29,11 @@ public:
     void OnAllCreatureUpdate(Creature* creature, uint32 diff) override
     {
         // Skip any creatures not in an instance we are scaling first to avoid unnecessary work
-        if (!sMythicPlus->IsMapEligible(creature->GetMap())) {
+        if (!sMpScaler->IsMapEligible(creature->GetMap())) {
             return;
         }
 
-        if (!sMythicPlus->IsCreatureEligible(creature)) {
+        if (!sMpScaler->IsCreatureEligible(creature)) {
             return;
         }
 
@@ -85,7 +66,7 @@ public:
         // this is a creature that was not scaled at instance load time, we need to scale it now.
         if(!known) {
             MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}", creature->GetName());
-            sMythicPlus->AddScaledCreature(creature, *instanceData);
+            sMpScaler->AddScaledCreature(creature, *instanceData);
             return;
         }
 
@@ -107,7 +88,7 @@ public:
             MpLog::Debug(MpLog::Area::Scaling,
                 "OnAllCreatureUpdate: Creature Death event scaling creature: {} level: {} guid: {} event: {}",
                 creature->GetName(), creature->GetLevel(), creature->GetGUID().ToString(), creature->getDeathState());
-            sMythicPlus->AddScaledCreature(creature, *instanceData);
+            sMpScaler->AddScaledCreature(creature, *instanceData);
         }
     }
 
@@ -115,11 +96,11 @@ public:
     void OnCreatureAddWorld(Creature* creature) override
     {
         Map* map = creature->GetMap();
-        if (!sMythicPlus->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
-        if (!sMythicPlus->IsCreatureEligible(creature)) {
+        if (!sMpScaler->IsCreatureEligible(creature)) {
             return;
         }
 
@@ -127,9 +108,9 @@ public:
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
 
         if(instanceData) {
-            sMythicPlus->AddScaledCreature(creature, *instanceData);
+            sMpScaler->AddScaledCreature(creature, *instanceData);
         } else {
-            sMythicPlus->AddCreatureForScaling(creature);
+            sMpScaler->AddCreatureForScaling(creature);
         }
     }
 

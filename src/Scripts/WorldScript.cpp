@@ -1,11 +1,11 @@
 #include "MpConfig.h"
-#include "MythicPlus.h"
 #include "MpRepository.h"
 #include "AdvancementMgr.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
-#include "MpEventHandlers.cpp"
+
+void MP_Register_EventHandlers();
 
 class MythicPlus_WorldScript : public WorldScript
 {

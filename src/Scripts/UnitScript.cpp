@@ -2,7 +2,7 @@
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 
@@ -25,7 +25,7 @@ private:
      */
     template<typename DamageType>
     void HandleNonCreatureAttacker(Unit* target, Unit*& attacker, DamageType& damage,
-                                 SpellInfo const* spellInfo, MythicPlus::MP_UNIT_EVENT_TYPE eventType)
+                                 SpellInfo const* spellInfo, MpScaler::MP_UNIT_EVENT_TYPE eventType)
     {
         Map* map = target ? target->GetMap() : nullptr;
         std::string attackerType = "nullptr";
@@ -139,7 +139,7 @@ private:
      */
 
     template<typename DamageType>
-    void ProcessSpellDamage(Unit* target, Unit* attacker, DamageType& damage, SpellInfo const* spellInfo, MythicPlus::MP_UNIT_EVENT_TYPE eventType, const std::string& logPrefix) {
+    void ProcessSpellDamage(Unit* target, Unit* attacker, DamageType& damage, SpellInfo const* spellInfo, MpScaler::MP_UNIT_EVENT_TYPE eventType, const std::string& logPrefix) {
         if(damage == 0) {
             return;
         }
@@ -189,7 +189,7 @@ private:
             if (! notScaledByAP && (spellInfo->SchoolMask == SPELL_SCHOOL_NORMAL || spellInfo->SchoolMask == SPELL_SCHOOL_MASK_NORMAL)) {
                 uint32 meleeDamage = static_cast<uint32>(std::max(0, static_cast<int32>(damage)));
 
-                damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
+                damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
 
                 // MpLog::Debug(MpLog::Area::Combat, ">>MELEE SPELL SCALING: {} hits with spell: {} ID: {} meleeDamage: {} damage: {}", attacker->GetName(), spellInfo->SpellName[0], spellInfo->Id, meleeDamage, damage);
             } else {
@@ -204,7 +204,7 @@ private:
 
                 // MpLog::Debug(MpLog::Area::Combat, ">> AP BASED DAMAGE Scaledown: origDamage: {} | spellDmg: {} | apDmg: {} | finalDmg: {}", static_cast<int32>(damage), spellDmg, apDmg, finalDmg);
 
-                damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
+                damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
 
                 // need to take into consideration if this is a stacking spell and multiply the final damage by the number of stacks
                 if(spellInfo->AttributesEx3 & SPELL_ATTR3_DOT_STACKING_RULE) {
@@ -261,7 +261,7 @@ public:
         }
 
         Map *map = target->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
@@ -280,9 +280,9 @@ public:
         }
 
         if(isHot) {
-            damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_HOT, target, attacker, damage, spellInfo);
+            damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_HOT, target, attacker, damage, spellInfo);
         } else {
-            ProcessSpellDamage(target, attacker, damage, spellInfo, MythicPlus::UNIT_EVENT_DOT, "DOT DAMAGE");
+            ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_DOT, "DOT DAMAGE");
         }
     }
 
@@ -292,11 +292,11 @@ public:
         }
 
         Map *map = target->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
-        if(!sMythicPlus->EligibleDamageTarget(target)) {
+        if(!sMpScaler->EligibleDamageTarget(target)) {
             if(spellInfo) {
                 // MpLog::Info(MpLog::Area::Combat, "ModifySpellDamageTaken: Target is not eligible for spell: {} ID: {}", spellInfo->SpellName[0], spellInfo->Id);
             }
@@ -306,7 +306,7 @@ public:
         // MpLog::Debug(MpLog::Area::Combat, "ModifySpellDamageTaken: {} hits {} with spell: {} ID: {}", attacker ? attacker->GetName() : "[null]", target ? target->GetName() : "[null]", spellInfo ? spellInfo->SpellName[0] : "[no spell]", spellInfo ? spellInfo->Id : 0);
 
         // Use the generic ProcessSpellDamage function
-        ProcessSpellDamage(target, attacker, damage, spellInfo, MythicPlus::UNIT_EVENT_SPELL, "SPELL DAMAGE");
+        ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_SPELL, "SPELL DAMAGE");
     }
 
     /**
@@ -319,11 +319,11 @@ public:
         }
 
         Map *map = target->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
-        damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_MELEE, target, attacker, damage);
+        damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_MELEE, target, attacker, damage);
     }
 
     // When a healing spell hits a mythic+ enemy modify based on the modifiers for the difficulty
@@ -333,14 +333,14 @@ public:
         }
 
         Map *map = target->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
-        healing = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_HEAL, target, healer, healing, spellInfo);
+        healing = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_HEAL, target, healer, healing, spellInfo);
     }
 
-    uint32 modifyIncomingDmgHeal(MythicPlus::MP_UNIT_EVENT_TYPE eventType,Unit* target, Unit* attacker, uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr) {
+    uint32 modifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType,Unit* target, Unit* attacker, uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr) {
         if (!target || !attacker) {
             // MpLog::Info(MpLog::Area::Combat, "modifyIncomingDmgHeal: Target and attacker are null for event {}", eventType);
             return damageOrHeal;
@@ -349,7 +349,7 @@ public:
         int32 alteredDmgHeal = 0;
 
         Map *map = target->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return damageOrHeal;
         }
 
@@ -381,31 +381,31 @@ public:
 
         std::string eventName = "";
         switch (eventType) {
-            case MythicPlus::UNIT_EVENT_MELEE:
+            case MpScaler::UNIT_EVENT_MELEE:
                 eventName = "Melee";
                 break;
-            case MythicPlus::UNIT_EVENT_HEAL:
+            case MpScaler::UNIT_EVENT_HEAL:
                 eventName = "Heal";
                 break;
-            case MythicPlus::UNIT_EVENT_DOT:
+            case MpScaler::UNIT_EVENT_DOT:
                 eventName = "DOT";
                 break;
-            case MythicPlus::UNIT_EVENT_SPELL:
+            case MpScaler::UNIT_EVENT_SPELL:
                 eventName = "Spell";
                 break;
-            case MythicPlus::UNIT_EVENT_HOT:
+            case MpScaler::UNIT_EVENT_HOT:
                 eventName = "HOT";
                 break;
         }
 
         // If the target is the enemy then increase the amount of healing by the instance data modifier for spell output.
-        if(sMythicPlus->EligibleDamageTarget(target)) {
+        if(sMpScaler->EligibleDamageTarget(target)) {
             /**
              * @TODO: Allow more granular control over the scaling of DOT, HOT, and other spell effects
              * in the future if needed
              */
             switch (eventType) {
-                case MythicPlus::UNIT_EVENT_MELEE:
+                case MpScaler::UNIT_EVENT_MELEE:
 
                     // Damage that is not mitigated by armor needs to be debuffed as it hits too hard and without resists
                     // it hits too hard give everyone a benefit of 30% armor reduction
@@ -426,12 +426,12 @@ public:
                     }
 
                     break;
-                case MythicPlus::UNIT_EVENT_DOT:
-                case MythicPlus::UNIT_EVENT_SPELL:
+                case MpScaler::UNIT_EVENT_DOT:
+                case MpScaler::UNIT_EVENT_SPELL:
                     if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682) {
                         if(spellInfo) {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
-                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                            alteredDmgHeal = sMpScaler->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
                                 creature, target, instanceData->boss.spell);
                         } else {
                             alteredDmgHeal = damageOrHeal * instanceData->boss.spell;
@@ -440,7 +440,7 @@ public:
                     } else {
                         if(spellInfo) {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
-                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                            alteredDmgHeal = sMpScaler->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
                                 creature, target, instanceData->creature.spell);
                         } else {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
@@ -449,8 +449,8 @@ public:
                     }
 
                     break;
-                case MythicPlus::UNIT_EVENT_HEAL:
-                case MythicPlus::UNIT_EVENT_HOT:
+                case MpScaler::UNIT_EVENT_HEAL:
+                case MpScaler::UNIT_EVENT_HOT:
                     break;
             }
         }
@@ -458,17 +458,17 @@ public:
         /**
          * @TODO: Add more granular control over the scaling of healing spells
          */
-        if(sMythicPlus->EligibleHealTarget(target) && (eventType == MythicPlus::UNIT_EVENT_HEAL || eventType == MythicPlus::UNIT_EVENT_HOT)) {
+        if(sMpScaler->EligibleHealTarget(target) && (eventType == MpScaler::UNIT_EVENT_HEAL || eventType == MpScaler::UNIT_EVENT_HOT)) {
             if(creature->IsDungeonBoss()) {
                 if(spellInfo) {
-                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                    alteredDmgHeal = sMpScaler->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
                         creature, attacker->ToCreature(), instanceData->boss.spell * 0.7f);
                 } else {
                     alteredDmgHeal = damageOrHeal * instanceData->boss.spell * 0.7f;
                 }
             } else {
                 if(spellInfo) {
-                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                    alteredDmgHeal = sMpScaler->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
                         creature, attacker->ToCreature(), instanceData->creature.spell * 0.7f);
                 } else {
                     alteredDmgHeal = damageOrHeal * instanceData->creature.spell * 0.70f;

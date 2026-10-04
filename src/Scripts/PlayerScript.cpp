@@ -1,7 +1,7 @@
 #include "MpBots.h"
 #include "MpLog.h"
 #include "MpScheduler.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "Player.h"
 #include "Group.h"
 #include "ScriptMgr.h"
@@ -31,7 +31,7 @@ public:
         }
 
         Map* map = player->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if(!sMpScaler->IsMapEligible(map)) {
             return;
         }
 

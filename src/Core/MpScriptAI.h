@@ -2,7 +2,7 @@
 #include "CreatureAI.h"
 // #include "CreatureHooks.h"
 #include "MpLog.h"
-#include "MythicPlus.h"
+#include "MpTypes.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 

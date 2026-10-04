@@ -66,3 +66,13 @@ if(EXISTS "${_mp_cfg_src}")
   endif()
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_mp_cfg_src}" "${_mp_conf}")
 endif()
+
+# --- Every hook must override a real ScriptMgr hook (spec §3.3d). Clang flags: the docker build uses clang.
+# Two upstream headers declare overrides without `override` (G3D/MemoryManager.h, Roll in Group.h); they are
+# treated as system headers for module TUs so -Wsuggest-override only judges module code.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(_mp_sys_headers "--system-header-prefix=G3D/;--system-header-prefix=Group.h")
+  file(GLOB_RECURSE _mp_tus "${_mp_dir}/src/*.cpp")
+  set_source_files_properties(${_mp_tus} TARGET_DIRECTORY modules PROPERTIES
+    COMPILE_OPTIONS "-Werror=inconsistent-missing-override;-Werror=suggest-override;${_mp_sys_headers}")
+endif()

@@ -3,7 +3,7 @@
 #include "MpLog.h"
 #include "Map.h"
 #include "MapMgr.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 
@@ -17,18 +17,18 @@ public:
     {
     }
 
-    void OnCreateMap(Map* /*map*/) { }
+    void OnCreateMap(Map* /*map*/) override { }
 
     /**
      * When a player enters the map check it needs to set up the instance data
      */
-    void OnPlayerEnterAll(Map* map, Player* player)
+    void OnPlayerEnterAll(Map* map, Player* player) override
     {
-        if (!sMythicPlus->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map)) {
             return;
         }
 
-        if(!sMythicPlus->IsDifficultySet(player)) {
+        if(!sMpScaler->IsDifficultySet(player)) {
             return;
         }
 
@@ -94,13 +94,13 @@ public:
         }
 
         // Once we have instance data set we can scale the remaining characters in our instance
-        sMythicPlus->ScaleRemaining(player, instanceData);
+        sMpScaler->ScaleRemaining(player, instanceData);
     }
 
     // When an instance is destroyed remove the instance data from the data store
-    virtual void OnDestroyInstance(MapInstanced* /*mapInstanced*/, Map* map)
+    void OnDestroyInstance(MapInstanced* /*mapInstanced*/, Map* map) override
     {
-        if (!sMythicPlus->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map)) {
             return;
         }
 

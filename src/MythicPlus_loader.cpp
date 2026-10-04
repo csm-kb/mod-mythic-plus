@@ -1,11 +1,5 @@
 #include "MpScheduler.h"
 #include "MpLog.h"
-#include "Spells/AdvancmentSpells.cpp"
-
-// Creature Overrides
-enum {
-    RAGEFIRE_BAZZALAN       = 11519
-};
 
 // This adds schedulers for use across scripts scoped to MythicPlus
 void Add_MP_Schedulers() {
@@ -40,9 +34,5 @@ void Addmod_mythic_plusScripts() {
     // Spell Scripts
     AddSC_AdvancementSpells();
 
-    // new Ragefire_Bazzalan_Mythic();
-    // Add_MP_GroupScripts();
-    // list of boss / creature event handlers
-    // new Ragefire_Bazzalan_Mythic(RAGEFIRE_BAZZALAN);
-
+    // MythicPlus_GroupScript intentionally not registered — see sub-project 2 notes.
 }

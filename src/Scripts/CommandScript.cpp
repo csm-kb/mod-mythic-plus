@@ -1,7 +1,7 @@
 
 #include "Chat.h"
 #include "AdvancementMgr.h"
-#include "MythicPlus.h"
+#include "MpScaler.h"
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
@@ -125,7 +125,7 @@ public:
         }
 
         std::string difficulty = args[0];
-        // if(!sMythicPlus->IsDifficultyEnabled(difficulty)) {
+        // if(!sMpScaler->IsDifficultyEnabled(difficulty)) {
         //     handler->PSendSysMessage("|cFFFF0000 The difficulty level you have selected is not enabled.");
         //     return true;
         // }
@@ -243,9 +243,9 @@ public:
         }
 
         if(creature->IsDungeonBoss() || creature->GetEntry() == 23682) {
-            sMythicPlus->ScaleCreature(creature->GetLevel(), creature, &instanceData->boss, instanceData->difficulty);
+            sMpScaler->ScaleCreature(creature->GetLevel(), creature, &instanceData->boss, instanceData->difficulty);
         } else {
-            sMythicPlus->ScaleCreature(creature->GetLevel(), creature, &instanceData->creature, instanceData->difficulty);
+            sMpScaler->ScaleCreature(creature->GetLevel(), creature, &instanceData->creature, instanceData->difficulty);
         }
 
         handler->PSendSysMessage("Creature rescaled: {}", creature->GetName());
@@ -276,7 +276,7 @@ public:
             return true;
         }
 
-        sMythicPlus->ScaleAll(player, *instanceData);
+        sMpScaler->ScaleAll(player, *instanceData);
         handler->PSendSysMessage("All creatures rescaled.");
 
         return true;

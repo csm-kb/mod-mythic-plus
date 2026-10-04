@@ -11,7 +11,7 @@ bool MpBots::Detail::NpcBotsIsBot(Unit const* unit) { return unit->IsNPCBot(); }
 bool MpBots::Detail::NpcBotsIsBotOrPet(Unit const* unit) { return unit->IsNPCBotOrPet(); }
 Player* MpBots::Detail::NpcBotsOwner(Creature const* creature) { return creature->GetBotOwner(); }
 
-// Compound legacy condition from MythicPlus::EligibleHealTarget / EligibleDamageTarget.
+// Compound legacy condition from MpScaler::EligibleHealTarget / EligibleDamageTarget.
 bool MpBots::Detail::NpcBotsIsBotOrOwnedSummon(Unit const* unit)
 {
     if (unit->IsNPCBot())
