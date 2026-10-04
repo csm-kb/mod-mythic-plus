@@ -1,5 +1,6 @@
 #include "MpBots.h"
 #include "MpConfig.h"
+#include "MpConstants.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "MpScaler.h"
@@ -313,7 +314,7 @@ public:
                     {
                         damageOrHeal = static_cast<uint32>(damageOrHeal * 0.50f);
                     }
-                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682)
+                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
                     {
                         alteredDmgHeal = damageOrHeal * instanceData->boss.melee;
                     }
@@ -334,7 +335,7 @@ public:
                     break;
                 case MpScaler::UNIT_EVENT_DOT:
                 case MpScaler::UNIT_EVENT_SPELL:
-                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682)
+                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
                     {
                         if (spellInfo)
                         {

@@ -8,6 +8,9 @@ inline const uint8 MP_MAX_ADVANCEMENT_RANK = 50;
 
 namespace MpConstants
 {
+    // Headless Horseman (Hallow's End): always scaled, and scaled as a boss
+    constexpr uint32 HEADLESS_HORSEMAN = 23682;
+
     // Spell IDs for passive stat and resist bonuses
     constexpr int TITANS_STRENGTH_AURA     = 80000001;  // strength
     constexpr int STEEL_FORGED_AURA        = 80000002;  // stamina

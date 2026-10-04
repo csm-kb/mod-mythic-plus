@@ -2,6 +2,7 @@
 #include "Group.h"
 #include "MpBots.h"
 #include "MpConfig.h"
+#include "MpConstants.h"
 #include "MpLog.h"
 #include "ObjectMgr.h"
 #include "World.h"
@@ -11,22 +12,11 @@
 #include <cmath>
 #include <optional>
 
-// Special case for Headless Horseman Event
-const uint32 HEADLESS_HORSEMAN = 23682;
+using MpConstants::HEADLESS_HORSEMAN;
 
 bool MpScaler::IsMapEligible(Map* map)
 {
-    if (!sMpConfig->enabled)
-    {
-        return false;
-    }
-
-    if (map->IsDungeon())
-    {
-        return true;
-    }
-
-    return false;
+    return sMpConfig->enabled && map->IsDungeon();
 }
 
 bool MpScaler::IsDifficultySet(Player const* player)
@@ -47,11 +37,6 @@ bool MpScaler::EligibleHealTarget(Unit* target)
         return false;
     }
 
-    if (target->GetTypeId() == TYPEID_CORPSE || target->GetTypeId() == TYPEID_GAMEOBJECT)
-    {
-        return false;
-    }
-
     if (MpBots::IsNpcBotOrOwnedSummon(target))
     {
         return false;
@@ -59,7 +44,7 @@ bool MpScaler::EligibleHealTarget(Unit* target)
 
     // Ensure target is a valid creature before checking eligibility
     Creature* creatureTarget = target->ToCreature();
-    if (creatureTarget && sMpScaler->IsCreatureEligible(creatureTarget))
+    if (creatureTarget && IsCreatureEligible(creatureTarget))
     {
         return true;
     }
@@ -74,7 +59,7 @@ bool MpScaler::EligibleDamageTarget(Unit* target)
         return false;
     }
 
-    if (target->GetTypeId() == TYPEID_PLAYER)
+    if (target->IsPlayer())
     {
         return true;
     }
@@ -177,7 +162,7 @@ void MpScaler::AddScaledCreature(Creature* creature, MpInstanceData const& insta
 
     // allow small variance in level for non-boss creatures
     uint8 level = uint8(urand(instanceData.creature.avgLevel - 1, instanceData.creature.avgLevel + 1));
-    if (creature->IsDungeonBoss() || creature->GetEntry() == 23682)
+    if (creature->IsDungeonBoss() || creature->GetEntry() == HEADLESS_HORSEMAN)
     {
         ScaleCreature(instanceData.boss.avgLevel, creature, &instanceData.boss, instanceData.difficulty);
     }
@@ -324,9 +309,10 @@ int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int t
         percentDamage = 0.02f;
     }
 
-    MpLog::Debug(MpLog::Area::Combat, "OrigHpPool: {} TargetHpPool: {} Percent Damage: {}", origHpPool, targetHpPool, percentDamage);
-    MpLog::Debug(MpLog::Area::Combat, "Original Damage: {} Scaled Damage: {}", baseDamage, static_cast<int32>(std::ceil(percentDamage * targetHpPool)));
     int32 scaledDamage = static_cast<int32>(std::ceil(percentDamage * targetHpPool));
+
+    MpLog::Debug(MpLog::Area::Combat, "OrigHpPool: {} TargetHpPool: {} Percent Damage: {}", origHpPool, targetHpPool, percentDamage);
+    MpLog::Debug(MpLog::Area::Combat, "Original Damage: {} Scaled Damage: {}", baseDamage, scaledDamage);
 
     return scaledDamage;
 }
@@ -386,13 +372,6 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     // calculate the global modifier x instance modifier
     float totalModifier = damageMultiplier * scaleFactor;
 
-    // If for some reason there is not a creature, just use the global modifier x instance modifier
-    if (!creature)
-    {
-        MpLog::Debug(MpLog::Area::Combat, "Invalid creature ScaleDamageSpell()");
-        return damage * totalModifier;
-    }
-
     // Use the already calculated damage as the base for scaling
     int32 newDamage = damage;
 
@@ -401,9 +380,7 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     {
         // handle if bot pets if NPCBot is installed.
         if (MpBots::IsNpcBotOrPet(creature))
-        {
             return damage;
-        }
 
         // Handle totems and summons - scale based on owner's details because they will not have creature data
         if (creature->IsTotem() || creature->IsSummon())
@@ -413,26 +390,19 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
             {
                 Creature* ownerCreature = owner->ToCreature();
 
+                if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
+
                 // Look up the owner creature's original level from the runtime state
                 std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
                 if (ownerCreatureData)
                 {
                     MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original level {} owner level {}", creature->GetName(), ownerCreature->GetName(), ownerCreatureData->originalLevel, ownerCreature->GetLevel());
-                    int32 ownerOriginalLevel = ownerCreatureData->originalLevel;
-
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
-                    {
-                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
-                    }
-                    newDamage = CalculateSpellDamage(damage, ownerOriginalLevel, ownerCreature->GetLevel());
+                    newDamage = CalculateSpellDamage(damage, ownerCreatureData->originalLevel, ownerCreature->GetLevel());
                 }
                 else
                 {
                     // Fallback if no creature data found - use current level
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
-                    {
-                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
-                    }
                     newDamage = CalculateSpellDamage(damage, ownerCreature->GetLevel(), ownerCreature->GetLevel());
                     MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
                 }
@@ -493,6 +463,25 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     return damage + scaledAdditionalDamage;
 }
 
+// Scales the heal to the target's health, not the caster's: the heal keeps its share of the target's
+// pre-Mythic+ instance health. No target leaves the heal unchanged.
+int32 MpScaler::ScaleHealToTarget(uint32 heal, Creature* target)
+{
+    if (!target)
+        return heal;
+
+    // Get target's original instance health for scaling comparison
+    std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
+    uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
+        targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
+
+    MpLog::Debug(MpLog::Area::Combat,
+        "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}",
+        target->GetName(), targetOriginalHealth, target->GetMaxHealth());
+
+    return CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
+}
+
 int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatureData const* creatureData,
     Creature* creature, Creature* target, float healMultiplier)
 {
@@ -517,13 +506,6 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     // calculate the global modifier x instance modifier
     float totalModifier = healMultiplier * scaleFactor;
 
-    // If for some reason there is not a creature, just use the global modifier x instance modifier
-    if (!creature)
-    {
-        MpLog::Debug(MpLog::Area::Combat, "Invalid creature ScaleHealSpell()");
-        return heal * totalModifier;
-    }
-
     // Use the already calculated heal as the base for scaling
     int32 newHeal = heal;
 
@@ -532,9 +514,7 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     {
         // handle if bot pets if NPCBot is installed.
         if (MpBots::IsNpcBotOrPet(creature))
-        {
             return heal;
-        }
 
         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} with spell: {}", target->GetName(), spellInfo->SpellName[0]);
 
@@ -546,52 +526,16 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
             {
                 Creature* ownerCreature = owner->ToCreature();
 
-                // Look up the owner creature's original level from the runtime state
-                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
-                if (ownerCreatureData)
-                {
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
-                    {
-                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
-                    }
-                    // Scale heal based on target's health, not caster's health
-                    if (target)
-                    {
-                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
-                        uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
-                            targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
-                            MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
-                        newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-                    }
-                    else
-                    {
-                        newHeal = heal;
-                    }
-                }
-                else
-                {
-                    // Fallback if no creature data found - use current level
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
-                    {
-                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
-                    }
-                    // Scale heal based on target's health, not caster's health
-                    if (target)
-                    {
-                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
-                        uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
-                            targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
+                // The owner's record only decides the log line below; both cases scale the same way
+                bool ownerKnown = sMpState->GetCreatureData(ownerCreature).has_value();
 
-                        MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
+                if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
 
-                        newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-                    }
-                    else
-                    {
-                        newHeal = heal;
-                    }
+                newHeal = ScaleHealToTarget(heal, target);
+
+                if (!ownerKnown)
                     MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
-                }
             }
         }
         else
@@ -601,23 +545,7 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
         }
     }
     else
-    {
-        // Scale heal based on target's health, not caster's health
-        if (target)
-        {
-            // Get target's original instance health for scaling comparison
-            std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
-            uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
-                targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
-                MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
-            newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-        }
-        else
-        {
-            // No target available, use original heal
-            newHeal = heal;
-        }
-    }
+        newHeal = ScaleHealToTarget(heal, target);
 
     // Calculate the additional heal from scaling (scaled heal - original heal)
     int32 additionalHeal = newHeal - heal;
@@ -819,7 +747,6 @@ float MpScaler::GetTypeHealthModifier(int32 Rank)
 // This takes the orignal health and scales flat based on the factor then applies the configuration modifier from the conf file
 uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, uint32 origHealth, float confHPMod)
 {
-    //
     int32 rank = 0;
     if (cInfo && cInfo->rank > 0)
     {

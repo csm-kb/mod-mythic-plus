@@ -2,6 +2,7 @@
 #include "AdvancementMgr.h"
 #include "MpScaler.h"
 #include "MpConfig.h"
+#include "MpConstants.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -237,7 +238,7 @@ public:
             return true;
         }
 
-        if (creature->IsDungeonBoss() || creature->GetEntry() == 23682)
+        if (creature->IsDungeonBoss() || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
         {
             sMpScaler->ScaleCreature(creature->GetLevel(), creature, &instanceData->boss, instanceData->difficulty);
         }

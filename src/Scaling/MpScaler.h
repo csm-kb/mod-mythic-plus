@@ -95,6 +95,9 @@ private:
     ~MpScaler() { }
 
     static float GetTypeHealthModifier(int32 rank);
+    // Scales a heal by the target's current vs. pre-Mythic+ health; used by ScaleHealSpell
+    int32 ScaleHealToTarget(uint32 heal, Creature* target);
+
     static uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId,
         MpDifficulty difficulty, uint32 origHealth, float confHPMod);
 };
