@@ -237,7 +237,7 @@ struct MpCreatureData
     std::vector<std::string> affixes;
 
     MpCreatureData(Creature* creature)
-        : creature(creature), scaled(false), originalInstanceHealth(0)
+        : creature(creature), scaled(false), NewAttackPower(0), AttackPowerScaleMultiplier(0), originalInstanceHealth(0)
     {
         if(creature) {
             originalLevel = creature->GetLevel();
