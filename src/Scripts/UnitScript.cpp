@@ -30,7 +30,6 @@ private:
         Map* map = target ? target->GetMap() : nullptr;
         std::string attackerType = "nullptr";
         std::string attackerName = "unknown";
-        uint32 entry = 0;
 
         if (attacker)
         {
@@ -39,7 +38,6 @@ private:
                 attackerType = "GameObject";
                 if (GameObject* go = attacker->ToGameObject())
                 {
-                    entry = go->GetEntry();
                     if (GameObjectTemplate const* goInfo = go->GetGOInfo())
                     {
                         attackerName = goInfo->name;
@@ -155,11 +153,10 @@ private:
      * @param damage
      * @param spellInfo
      * @param eventType
-     * @param logPrefix
      */
 
     template<typename DamageType>
-    void ProcessSpellDamage(Unit* target, Unit* attacker, DamageType& damage, SpellInfo const* spellInfo, MpScaler::MP_UNIT_EVENT_TYPE eventType, const std::string& logPrefix)
+    void ProcessSpellDamage(Unit* target, Unit* attacker, DamageType& damage, SpellInfo const* spellInfo, MpScaler::MP_UNIT_EVENT_TYPE eventType)
     {
         if (damage == 0)
         {
@@ -313,7 +310,7 @@ public:
         }
         else
         {
-            ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_DOT, "DOT DAMAGE");
+            ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_DOT);
         }
     }
 
@@ -336,7 +333,7 @@ public:
         }
 
         // Use the generic ProcessSpellDamage function
-        ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_SPELL, "SPELL DAMAGE");
+        ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_SPELL);
     }
 
     /**
@@ -469,7 +466,8 @@ public:
                     }
 
                     // Only log if damage was actually modified
-                    if (alteredDmgHeal != damageOrHeal)
+                    // Same comparison as before: the int32 operand is converted to uint32 either way.
+                    if (static_cast<uint32>(alteredDmgHeal) != damageOrHeal)
                     {
                         std::string damageType = (creature->GetMeleeDamageSchoolMask() == SPELL_SCHOOL_MASK_NORMAL) ? "Melee Damage" : "Elemental Damage";
                         MpLog::Debug(MpLog::Area::Combat, ">>> Modify {}: Creature Name: {} originalDmg: {} alteredDmg: {} School Mask: {}",

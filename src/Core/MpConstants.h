@@ -26,7 +26,7 @@ namespace MpConstants
      * @param advancement
      * @return int
      */
-    static int GetAdvancementAura(MpAdvancements advancement)
+    inline int GetAdvancementAura(MpAdvancements advancement)
     {
         switch (advancement)
         {

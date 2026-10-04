@@ -312,9 +312,6 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     // Scale up the armor with some variance also to make some tougher enemies in the mix
     uint32 armor = uint32(std::ceil(stats->BaseArmor * multipliers->armor * cInfo->ModArmor));
     creature->SetArmor(armor);
-
-    float updatedAp = creature->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE);
-    float updatedRangeAp = creature->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE);
 }
 
 int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel)
