@@ -1,16 +1,10 @@
+#include "MpEventProcessor.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
-#include "AdvancementMgr.h"
-#include "Chat.h"
-#include "Channel.h"
-#include "ChannelMgr.h"
-#include "MpEventProcessor.h"
-#include <boost/algorithm/string/predicate.hpp> // For starts_with
 
-#include <vector>
+#include <boost/algorithm/string/predicate.hpp> // For starts_with
 #include <string>
-#include <ranges>
 
 /**
  * This script file is a special event handler attached to the chat channel for MythicPlus to intercept

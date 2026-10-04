@@ -1,11 +1,11 @@
+#include "Creature.h"
+#include "Player.h"
+// After the core headers, so a provider macro defined by a core header is seen.
 #include "MpBotsProviders.h"
 
 #if defined(MP_PROVIDER_NPCBOTS)
 // Not compiled on the csm-kb core (no NPCBots); verified by review only. Bodies moved verbatim from the
 // pre-seam NPCBots blocks in MythicPlus.cpp / UnitScript.cpp / PlayerScript.cpp.
-
-#include "Creature.h"
-#include "Player.h"
 
 bool MpBots::Detail::NpcBotsIsBot(Unit const* unit) { return unit->IsNPCBot(); }
 bool MpBots::Detail::NpcBotsIsBotOrPet(Unit const* unit) { return unit->IsNPCBotOrPet(); }

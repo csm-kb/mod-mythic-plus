@@ -1,13 +1,15 @@
 #ifndef ADVANCEMENT_MGR_H
 #define ADVANCEMENT_MGR_H
 
-#include "SharedDefines.h"
 #include "Player.h"
+#include "SharedDefines.h"
 
-#include <memory>
-#include <unordered_map>
+#include <array>
 #include <map>
 #include <mutex>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 enum MpAdvancements
 {

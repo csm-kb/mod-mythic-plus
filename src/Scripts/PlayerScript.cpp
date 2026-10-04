@@ -1,13 +1,11 @@
-#include "MpBots.h"
-#include "MpLog.h"
-#include "MpScheduler.h"
-#include "MpScaler.h"
-#include "Player.h"
-#include "Group.h"
-#include "ScriptMgr.h"
-#include "TaskScheduler.h"
 #include "AdvancementMgr.h"
 #include "Formulas.h"
+#include "Group.h"
+#include "MpBots.h"
+#include "MpLog.h"
+#include "MpScaler.h"
+#include "Player.h"
+#include "ScriptMgr.h"
 
 #include <optional>
 #include <utility>

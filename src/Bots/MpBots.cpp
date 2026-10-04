@@ -1,7 +1,8 @@
 #include "MpBots.h"
-#include "MpBotsProviders.h"
 #include "Creature.h"
 #include "Player.h"
+// After the core headers, so a provider macro defined by a core header is seen.
+#include "MpBotsProviders.h"
 
 bool MpBots::IsBot(Unit const* unit)
 {

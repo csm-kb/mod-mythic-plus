@@ -1,10 +1,8 @@
-#include <array>
-#include <string_view>
-#include <string>
-#include <unordered_map>
-
 #ifndef MP_EVENTS_H
 #define MP_EVENTS_H
+
+#include <string_view>
+#include <unordered_map>
 
 // This defines list of incoming events typically from the client
 enum class MpEvent

@@ -1,9 +1,9 @@
 #ifndef MYTHICPLUS_SCHEDULER_H
 #define MYTHICPLUS_SCHEDULER_H
 
-#include "MpLog.h"
 #include "ScriptMgr.h"
 #include "TaskScheduler.h"
+
 #include <chrono>
 
 enum MP_SCHEDULE_GROUP
@@ -48,16 +48,17 @@ private:
 };
 
 #define sMpScheduler MpScheduler::instance()
-#endif // MYTHICPLUS_SCHEDULER_H
 
 // Attach the world scheduler to listen to world events
 class MpScheduler_WorldScript : public WorldScript
 {
-    public:
-        MpScheduler_WorldScript() : WorldScript("MpScheduler_GlobalScript") { }
+public:
+    MpScheduler_WorldScript() : WorldScript("MpScheduler_GlobalScript") { }
 
     void OnUpdate(uint32 diff) override
     {
         sMpScheduler->GetWorldScheduler().Update(diff);
     }
 };
+
+#endif // MYTHICPLUS_SCHEDULER_H

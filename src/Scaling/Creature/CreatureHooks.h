@@ -1,12 +1,12 @@
 #ifndef CREATUREHOOKS_H
 #define CREATUREHOOKS_H
 
+#include "Creature.h"
+
 #include <functional>
+#include <memory>
 #include <unordered_map>
 #include <vector>
-#include <memory>
-#include "Creature.h"
-#include "ObjectGuid.h"
 
 // Type alias for variadic event hooks
 template<typename... Args>

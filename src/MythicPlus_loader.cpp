@@ -1,5 +1,4 @@
 #include "MpScheduler.h"
-#include "MpLog.h"
 
 // This adds schedulers for use across scripts scoped to MythicPlus
 void Add_MP_Schedulers()

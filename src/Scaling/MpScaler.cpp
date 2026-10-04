@@ -1,17 +1,13 @@
 #include "MpScaler.h"
+#include "Group.h"
 #include "MpBots.h"
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "ObjectMgr.h"
-#include "MapMgr.h"
-#include "ScriptMgr.h"
-#include "Group.h"
-#include "Unit.h"
-#include "WorldPacket.h"
-#include "UpdateMask.h"
-#include "MpScriptAI.h"
+#include "World.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
 

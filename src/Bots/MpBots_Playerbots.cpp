@@ -1,8 +1,9 @@
+#include "Player.h"
+// After the core headers, so a provider macro defined by a core header is seen.
 #include "MpBotsProviders.h"
 
 #if defined(MP_PROVIDER_PLAYERBOTS)
 
-#include "Player.h"
 #include "Playerbots.h"
 
 // A playerbot is a Player with a PlayerbotAI attached, including self-bots (see IsRealPlayer in

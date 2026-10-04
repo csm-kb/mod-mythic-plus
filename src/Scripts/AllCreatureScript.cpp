@@ -1,7 +1,5 @@
-#include "CreatureAI.h"
 #include "MpLog.h"
 #include "MpScaler.h"
-#include "MpScriptAI.h"
 #include "ScriptMgr.h"
 
 #include <optional>

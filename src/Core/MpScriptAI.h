@@ -1,8 +1,9 @@
+#ifndef MP_SCRIPT_AI_H
+#define MP_SCRIPT_AI_H
+
 #include "Creature.h"
 #include "CreatureAI.h"
-#include "MpLog.h"
 #include "MpTypes.h"
-#include "ScriptMgr.h"
 #include "ScriptedCreature.h"
 
 #ifdef _ELUNA_CREATURE_AI_H
@@ -37,3 +38,5 @@ public:
         BaseAI::Reset();
     }
 };
+
+#endif // MP_SCRIPT_AI_H
