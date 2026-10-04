@@ -62,18 +62,11 @@ public:
 
         uint32 totalDeaths = data->GetDeaths(player->GetMapId(), player->GetInstanceId());
         MpLogger::info("Total Deaths: {}", totalDeaths);
-        if(totalDeaths > 1) {
-            MpLogger::debug(" :::: Player Deaths for Group too high! ::::::");
-
-            TaskScheduler& wScheduler = sMpScheduler->GetWorldScheduler();
-            wScheduler.Schedule(10s, MP_WORLD_TASK_GROUP, [player, map](TaskContext /*ctx*/) {
-                Group* group = player->GetGroup();
-                if(!group) {
-                    return;
-                }
-
-                MythicPlus::GroupReset(group, map);
-            });
+        if (totalDeaths > 1)
+        {
+            // Death-limit enforcement (GroupReset) is not implemented yet; see sub-project 2 notes.
+            MpLogger::debug("Group {} death threshold reached in map {} instance {}",
+                group->GetGUID().GetCounter(), map->GetId(), map->GetInstanceId());
         }
 //         if(totalDeaths > 1) {
 //             Map* map = player->GetMap();
