@@ -137,7 +137,7 @@ void MpDataStore::RemoveGroupData(Group *group) {
     MpLogger::debug("RemoveGroupData for group {}", group->GetGUID().GetCounter());
     _groupData->erase(group->GetGUID());
 
-    CharacterDatabase.Execute("DELETE FROM group_difficulty WHERE guid = {}", group->GetGUID().GetCounter());
+    CharacterDatabase.Execute("DELETE FROM mp_group_data WHERE groupId = {}", group->GetGUID().GetCounter());
 }
 
 // Adds PlayerData related to MythicRun Status to map
