@@ -7,6 +7,7 @@
 #include "MpLogger.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+#include "StringConvert.h"
 
 using namespace Acore::ChatCommands;
 
@@ -311,7 +312,14 @@ public:
             auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
-                float value = std::stof(args[0]);
+                Optional<float> parsed = Acore::StringTo<float>(args[0]);
+                if (!parsed || *parsed <= 0.0f)
+                {
+                    handler->PSendSysMessage("|cFFFF0000 Invalid number: {}", args[0]);
+                    return true;
+                }
+
+                float value = *parsed;
                 sMpDataStore->SetMeleeScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Melee scale factor set to: {}", value));
                 return true;
@@ -339,7 +347,14 @@ public:
             auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
-                float value = std::stof(args[0]);
+                Optional<float> parsed = Acore::StringTo<float>(args[0]);
+                if (!parsed || *parsed <= 0.0f)
+                {
+                    handler->PSendSysMessage("|cFFFF0000 Invalid number: {}", args[0]);
+                    return true;
+                }
+
+                float value = *parsed;
                 sMpDataStore->SetSpellScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Spell scale factor set to: {}", value));
                 return true;
@@ -367,7 +382,14 @@ public:
             auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
-                float value = std::stof(args[0]);
+                Optional<float> parsed = Acore::StringTo<float>(args[0]);
+                if (!parsed || *parsed <= 0.0f)
+                {
+                    handler->PSendSysMessage("|cFFFF0000 Invalid number: {}", args[0]);
+                    return true;
+                }
+
+                float value = *parsed;
                 sMpDataStore->SetHealthScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Health scale factor set to: {}", value));
                 return true;
