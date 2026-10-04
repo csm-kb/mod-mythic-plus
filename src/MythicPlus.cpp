@@ -1,4 +1,5 @@
 #include "MythicPlus.h"
+#include "MpConfig.h"
 #include "MpLog.h"
 #include "ObjectMgr.h"
 #include "MapMgr.h"
@@ -17,7 +18,7 @@ const uint32 HEADLESS_HORSEMAN = 23682;
 
 bool MythicPlus::IsMapEligible(Map* map)
 {
-    if (!Enabled) {
+    if (!sMpConfig->enabled) {
         return false;
     }
 
@@ -41,16 +42,6 @@ bool MythicPlus::IsDifficultySet(Player const* player)
     }
 
     return true;
-}
-
-bool MythicPlus::IsDifficultyEnabled(std::string difficulty)
-{
-    return std::find(enabledDifficulties.begin(), enabledDifficulties.end(), difficulty) != enabledDifficulties.end();
-}
-
-bool MythicPlus::IsDungeonDisabled(uint32 dungeon)
-{
-    return std::find(disabledDungeons.begin(), disabledDungeons.end(), dungeon) != disabledDungeons.end();
 }
 
 bool MythicPlus::EligibleHealTarget(Unit* target)
@@ -309,8 +300,8 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
     // Additionally need to add in a decrease in attack power for normal non elite enemies
     if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
         // Reduced scaling for elite/boss spells to prevent them from hitting too hard
-        ap *= normalEnemyReducer;
-        rangeAp *= normalEnemyReducer;
+        ap *= sMpConfig->normalEnemyReducer;
+        rangeAp *= sMpConfig->normalEnemyReducer;
     }
 
     MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
@@ -440,13 +431,13 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
                     int32 ownerOriginalLevel = ownerCreatureData->originalLevel;
 
                     if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
-                        totalModifier = totalModifier * normalEnemyReducer;
+                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
                     }
                     newDamage = CalculateSpellDamage(damage, ownerOriginalLevel, ownerCreature->GetLevel());
                 } else {
                     // Fallback if no creature data found - use current level
                     if(ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
-                        totalModifier = totalModifier * normalEnemyReducer;
+                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
                     }
                     newDamage = CalculateSpellDamage(damage, ownerCreature->GetLevel(), ownerCreature->GetLevel());
                     MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
@@ -472,8 +463,9 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
     int32 scaledAdditionalDamage = additionalDamage * totalModifier;
 
     // Use the diminishing return values from the configuration
-    uint32 threshold = sMythicPlus->diminishingThresholds[instanceData->difficulty];
-    float diminishingExponent = sMythicPlus->diminishingExponent;
+    MpTierConfig const* tier = sMpConfig->GetTier(instanceData->difficulty);
+    uint32 threshold = tier ? tier->diminishingThreshold : 0;
+    float diminishingExponent = sMpConfig->diminishingExponent;
 
     // Apply diminishing returns only to the additional scaled damage if it exceeds threshold
     if (static_cast<uint32>(scaledAdditionalDamage) > threshold) {
@@ -550,7 +542,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
                 MpCreatureData* ownerCreatureData = sMpDataStore->GetCreatureData(ownerCreature->GetGUID());
                 if (ownerCreatureData) {
                     if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
-                        totalModifier = totalModifier * normalEnemyReducer; // Less reduction for heals than damage
+                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
@@ -565,7 +557,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
                 } else {
                     // Fallback if no creature data found - use current level
                     if(ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
-                        totalModifier = totalModifier * normalEnemyReducer; // Less reduction for heals than damage
+                        totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
@@ -609,8 +601,9 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
     int32 scaledAdditionalHeal = additionalHeal * totalModifier;
 
     // Use the diminishing return values from the configuration (same as damage)
-    uint32 threshold = sMythicPlus->diminishingThresholds[instanceData->difficulty];
-    float diminishingExponent = sMythicPlus->diminishingExponent;
+    MpTierConfig const* tier = sMpConfig->GetTier(instanceData->difficulty);
+    uint32 threshold = tier ? tier->diminishingThreshold : 0;
+    float diminishingExponent = sMpConfig->diminishingExponent;
 
     // Apply diminishing returns only to the additional scaled heal if it exceeds threshold * 2 since enemies have much more health.
     if (scaledAdditionalHeal > threshold * 2.0f) {

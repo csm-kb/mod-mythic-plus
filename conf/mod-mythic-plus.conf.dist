@@ -2,37 +2,24 @@
 
 ##########################################################
 #
-#  Logging Configuration
-#
-##########################################################
-
-Appender.MythicPlusLog=2,4,0,mod-mythic-plus.log,w
-# Appender.MythicPlusConsole=1,5,0,"1 9 3 6 5 8"
-Logger.module.MythicPlus=5,MythicPlusLog MythicPlusConsole
-
-##########################################################
-#
 # Mythic+ Global Settings
 #   - These settings are used to enable or disable the Mythic+ system and set the global settings for the system.
+#   - Every key below can be overridden by the environment variable named in its comment.
+#   - The values in this file are the code defaults (src/Core/MpConfig.cpp); the build checks they stay in sync.
+#   - An invalid value is logged as event=config_invalid and the default is used.
 #
 #   Enabled: 1 = Enabled, 0 = Disabled - Enables the Mythic+ system.
 #   EnableItemRewards: 1 = Enabled, 0 = Disabled - Enables the reward system for Mythic+ dungeons.
 #   EnableDeathLimits: 1 = Enabled, 0 = Disabled - Enables the death limit system for Mythic+ dungeons.
-#   EnabledDifficulties: A comma separated list of difficulties that are enabled for Mythic+ dungeons.
-#   DisabledDungeons: A comma separated list of dungeons that are disabled for Mythic+ dungeons.
 #
 ##########################################################
-MythicPlus.Enabled = 1
-MythicPlus.EnableItemRewards = 1
-MythicPlus.EnableDeathLimits = 1
 
-##########################################################
-#
-# Enabled difficulty settings
-#
-##########################################################
- MythicPlus.EnabledDifficulties = mythic,legendary,ascendant
- MythicPlus.DisabledDungeons =
+# 1 = on, 0 = off.  Env: AC_MYTHIC_PLUS_ENABLED
+MythicPlus.Enabled = 1
+# 1 = on, 0 = off.  Env: AC_MYTHIC_PLUS_ENABLE_ITEM_REWARDS
+MythicPlus.EnableItemRewards = 1
+# 1 = on, 0 = off.  Env: AC_MYTHIC_PLUS_ENABLE_DEATH_LIMITS
+MythicPlus.EnableDeathLimits = 1
 
 ##########################################################
 #
@@ -41,50 +28,84 @@ MythicPlus.EnableDeathLimits = 1
 #     stats based on the difficulty of the dungeon.
 #   - Bosses will only receive their multiplier not the Dungeon multiplier to prevent multiplicative scaling.
 #   - These values are used to scale the difficulty of all dungeons across new difficulty modes.
+#   - Multipliers must be > 0. Levels must be 1-255.
 #
 #   To scale individual instances you should use the mp_scale_factors table per instance to increase/reduce Modifiers
 ##########################################################
 
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_HEALTH
 MythicPlus.Mythic.DungeonHealth = 1.25
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_MELEE
 MythicPlus.Mythic.DungeonMelee = 1.25
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BASE_DAMAGE
 MythicPlus.Mythic.DungeonBaseDamage = 1.50
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_SPELL
 MythicPlus.Mythic.DungeonSpell = 1.15
-MythicPlus.Mythic.DungeonArmor = 1.95
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_ARMOR
+MythicPlus.Mythic.DungeonArmor = 1.25
+# 1-255.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_AVG_LEVEL
 MythicPlus.Mythic.DungeonAvgLevel = 83
-
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_HEALTH
 MythicPlus.Mythic.DungeonBossHealth = 1.50
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_MELEE
 MythicPlus.Mythic.DungeonBossMelee = 1.35
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_BASE_DAMAGE
 MythicPlus.Mythic.DungeonBossBaseDamage = 2.00
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_SPELL
 MythicPlus.Mythic.DungeonBossSpell = 1.25
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_ARMOR
 MythicPlus.Mythic.DungeonBossArmor = 1.35
+# 1-255.  Env: AC_MYTHIC_PLUS_MYTHIC_DUNGEON_BOSS_LEVEL
 MythicPlus.Mythic.DungeonBossLevel = 85
 
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_HEALTH
 MythicPlus.Legendary.DungeonHealth = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_MELEE
 MythicPlus.Legendary.DungeonMelee = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BASE_DAMAGE
 MythicPlus.Legendary.DungeonBaseDamage = 2.75
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_SPELL
 MythicPlus.Legendary.DungeonSpell = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_ARMOR
 MythicPlus.Legendary.DungeonArmor = 2.25
+# 1-255.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_AVG_LEVEL
 MythicPlus.Legendary.DungeonAvgLevel = 85
-
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_HEALTH
 MythicPlus.Legendary.DungeonBossHealth = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_MELEE
 MythicPlus.Legendary.DungeonBossMelee = 2.25
-MythicPlus.Legendary.DungeonBossSpell = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_BASE_DAMAGE
 MythicPlus.Legendary.DungeonBossBaseDamage = 4.00
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_SPELL
+MythicPlus.Legendary.DungeonBossSpell = 2.25
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_ARMOR
 MythicPlus.Legendary.DungeonBossArmor = 3.25
+# 1-255.  Env: AC_MYTHIC_PLUS_LEGENDARY_DUNGEON_BOSS_LEVEL
 MythicPlus.Legendary.DungeonBossLevel = 87
 
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_HEALTH
 MythicPlus.Ascendant.DungeonHealth = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_MELEE
 MythicPlus.Ascendant.DungeonMelee = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BASE_DAMAGE
 MythicPlus.Ascendant.DungeonBaseDamage = 4.75
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_SPELL
 MythicPlus.Ascendant.DungeonSpell = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_ARMOR
 MythicPlus.Ascendant.DungeonArmor = 3.25
+# 1-255.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_AVG_LEVEL
 MythicPlus.Ascendant.DungeonAvgLevel = 87
-
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_HEALTH
 MythicPlus.Ascendant.DungeonBossHealth = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_MELEE
 MythicPlus.Ascendant.DungeonBossMelee = 3.25
-MythicPlus.Ascendant.DungeonBossSpell = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_BASE_DAMAGE
 MythicPlus.Ascendant.DungeonBossBaseDamage = 6.00
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_SPELL
+MythicPlus.Ascendant.DungeonBossSpell = 3.25
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_ARMOR
 MythicPlus.Ascendant.DungeonBossArmor = 3.25
+# 1-255.  Env: AC_MYTHIC_PLUS_ASCENDANT_DUNGEON_BOSS_LEVEL
 MythicPlus.Ascendant.DungeonBossLevel = 90
 
 ##########################################################
@@ -95,8 +116,11 @@ MythicPlus.Ascendant.DungeonBossLevel = 90
 #
 ##########################################################
 
-MythicPlus.Mythic.DeathAllowance = 100
+# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_MYTHIC_DEATH_ALLOWANCE
+MythicPlus.Mythic.DeathAllowance = 1000
+# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_LEGENDARY_DEATH_ALLOWANCE
 MythicPlus.Legendary.DeathAllowance = 30
+# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_ASCENDANT_DEATH_ALLOWANCE
 MythicPlus.Ascendant.DeathAllowance = 15
 
 ##########################################################
@@ -110,8 +134,11 @@ MythicPlus.Ascendant.DeathAllowance = 15
 #
 ##########################################################
 
+# > 0.  Env: AC_MYTHIC_PLUS_MYTHIC_ITEM_OFFSET
 MythicPlus.Mythic.ItemOffset = 20000000
+# > 0.  Env: AC_MYTHIC_PLUS_LEGENDARY_ITEM_OFFSET
 MythicPlus.Legendary.ItemOffset = 21000000
+# > 0.  Env: AC_MYTHIC_PLUS_ASCENDANT_ITEM_OFFSET
 MythicPlus.Ascendant.ItemOffset = 22000000
 
 ##########################################################
@@ -121,14 +148,22 @@ MythicPlus.Ascendant.ItemOffset = 22000000
 #   - The diminishing returns are based on the difficulty of the dungeon and the amount of damage that has been done to the target.
 ##########################################################
 
+# > 0.  Env: AC_MYTHIC_PLUS_DIMINISHING_EXPONENT
 MythicPlus.DiminishingExponent = 0.96
+# 0 or more.  Env: AC_MYTHIC_PLUS_DIMINISHING_THRESHOLD_MYTHIC
 MythicPlus.DiminishingThreshold.Mythic = 10000
+# 0 or more.  Env: AC_MYTHIC_PLUS_DIMINISHING_THRESHOLD_LEGENDARY
 MythicPlus.DiminishingThreshold.Legendary = 20000
+# 0 or more.  Env: AC_MYTHIC_PLUS_DIMINISHING_THRESHOLD_ASCENDANT
 MythicPlus.DiminishingThreshold.Ascendant = 40000
 
-##############
+##########################################################
 # Scaling Adjusters
-#############
+##########################################################
+
+# > 0.  Env: AC_MYTHIC_PLUS_ELEMENTAL_MELEE_REDUCER
 MythicPlus.ElementalMeleeReducer = 0.50
+# > 0.  Env: AC_MYTHIC_PLUS_NORMAL_ENEMY_REDUCER
 MythicPlus.NormalEnemyReducer = 0.50
+# > 0.  Env: AC_MYTHIC_PLUS_NON_CREATURE_SPELL_REDUCER
 MythicPlus.NonCreatureSpellReducer = 0.50

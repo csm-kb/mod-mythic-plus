@@ -4,6 +4,7 @@
 #include "MpDataStore.h"
 #include "MythicPlus.h"
 #include "MpDataStore.h"
+#include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -190,9 +191,9 @@ public:
         uint32 mapId = player->GetMapId();
 
         std::string status = Acore::StringFormat("Mythic+ Status:\n Mythic+ Enabled: {}\n Mythic+ Item Rewards: {}\n Mythic+ DeathLimits: {}\n",
-            std::string((sMythicPlus->Enabled) ? "Yes" : "No"),
-            std::string((sMythicPlus->EnableItemRewards) ? "Yes" : "No"),
-            std::string((sMythicPlus->EnableDeathLimits) ? "Yes" : "No")
+            std::string((sMpConfig->enabled) ? "Yes" : "No"),
+            std::string((sMpConfig->enableItemRewards) ? "Yes" : "No"),
+            std::string((sMpConfig->enableDeathLimits) ? "Yes" : "No")
         );
 
         if (player->GetGroup()) {
@@ -281,7 +282,7 @@ public:
     static bool HandleDisable(ChatHandler* handler)
     {
         MpLog::Debug(MpLog::Area::Instance, "HandleDisable()");
-        sMythicPlus->Enabled = false;
+        sMpConfig->enabled = false;
         handler->SendSysMessage("Mythic+ mod has been disabled.");
         return true;
     }
@@ -289,7 +290,7 @@ public:
     static bool HandleEnable(ChatHandler* handler)
     {
         MpLog::Debug(MpLog::Area::Instance, "HandleEnable()");
-        sMythicPlus->Enabled = true;
+        sMpConfig->enabled = true;
         handler->SendSysMessage("Mythic+ mod has been enabled.");
         return true;
     }

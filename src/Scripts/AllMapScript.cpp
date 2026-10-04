@@ -1,4 +1,5 @@
 #include "Chat.h"
+#include "MpConfig.h"
 #include "MpLog.h"
 #include "Map.h"
 #include "MpDataStore.h"
@@ -56,32 +57,17 @@ public:
         }
 
         MpInstanceData instanceData;
-        switch(groupData->difficulty) {
-            case MP_DIFFICULTY_MYTHIC:
-                instanceData.boss = sMythicPlus->mythicBossModifiers;
-                instanceData.creature = sMythicPlus->mythicDungeonModifiers;
-                instanceData.itemRewards = sMythicPlus->EnableItemRewards;
-                instanceData.deathLimits = sMythicPlus->mythicDeathAllowance;
-                instanceData.itemOffset = sMythicPlus->mythicItemOffset;
-                break;
-            case MP_DIFFICULTY_LEGENDARY:
-                instanceData.boss = sMythicPlus->legendaryBossModifiers;
-                instanceData.creature = sMythicPlus->legendaryDungeonModifiers;
-                instanceData.itemRewards = sMythicPlus->EnableItemRewards;
-                instanceData.deathLimits = sMythicPlus->legendaryDeathAllowance;
-                instanceData.itemOffset = sMythicPlus->legendaryItemOffset;
-                break;
-            case MP_DIFFICULTY_ASCENDANT:
-                instanceData.boss = sMythicPlus->ascendantBossModifiers;
-                instanceData.creature = sMythicPlus->ascendantDungeonModifiers;
-                instanceData.itemRewards = sMythicPlus->EnableItemRewards;
-                instanceData.deathLimits = sMythicPlus->ascendantDeathAllowance;
-                instanceData.itemOffset = sMythicPlus->ascendantItemOffset;
-                break;
-            default:
-                MpLog::Debug(MpLog::Area::Instance, "No difficulty set for group {}", group->GetGUID().GetCounter());
-                return;
+        MpTierConfig const* tier = sMpConfig->GetTier(groupData->difficulty);
+        if (!tier)
+        {
+            MpLog::Debug(MpLog::Area::Instance, "No difficulty set for group {}", group->GetGUID().GetCounter());
+            return;
         }
+        instanceData.boss = tier->boss;
+        instanceData.creature = tier->dungeon;
+        instanceData.itemRewards = sMpConfig->enableItemRewards;
+        instanceData.deathLimits = tier->deathAllowance;
+        instanceData.itemOffset = tier->itemOffset;
 
         instanceData.difficulty = groupData->difficulty;
 

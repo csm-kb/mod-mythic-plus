@@ -1,3 +1,4 @@
+#include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "MythicPlus.h"
@@ -56,7 +57,7 @@ private:
 
                    if (MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureAttacker->GetGUID())) {
                     damage = static_cast<DamageType>(modifyIncomingDmgHeal(eventType, target, creatureAttacker,
-                                                                         static_cast<uint32>(damage), spellInfo)) * sMythicPlus->nonCreatureSpellReducer;
+                                                                         static_cast<uint32>(damage), spellInfo)) * sMpConfig->nonCreatureSpellReducer;
                     return;
                 }
             } else {
@@ -68,7 +69,7 @@ private:
 
                 if (map) {
                     if (MpInstanceData* instanceData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId())) {
-                        damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMythicPlus->nonCreatureSpellReducer);
+                        damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMpConfig->nonCreatureSpellReducer);
                         return;
                     }
                 }
@@ -77,7 +78,7 @@ private:
         // Fallback to instance-based scaling if we can't find a nearest creature
         else if (map) {
             if (MpInstanceData* instanceData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId())) {
-                damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMythicPlus->nonCreatureSpellReducer);
+                damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMpConfig->nonCreatureSpellReducer);
                 return;
             }
         }

@@ -42,46 +42,9 @@ public:
     MythicPlus(const MythicPlus&) = delete;
     MythicPlus& operator=(const MythicPlus&) = delete;
 
-    // Global Settings
-    bool Enabled;
-    bool EnableItemRewards;
-    bool EnableDeathLimits;
-
-    // Turn off specific features of mythic+
-    std::vector<std::string> enabledDifficulties;
-    std::vector<uint32> disabledDungeons;
-
-    // Difficulty Modifiers
-    MpMultipliers mythicDungeonModifiers;
-    MpMultipliers mythicBossModifiers;
-    MpMultipliers legendaryDungeonModifiers;
-    MpMultipliers legendaryBossModifiers;
-    MpMultipliers ascendantDungeonModifiers;
-    MpMultipliers ascendantBossModifiers;
-
-    // Death Allowances
-    uint32 mythicDeathAllowance;
-    uint32 legendaryDeathAllowance;
-    uint32 ascendantDeathAllowance;
-
-    // Itemization Offsets
-    uint32 mythicItemOffset;
-    uint32 legendaryItemOffset;
-    uint32 ascendantItemOffset;
-
     // Scaling modifiers (Deprecated)
     uint32 meleeAttackPowerDampener;
     uint32 meleeAttackPowerStart;
-
-    // Spell Damage Diminishing Returns
-    float diminishingExponent;
-    std::unordered_map<MpDifficulty, uint32> diminishingThresholds;
-
-    // Specialized variables used in calculations
-    float elementalMeleeReducer;
-    float normalEnemyReducer;
-    float nonCreatureSpellReducer;
-
 
     enum MP_UNIT_EVENT_TYPE
     {
@@ -97,12 +60,6 @@ public:
 
     // If a player difficulty is set that is eligible for mythic+ scaling
     bool IsDifficultySet(Player const* player);
-
-    // Check is difficulty is enabled in the configuration
-    bool IsDifficultyEnabled(std::string difficulty);
-
-    // if configuration has disabled the specific dungeon return false
-    bool IsDungeonDisabled(uint32 dungeonId);
 
     // Is it a scaled creature that is being healed
     bool EligibleHealTarget(Unit* target);
