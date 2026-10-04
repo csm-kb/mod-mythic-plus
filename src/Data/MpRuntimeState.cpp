@@ -75,10 +75,12 @@ std::optional<MpPlayerData> MpRuntimeState::GetPlayerData(ObjectGuid guid) const
     return itr->second;
 }
 
+// Keeps an existing record, like the base AddPlayerData (emplace): callers use it as the create step of a
+// get-or-create, so a record another thread created in between must not be overwritten.
 void MpRuntimeState::SetPlayerData(ObjectGuid guid, MpPlayerData data)
 {
     std::unique_lock lock(_lock);
-    _players.insert_or_assign(guid, std::move(data));
+    _players.try_emplace(guid, std::move(data));
 }
 
 void MpRuntimeState::RemovePlayerData(ObjectGuid guid)
@@ -239,26 +241,51 @@ void MpRuntimeState::RemoveInstanceData(uint32 mapId, uint32 instanceId)
 
 // ---- Creatures ----
 
-std::optional<MpCreatureData> MpRuntimeState::GetCreatureData(ObjectGuid guid) const
+MpRuntimeState::CreatureKey MpRuntimeState::KeyOf(Creature const* creature)
 {
+    return { std::make_pair(creature->GetMapId(), creature->GetInstanceId()), creature->GetGUID() };
+}
+
+std::optional<MpCreatureData> MpRuntimeState::GetCreatureData(Creature const* creature) const
+{
+    CreatureKey const key = KeyOf(creature);
+
     std::shared_lock lock(_lock);
-    auto itr = _creatures.find(guid);
-    if (itr == _creatures.end())
+    auto instanceItr = _creatures.find(key.instance);
+    if (instanceItr == _creatures.end())
+        return std::nullopt;
+
+    auto itr = instanceItr->second.find(key.guid);
+    if (itr == instanceItr->second.end())
         return std::nullopt;
 
     return itr->second;
 }
 
-void MpRuntimeState::SetCreatureData(ObjectGuid guid, MpCreatureData data)
+// Replaces any existing record (base AddCreatureData): scaling and respawns reset the record on purpose.
+// The record's mapId/instanceId are set from the key so the two always agree.
+void MpRuntimeState::SetCreatureData(Creature const* creature, MpCreatureData data)
 {
+    CreatureKey const key = KeyOf(creature);
+    data.mapId = key.instance.first;
+    data.instanceId = key.instance.second;
+
     std::unique_lock lock(_lock);
-    _creatures.insert_or_assign(guid, std::move(data));
+    _creatures[key.instance].insert_or_assign(key.guid, std::move(data));
 }
 
-void MpRuntimeState::RemoveCreatureData(ObjectGuid guid)
+void MpRuntimeState::RemoveCreatureData(Creature const* creature)
 {
+    CreatureKey const key = KeyOf(creature);
+
     std::unique_lock lock(_lock);
-    _creatures.erase(guid);
+    auto instanceItr = _creatures.find(key.instance);
+    if (instanceItr == _creatures.end())
+        return;
+
+    instanceItr->second.erase(key.guid);
+    if (instanceItr->second.empty())
+        _creatures.erase(instanceItr);
 }
 
 std::vector<ObjectGuid> MpRuntimeState::GetInstanceCreatureGuids(uint32 mapId, uint32 instanceId,
@@ -267,8 +294,12 @@ std::vector<ObjectGuid> MpRuntimeState::GetInstanceCreatureGuids(uint32 mapId, u
     std::vector<ObjectGuid> guids;
 
     std::shared_lock lock(_lock);
-    for (auto const& [guid, data] : _creatures)
-        if (data.mapId == mapId && data.instanceId == instanceId && (!unscaledOnly || !data.scaled))
+    auto instanceItr = _creatures.find(std::make_pair(mapId, instanceId));
+    if (instanceItr == _creatures.end())
+        return guids;
+
+    for (auto const& [guid, data] : instanceItr->second)
+        if (!unscaledOnly || !data.scaled)
             guids.push_back(guid);
 
     return guids;
@@ -279,13 +310,13 @@ MpCreatureCounts MpRuntimeState::CountInstanceCreatures(uint32 mapId, uint32 ins
     MpCreatureCounts counts;
 
     std::shared_lock lock(_lock);
-    for (auto const& entry : _creatures)
-    {
-        MpCreatureData const& data = entry.second;
-        if (data.mapId != mapId || data.instanceId != instanceId)
-            continue;
+    auto instanceItr = _creatures.find(std::make_pair(mapId, instanceId));
+    if (instanceItr == _creatures.end())
+        return counts;
 
-        if (data.scaled)
+    for (auto const& entry : instanceItr->second)
+    {
+        if (entry.second.scaled)
             ++counts.scaled;
         else
             ++counts.pending;

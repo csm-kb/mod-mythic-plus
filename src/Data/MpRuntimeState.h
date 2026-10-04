@@ -104,6 +104,7 @@ struct MpInstanceData
 };
 
 // Per-creature Mythic+ state. `creature` is only valid on the creature's own map thread, within the current tick.
+// mapId/instanceId always equal the record's key in MpRuntimeState (SetCreatureData enforces it).
 struct MpCreatureData
 {
     Creature* creature = nullptr;
@@ -150,6 +151,10 @@ struct MpCreatureCounts
  *
  * Getters return copies; Update* run the callback under the exclusive lock. Callbacks must only touch the
  * record they are given: no sMpState calls (the lock is not recursive), no logging, no other outside code.
+ *
+ * Creature records are keyed by {mapId, instanceId, guid}: creature low GUIDs are generated per map, so two
+ * instances of the same dungeon can hold creatures with equal GUIDs. Every creature call takes the Creature and
+ * reads its map, instance and guid before locking; call it on that creature's own map thread.
  */
 class MpRuntimeState
 {
@@ -160,7 +165,7 @@ public:
     MpRuntimeState& operator=(MpRuntimeState const&) = delete;
 
     std::optional<MpPlayerData> GetPlayerData(ObjectGuid guid) const;
-    void SetPlayerData(ObjectGuid guid, MpPlayerData data);
+    void SetPlayerData(ObjectGuid guid, MpPlayerData data);                  // create-if-absent
     template<typename Fn> bool UpdatePlayerData(ObjectGuid guid, Fn&& fn);   // fn(MpPlayerData&), exclusive lock
     void RemovePlayerData(ObjectGuid guid);
 
@@ -174,16 +179,25 @@ public:
     void SetInstanceData(uint32 mapId, uint32 instanceId, MpInstanceData data);
     void RemoveInstanceData(uint32 mapId, uint32 instanceId);
 
-    std::optional<MpCreatureData> GetCreatureData(ObjectGuid guid) const;
-    void SetCreatureData(ObjectGuid guid, MpCreatureData data);
-    template<typename Fn> bool UpdateCreatureData(ObjectGuid guid, Fn&& fn);
-    void RemoveCreatureData(ObjectGuid guid);
+    std::optional<MpCreatureData> GetCreatureData(Creature const* creature) const;
+    void SetCreatureData(Creature const* creature, MpCreatureData data);    // replaces an existing record
+    template<typename Fn> bool UpdateCreatureData(Creature const* creature, Fn&& fn);
+    void RemoveCreatureData(Creature const* creature);
     std::vector<ObjectGuid> GetInstanceCreatureGuids(uint32 mapId, uint32 instanceId, bool unscaledOnly) const;
     MpCreatureCounts CountInstanceCreatures(uint32 mapId, uint32 instanceId) const;
 
 private:
     MpRuntimeState() = default;
     ~MpRuntimeState() = default;
+
+    struct CreatureKey
+    {
+        std::pair<uint32, uint32> instance; // {mapId, instanceId}
+        ObjectGuid guid;
+    };
+
+    // Reads the creature's map, instance and guid; called before taking the lock.
+    static CreatureKey KeyOf(Creature const* creature);
 
     template<typename Records, typename Key, typename Fn>
     bool UpdateRecord(Records& records, Key const& key, Fn&& fn)
@@ -201,7 +215,8 @@ private:
     std::unordered_map<ObjectGuid, MpPlayerData> _players;
     std::unordered_map<ObjectGuid, MpGroupData> _groups;
     std::map<std::pair<uint32, uint32>, MpInstanceData> _instances;
-    std::unordered_map<ObjectGuid, MpCreatureData> _creatures;
+    // {mapId, instanceId} -> creature guid -> record; an instance entry is dropped with its last creature
+    std::map<std::pair<uint32, uint32>, std::unordered_map<ObjectGuid, MpCreatureData>> _creatures;
 };
 
 template<typename Fn>
@@ -217,9 +232,21 @@ bool MpRuntimeState::UpdateGroupData(ObjectGuid groupGuid, Fn&& fn)
 }
 
 template<typename Fn>
-bool MpRuntimeState::UpdateCreatureData(ObjectGuid guid, Fn&& fn)
+bool MpRuntimeState::UpdateCreatureData(Creature const* creature, Fn&& fn)
 {
-    return UpdateRecord(_creatures, guid, std::forward<Fn>(fn));
+    CreatureKey const key = KeyOf(creature);
+
+    std::unique_lock lock(_lock);
+    auto instanceItr = _creatures.find(key.instance);
+    if (instanceItr == _creatures.end())
+        return false;
+
+    auto itr = instanceItr->second.find(key.guid);
+    if (itr == instanceItr->second.end())
+        return false;
+
+    fn(itr->second);
+    return true;
 }
 
 #define sMpState MpRuntimeState::instance()

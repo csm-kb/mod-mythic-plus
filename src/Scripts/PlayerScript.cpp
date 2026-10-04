@@ -123,7 +123,7 @@ public:
         }
 
         // Check if this is a Mythic+ scaled creature
-        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature);
         if (!creatureData || !creatureData->IsScaled()) return;
 
         // Different gold ranges based on creature rank
@@ -174,7 +174,7 @@ public:
         }
 
         // Check if this is a Mythic+ scaled creature
-        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature);
         if (!creatureData || !creatureData->IsScaled()) return;
 
         // Recalculate XP using scaled level instead of original level

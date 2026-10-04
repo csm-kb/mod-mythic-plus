@@ -58,9 +58,8 @@ public:
 
         // throttle this check per creature to only run if more than 20ms has passed since last check. The timer
         // lives in the creature's record, so a creature without one is checked right away.
-        ObjectGuid creatureGuid = creature->GetGUID();
         bool throttled = false;
-        bool known = sMpState->UpdateCreatureData(creatureGuid, [diff, &throttled](MpCreatureData& data)
+        bool known = sMpState->UpdateCreatureData(creature, [diff, &throttled](MpCreatureData& data)
         {
             data.updateTimer += diff;
             if (data.updateTimer < 20)
@@ -93,7 +92,7 @@ public:
         // record the death of our scaled creature; a corpse that comes back alive was respawned and is rescaled
         DeathState currentState = creature->getDeathState();
         bool respawned = false;
-        if (!sMpState->UpdateCreatureData(creatureGuid, [currentState, &respawned](MpCreatureData& data)
+        if (!sMpState->UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
             {
                 if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
                     data.lastDeathState = currentState;
@@ -137,7 +136,7 @@ public:
     // Cleanup the creature from custom data used for mythic+ mod
     void OnCreatureRemoveWorld(Creature* creature) override
     {
-        sMpState->RemoveCreatureData(creature->GetGUID());
+        sMpState->RemoveCreatureData(creature);
     }
 
 };

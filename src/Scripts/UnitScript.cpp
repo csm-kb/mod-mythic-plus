@@ -58,7 +58,7 @@ private:
             attacker = *attackers.begin();
             if (Creature* creatureAttacker = attacker->ToCreature()) {
 
-                   if (sMpState->GetCreatureData(creatureAttacker->GetGUID())) {
+                   if (sMpState->GetCreatureData(creatureAttacker)) {
                     damage = static_cast<DamageType>(modifyIncomingDmgHeal(eventType, target, creatureAttacker,
                                                                          static_cast<uint32>(damage), spellInfo)) * sMpConfig->nonCreatureSpellReducer;
                     return;
@@ -154,7 +154,7 @@ private:
         }
 
         Creature* creatureCaster = attacker->ToCreature();
-        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creatureCaster->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creatureCaster);
 
         if (!creatureCaster) {
             MpLog::Debug(MpLog::Area::Combat, "Creature caster is null in map {}", attacker ? attacker->GetMap()->GetId() : 0);
@@ -375,7 +375,7 @@ public:
         // Only spell scaling reads the attacker's record; melee hits skip the lookup
         std::optional<MpCreatureData> attackerData;
         if (spellInfo) {
-            attackerData = sMpState->GetCreatureData(attacker->GetGUID());
+            attackerData = sMpState->GetCreatureData(creature);
         }
         MpCreatureData const* attackerDataPtr = attackerData ? &*attackerData : nullptr;
 

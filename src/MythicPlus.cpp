@@ -147,7 +147,7 @@ void MythicPlus::AddCreatureForScaling(Creature* creature)
         return;
     }
 
-    sMpState->SetCreatureData(creature->GetGUID(), MpCreatureData(creature));
+    sMpState->SetCreatureData(creature, MpCreatureData(creature));
     // MpLog::Debug(MpLog::Area::Scaling, "Added creature {} to instance data for instance {}",
     //     creature->GetName(),
     //     creature->GetMap()->GetMapName()
@@ -161,7 +161,7 @@ void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData const& ins
     creatureData.SetDifficulty(instanceData.difficulty);
     creatureData.lastDeathState = creature->getDeathState();
 
-    sMpState->SetCreatureData(creature->GetGUID(), std::move(creatureData));
+    sMpState->SetCreatureData(creature, std::move(creatureData));
 
     // allow small variance in level for non-boss creatures
     uint8 level = uint8(urand(instanceData.creature.avgLevel - 1, instanceData.creature.avgLevel + 1));
@@ -281,7 +281,7 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers co
         rangeAp *= sMpConfig->normalEnemyReducer;
     }
 
-    sMpState->UpdateCreatureData(creature->GetGUID(), [ap, meleeMultiplier](MpCreatureData& data)
+    sMpState->UpdateCreatureData(creature, [ap, meleeMultiplier](MpCreatureData& data)
     {
         data.NewAttackPower = ap;
         data.AttackPowerScaleMultiplier = meleeMultiplier;
@@ -402,7 +402,7 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, Mp
                 Creature* ownerCreature = owner->ToCreature();
 
                 // Look up the owner creature's original level from the runtime state
-                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature->GetGUID());
+                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
                 if (ownerCreatureData) {
                     MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original level {} owner level {}", creature->GetName(), ownerCreature->GetName(), ownerCreatureData->originalLevel, ownerCreature->GetLevel());
                     int32 ownerOriginalLevel = ownerCreatureData->originalLevel;
@@ -516,14 +516,14 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCrea
                 Creature* ownerCreature = owner->ToCreature();
 
                 // Look up the owner creature's original level from the runtime state
-                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature->GetGUID());
+                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
                 if (ownerCreatureData) {
                     if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
-                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
+                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                             MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
@@ -538,7 +538,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCrea
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
-                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
+                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
 
@@ -560,7 +560,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCrea
         // Scale heal based on target's health, not caster's health
         if (target) {
             // Get target's original instance health for scaling comparison
-            std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
+            std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
             uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                 targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                 MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());

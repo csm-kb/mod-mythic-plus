@@ -77,7 +77,7 @@ public:
         }
 
         CreatureTemplate const* creatureTemplate = target->GetCreatureTemplate();
-        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target);
 
 
         handler->PSendSysMessage(LANG_NPCINFO_LEVEL, target->GetLevel());
@@ -230,7 +230,7 @@ public:
             return true;
         }
 
-        if(!sMpState->GetCreatureData(creature->GetGUID())) {
+        if(!sMpState->GetCreatureData(creature)) {
             handler->PSendSysMessage("Creature is not eligible for rescaling.");
             return true;
         }
