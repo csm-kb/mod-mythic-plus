@@ -8,15 +8,6 @@
 #include "Creature.h"
 #include "ObjectGuid.h"
 
-// Struct to store the state of which handlers have been fired for a creature
-struct CreatureEventState
-{
-    bool onDeathEventFired = false;
-    bool onSpawnEventFired = false;
-    bool onAddedToInstanceEventFired = false;
-    uint8 deaths = 0;  // Count of deaths
-};
-
 // Type alias for variadic event hooks
 template<typename... Args>
 using CreatureHook = std::function<void(Args...)>;
@@ -29,8 +20,6 @@ using HandlersList = std::vector<CreatureHook<Args...>>;
 template<typename... Args>
 using HandlerMap = std::unordered_map<uint32, HandlersList<Args...>>;
 
-using CreatureEventStateMap = std::map<ObjectGuid, CreatureEventState>;
-
 class CreatureHooks
 {
 private:
@@ -38,21 +27,14 @@ private:
     CreatureHooks():
         _OnSpawnHandlers(std::make_unique<HandlerMap<Creature*>>()),
         _JustDiedHandlers(std::make_unique<HandlerMap<Creature*, Unit*>>()),
-        _OnAddToInstanceHandlers(std::make_unique<HandlerMap<Creature*>>()),
-        _eventStates(std::make_unique<CreatureEventStateMap>())
+        _OnAddToInstanceHandlers(std::make_unique<HandlerMap<Creature*>>())
     {
         _OnSpawnHandlers->reserve(128);
         _JustDiedHandlers->reserve(128);
         _OnAddToInstanceHandlers->reserve(100);
     }
 
-    ~CreatureHooks()
-    {
-        _OnSpawnHandlers->clear();
-        _JustDiedHandlers->clear();
-        _OnAddToInstanceHandlers->clear();
-        _eventStates->clear();
-    }
+    ~CreatureHooks() = default;
 
     // ensure we only ever have one instance of this class
     CreatureHooks(const CreatureHooks&) = delete;
@@ -62,9 +44,6 @@ private:
     std::unique_ptr<HandlerMap<Creature*>> _OnSpawnHandlers;
     std::unique_ptr<HandlerMap<Creature*, Unit*>> _JustDiedHandlers;
     std::unique_ptr<HandlerMap<Creature*>> _OnAddToInstanceHandlers;
-
-    // Tracks state to know which handlers need to be fired again
-    std::unique_ptr<CreatureEventStateMap> _eventStates;
 
 public:
     static CreatureHooks* instance()

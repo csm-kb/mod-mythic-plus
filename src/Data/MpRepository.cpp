@@ -60,11 +60,6 @@ uint32 MpRepository::GetPlayerHealthAvg(uint32 level) const
     return itr != _playerHealthAvg.end() ? itr->second : 0;
 }
 
-void MpRepository::SetHealScaleFactor(int32 mapId, int32 difficulty, float newValue)
-{
-    UpdateScaleFactor(mapId, difficulty, [newValue](MpScaleFactor& factor) { factor.healBonus = newValue; });
-}
-
 void MpRepository::SetHealthScaleFactor(int32 mapId, int32 difficulty, float newValue)
 {
     UpdateScaleFactor(mapId, difficulty, [newValue](MpScaleFactor& factor) { factor.healthBonus = newValue; });
@@ -198,22 +193,6 @@ void MpRepository::DBUpdatePlayerInstanceData(ObjectGuid playerGuid, MpDifficult
     );
 }
 
-void MpRepository::DBResetPlayerDeaths(Player* player)
-{
-    if (!player)
-    {
-        MpLog::Error(MpLog::Area::Instance, "DBUpdateDeaths called with invalid playerId");
-        return;
-    }
-
-    CharacterDatabase.Execute(
-        "UPDATE mp_player_instance_data SET deaths = 0 WHERE guid = {} and mapId = {} and instanceId = {}",
-        player->GetGUID().GetCounter(),
-        player->GetMapId(),
-        player->GetInstanceId()
-    );
-}
-
 void MpRepository::DBAddPlayerDeath(Player* player)
 {
     if (!player)
@@ -305,17 +284,6 @@ void MpRepository::DBAddGroupDeath(Group* group, uint32 mapId, uint32 instanceId
     );
 }
 
-void MpRepository::DBRemovePlayerData(ObjectGuid playerGuid)
-{
-    if (!playerGuid)
-    {
-        MpLog::Error(MpLog::Area::Instance, "DBRemovePlayerData called with invalid playerGuid");
-        return;
-    }
-
-    CharacterDatabase.Execute("DELETE FROM mp_player_instance_data WHERE guid = {} ", playerGuid.GetCounter());
-}
-
 void MpRepository::DBRemovePlayerInstanceData(uint32 instanceId)
 {
     if (!instanceId)
@@ -326,25 +294,6 @@ void MpRepository::DBRemovePlayerInstanceData(uint32 instanceId)
     }
 
     CharacterDatabase.Execute("DELETE FROM mp_player_instance_data WHERE instanceId = {} ", instanceId);
-}
-
-void MpRepository::DBUpdateGroupTimerDeaths(ObjectGuid groupGuid, uint32 mapId, uint32 instanceId, uint32 timer,
-    uint32 deaths)
-{
-    if (!groupGuid)
-    {
-        MpLog::Error(MpLog::Area::Instance, "DBUpdateGroupTimerDeaths called with invalid groupGuid");
-        return;
-    }
-
-    CharacterDatabase.Execute(
-        "REPLACE INTO mp_group_data (groupId, mapId, instanceId, instanceTimer, deaths) VALUES ({},{},{},{},{}) ",
-        groupGuid.GetCounter(),
-        mapId,
-        instanceId,
-        timer,
-        deaths
-    );
 }
 
 void MpRepository::DBRemoveGroupData(ObjectGuid groupGuid)

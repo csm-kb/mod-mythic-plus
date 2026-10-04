@@ -243,24 +243,6 @@ public:
         sMpRepo->DBUpdatePlayerInstanceData(player->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId());
         sMpRepo->DBUpdateGroupData(group->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId(), 0);
     }
-
-    std::vector<Player*> GetGroupMembers(Player* currentPlayer)
-    {
-        std::vector<Player*> groupPlayers;
-
-        Group* group = currentPlayer->GetGroup();
-        if (!group)
-        {
-            MpLog::Warn(MpLog::Area::Instance, "Player is not in a group.");
-            return groupPlayers;
-        }
-
-        group->DoForAllMembers([&](Player* member) {
-            groupPlayers.push_back(member);
-        });
-
-        return groupPlayers;
-    }
 };
 
 void Add_MP_PlayerScripts()

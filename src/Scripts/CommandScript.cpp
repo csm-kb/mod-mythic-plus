@@ -172,21 +172,6 @@ public:
         return true;
     }
 
-    static bool HandleMythic(ChatHandler* handler, const std::vector<std::string>& /*args*/)
-    {
-        return HandleSetDifficulty(handler, {"mythic"});
-    }
-
-    static bool HandleLegendary(ChatHandler* handler, const std::vector<std::string>& /*args*/)
-    {
-        return HandleSetDifficulty(handler, {"legendary"});
-    }
-
-    static bool HandleAscendant(ChatHandler* handler, const std::vector<std::string>& /*args*/)
-    {
-        return HandleSetDifficulty(handler, {"ascendant"});
-    }
-
     static bool HandleStatus(ChatHandler* handler)
     {
         Player* player = handler->GetPlayer();

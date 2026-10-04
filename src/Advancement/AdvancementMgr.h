@@ -34,8 +34,6 @@ struct MpAdvancementRank
 {
     uint32 rank;
     MpAdvancements advancementId;
-    std::unordered_map<uint32 /*item_entry*/,uint32 /*quantity*/> materialCost;
-
     std::array<int, 3> rollCost; // 0 = low, 1 = mid, 2 = high
 
     // Range of status based on bet dice roll.
@@ -52,12 +50,6 @@ struct MpAdvancementRank
     bool IsValid()
     {
         return (rank > 0 && advancementId >= 0 && advancementId < MP_ADV_MAX);
-    }
-
-    // Check if the map has an the item entry for the passed in material
-    bool HasMaterial(uint32 itemEntry)
-    {
-        return materialCost.contains(itemEntry);
     }
 };
 
@@ -125,15 +117,9 @@ public:
      */
     uint32 UpgradeAdvancement(Player* player, MpAdvancements advancement, uint32 diceCostLevel);
 
-    // Used to reset all advancements for a specific player
-    bool ResetPlayerAdvancements(Player* player);
-
 private:
     AdvancementMgr() {}
     ~AdvancementMgr() {}
-
-    // Will reset all the player advancements and refund the spent dice and material with a penalty for the reset.
-    void _ResetPlayerAdvancement(Player* player, MpAdvancements advancement);
 
     // Rolls the dice to see how much a bonus is given based on the dice spend level
     float _RollAdvancement(MpAdvancementRank* advancementRank, uint32 diceCostLevel);

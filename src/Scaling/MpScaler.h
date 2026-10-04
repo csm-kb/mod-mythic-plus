@@ -95,9 +95,6 @@ private:
     ~MpScaler() { }
 
     static float GetTypeHealthModifier(int32 rank);
-    static float GetTypeDamageModifier(int32 rank);
-    static float CalculateScaling(int levelDifference, float scaleFactor, float constant = 1.25f,
-        float growthFactor = 20.0f);
     static uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId,
         MpDifficulty difficulty, uint32 origHealth, float confHPMod);
 };

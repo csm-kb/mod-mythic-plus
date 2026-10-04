@@ -39,7 +39,6 @@ public:
     void SetMeleeScaleFactor(int32 mapId, int32 difficulty, float value);
     void SetHealthScaleFactor(int32 mapId, int32 difficulty, float value);
     void SetSpellScaleFactor(int32 mapId, int32 difficulty, float value);
-    void SetHealScaleFactor(int32 mapId, int32 difficulty, float value);
 
     // Retrieves the average player hp pool for a player level
     uint32 GetPlayerHealthAvg(uint32 level) const;
@@ -54,16 +53,12 @@ public:
     void DBUpdatePlayerInstanceData(ObjectGuid playerGuid, MpDifficulty difficulty, uint32 mapId = 0,
         uint32 instanceId = 0, uint32 deaths = 0);
 
-    void DBResetPlayerDeaths(Player* player);
     void DBAddPlayerDeath(Player* player, Creature* killer, MpDifficulty difficulty);
     void DBAddPlayerDeath(Player* player);
 
-    void DBRemovePlayerData(ObjectGuid playerGuid);
     void DBRemovePlayerInstanceData(uint32 instanceId);
     void DBRemoveGroupInstanceData(uint32 instanceId);
     void DBUpdateGroupData(ObjectGuid groupGuid, MpDifficulty difficulty, uint32 mapId, uint32 instanceId,
-        uint32 deaths);
-    void DBUpdateGroupTimerDeaths(ObjectGuid groupGuid, uint32 mapId, uint32 instanceId, uint32 timer,
         uint32 deaths);
     void DBRemoveGroupData(ObjectGuid groupGuid);
     void DBAddGroupDeath(Group* group, uint32 mapId, uint32 instanceId, MpDifficulty difficulty);

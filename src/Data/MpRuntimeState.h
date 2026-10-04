@@ -50,13 +50,6 @@ struct MpPlayerData
         return itr != instanceData.end() ? itr->second.deaths : 0;
     }
 
-    void ResetDeathCount(uint32 mapId, uint32 instanceId)
-    {
-        auto itr = instanceData.find(std::make_pair(mapId, instanceId));
-        if (itr != instanceData.end())
-            itr->second.deaths = 0;
-    }
-
     void ResetAllDeathCounts()
     {
         for (auto& [key, data] : instanceData)
@@ -126,10 +119,6 @@ struct MpCreatureData
 
     CreatureBaseStats const* originalStats = nullptr; // static ObjectMgr data
     MpDifficulty difficulty = MP_DIFFICULTY_NORMAL;
-
-    // Custom difficulty modifiers to creatures at higher difficulties
-    std::vector<uint32> auras;
-    std::vector<std::string> affixes;
 
     explicit MpCreatureData(Creature* creature);
 

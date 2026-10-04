@@ -31,9 +31,6 @@ MpCreatureData::MpCreatureData(Creature* c) : creature(c)
         originalStats = sObjectMgr->GetCreatureBaseStats(originalLevel, creature->GetCreatureTemplate()->unit_class);
         originalInstanceHealth = creature->GetMaxHealth();
     }
-
-    auras.reserve(3);
-    affixes.reserve(3);
 }
 
 std::string MpCreatureData::ToString() const

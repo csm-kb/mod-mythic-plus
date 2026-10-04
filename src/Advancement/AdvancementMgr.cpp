@@ -115,7 +115,6 @@ int32 AdvancementMgr::LoadAdvancementRanks()
         MpAdvancementRank rank = {
             .rank = upgradeRank,
             .advancementId = advancement,
-            .materialCost = std::unordered_map<uint32, uint32>(),
             .rollCost = {chanceCost1, chanceCost2, chanceCost3},
             .lowRange = std::make_pair(minIncrease1, maxIncrease1),
             .midRange = std::make_pair(minIncrease2, maxIncrease2),
@@ -351,19 +350,6 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     }
 
     return roll;
-}
-
-bool AdvancementMgr::ResetPlayerAdvancements(Player* /*player*/)
-{
-    std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
-
-    return true;
-}
-
-void AdvancementMgr::_ResetPlayerAdvancement(Player* /*player*/, MpAdvancements /*advancement*/)
-{
-    std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
-    return;
 }
 
 // Roll them stats DnD style.
