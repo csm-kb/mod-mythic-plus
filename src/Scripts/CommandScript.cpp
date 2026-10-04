@@ -244,7 +244,7 @@ public:
             sMythicPlus->ScaleCreature(creature->GetLevel(), creature, &instanceData->creature, instanceData->difficulty);
         }
 
-        handler->PSendSysMessage("Creature rescaled: %s", creature->GetName());
+        handler->PSendSysMessage("Creature rescaled: {}", creature->GetName());
 
         return true;
     }
@@ -361,7 +361,8 @@ public:
             }
         }
 
-        handler->PSendSysMessage("|cFFFF0000 You must be in a group and mythic+ instance to set a melee scale factor.");
+        handler->PSendSysMessage(
+            "|cFFFF0000 You must be in a group and mythic+ instance to set a spell scale factor.");
         return true;
     }
 
@@ -396,7 +397,8 @@ public:
             }
         }
 
-        handler->PSendSysMessage("|cFFFF0000 You must be in a group and mythic+ instance to set a melee scale factor.");
+        handler->PSendSysMessage(
+            "|cFFFF0000 You must be in a group and mythic+ instance to set a health scale factor.");
         return true;
     }
 
