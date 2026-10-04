@@ -23,12 +23,12 @@ public:
 
     void OnPlayerKilledByCreature(Creature* killer, Player* player) override
     {
-        Map* map = player->GetMap();
-        if(!sMythicPlus->IsMapEligible(map)) {
+        if (!player) {
             return;
         }
 
-        if (!player) {
+        Map* map = player->GetMap();
+        if(!sMythicPlus->IsMapEligible(map)) {
             return;
         }
 

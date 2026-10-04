@@ -55,6 +55,7 @@ void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
 
                     if(!player) {
                         MpLogger::error("AddGroupData called with null player in instance");
+                        continue;
                     }
 
                     ChatHandler(player->GetSession()).SendNotification("The group leader has changed the difficulty setting. You have been removed from the instance.");
@@ -77,6 +78,7 @@ void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
 
                 if(!player) {
                     MpLogger::error("AddGroupData called with null player in instance");
+                    continue;
                 }
 
                 ChatHandler(player->GetSession()).SendNotification("The group leader has changed the difficulty setting. You have been removed from the instance.");
