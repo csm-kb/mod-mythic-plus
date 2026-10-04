@@ -1,4 +1,4 @@
-REPLACE creature_classlevelstats (class, `level`, basehp0, basehp1, basehp2,
+INSERT INTO creature_classlevelstats (class, `level`, basehp0, basehp1, basehp2,
 basemana, basearmor, attackpower, rangedattackpower, damage_base, damage_exp1, damage_exp2) VALUES
 (1, 81, 5489.19, 9449.55, 12640.32, 0.00, 10033.36, 714.66, 111.97, 47.9043, 131.5509, 166.3098),
 (1, 82, 5641.53, 9700.79, 12855.00, 0.00, 10337.65, 790.54, 121.09, 48.5708, 131.9685, 169.2029),
@@ -79,4 +79,5 @@ basemana, basearmor, attackpower, rangedattackpower, damage_base, damage_exp1, d
 (8, 97, 5755.91, 8876.34, 10296.69, 11972.39, 12021.96, 1199.39, 229.90, 49.7248, 199.6067, 171.7855),
 (8, 98, 5891.58, 9025.99, 10126.58, 12174.31, 12272.59, 1278.23, 242.93, 50.2910, 203.7543, 171.1457),
 (8, 99, 6029.23, 9175.76, 9935.10, 12378.00, 12523.61, 1359.87, 256.37, 50.8572, 207.9038, 170.2986),
-(8, 100, 6168.85, 9325.65, 9722.26, 12583.44, 12775.04, 1444.31, 270.20, 51.4234, 212.0552, 169.2444);
+(8, 100, 6168.85, 9325.65, 9722.26, 12583.44, 12775.04, 1444.31, 270.20, 51.4234, 212.0552, 169.2444)
+ON DUPLICATE KEY UPDATE basehp0=VALUES(basehp0), basehp1=VALUES(basehp1), basehp2=VALUES(basehp2), basemana=VALUES(basemana), basearmor=VALUES(basearmor), attackpower=VALUES(attackpower), rangedattackpower=VALUES(rangedattackpower), damage_base=VALUES(damage_base), damage_exp1=VALUES(damage_exp1), damage_exp2=VALUES(damage_exp2);
