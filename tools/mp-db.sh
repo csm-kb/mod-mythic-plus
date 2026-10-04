@@ -7,8 +7,19 @@ source "$(dirname "${BASH_SOURCE[0]}")/mp-lib.sh"
 mp_require_docker
 case "${1:-}" in
   up)
-    docker ps --format '{{.Names}}' | grep -qx ac-database \
-      || docker compose -f "$MP_ROOT/docker-compose.yml" up -d --wait ac-database >/dev/null
+    # Never `compose up` the real server (it could be recreated): use it as is, or just start it.
+    if ! docker ps -a --format '{{.Names}}' | grep -qx ac-database; then
+      echo "mp: container ac-database does not exist; create your normal stack first" >&2
+      exit 2
+    fi
+    if ! docker ps --format '{{.Names}}' | grep -qx ac-database; then
+      mp_say "ac-database is stopped; starting it (docker start)"
+      docker start ac-database >/dev/null
+      until docker exec ac-database sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -e "SELECT 1"' \
+          >/dev/null 2>&1; do
+        sleep 2
+      done
+    fi
     NET="$(mp_compose_network)"
     docker rm -f "$MP_DB_CONTAINER" >/dev/null 2>&1 || true
     docker volume rm "$MP_DB_VOLUME" >/dev/null 2>&1 || true
