@@ -45,7 +45,10 @@ namespace
     {
         return uint8(Read<uint32>(key, def, [](uint32 v) { return v >= 1 && v <= 255; }, "1-255"));
     }
-    uint32 Positive(char const* key, uint32 def) { return Read<uint32>(key, def, [](uint32 v) { return v > 0; }, "> 0"); }
+    uint32 Positive(char const* key, uint32 def)
+    {
+        return Read<uint32>(key, def, [](uint32 v) { return v > 0; }, "> 0");
+    }
     uint32 Any(char const* key, uint32 def) { return Read<uint32>(key, def, [](uint32) { return true; }, "uint32"); }
     bool Flag(char const* key, bool def) { return sConfigMgr->GetOption<bool>(key, def); }
 }

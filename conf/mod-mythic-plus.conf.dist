@@ -10,7 +10,7 @@
 #
 #   Enabled: 1 = Enabled, 0 = Disabled - Enables the Mythic+ system.
 #   EnableItemRewards: 1 = Enabled, 0 = Disabled - Enables the reward system for Mythic+ dungeons.
-#   EnableDeathLimits: 1 = Enabled, 0 = Disabled - Enables the death limit system for Mythic+ dungeons.
+#   EnableDeathLimits: 1 = Enabled, 0 = Disabled - Death limit flag (stored and shown in .mp status; not enforced yet).
 #
 ##########################################################
 
@@ -18,7 +18,7 @@
 MythicPlus.Enabled = 1
 # 1 = on, 0 = off.  Env: AC_MYTHIC_PLUS_ENABLE_ITEM_REWARDS
 MythicPlus.EnableItemRewards = 1
-# 1 = on, 0 = off.  Env: AC_MYTHIC_PLUS_ENABLE_DEATH_LIMITS
+# 1 = on, 0 = off. Shown in .mp status only; not enforced yet.  Env: AC_MYTHIC_PLUS_ENABLE_DEATH_LIMITS
 MythicPlus.EnableDeathLimits = 1
 
 ##########################################################
@@ -116,11 +116,11 @@ MythicPlus.Ascendant.DungeonBossLevel = 90
 #
 ##########################################################
 
-# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_MYTHIC_DEATH_ALLOWANCE
+# Stored and shown in .mp status only; not enforced yet.  Env: AC_MYTHIC_PLUS_MYTHIC_DEATH_ALLOWANCE
 MythicPlus.Mythic.DeathAllowance = 1000
-# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_LEGENDARY_DEATH_ALLOWANCE
+# Stored and shown in .mp status only; not enforced yet.  Env: AC_MYTHIC_PLUS_LEGENDARY_DEATH_ALLOWANCE
 MythicPlus.Legendary.DeathAllowance = 30
-# 0 = no deaths allowed.  Env: AC_MYTHIC_PLUS_ASCENDANT_DEATH_ALLOWANCE
+# Stored and shown in .mp status only; not enforced yet.  Env: AC_MYTHIC_PLUS_ASCENDANT_DEATH_ALLOWANCE
 MythicPlus.Ascendant.DeathAllowance = 15
 
 ##########################################################
