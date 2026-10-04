@@ -288,7 +288,7 @@ public:
     static bool HandleEnable(ChatHandler* handler)
     {
         MpLogger::debug("HandleEnable()");
-        sMythicPlus->Enabled = false;
+        sMythicPlus->Enabled = true;
         handler->SendSysMessage("Mythic+ mod has been enabled.");
         return true;
     }
