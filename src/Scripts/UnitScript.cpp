@@ -174,14 +174,11 @@ private:
             if (spellInfo && !spellInfo->Effects.empty()) {
                 int32 baseEffect = spellInfo->Effects[0].CalcValue(attacker, nullptr, nullptr);
                 if (damage <= (baseEffect * 1.15f)) {
-                    // MpLog::Debug(MpLog::Area::Combat, ">>>> MELEE SPELL SCALING: Spell {} (ID: {}) is not scaled by AP damage: {} vs originalEffect: {}",
-                    //     spellInfo->SpellName[0], spellInfo->Id, damage, baseEffect);
                     notScaledByAP = true;
                 }
             } else {
                 // If we can't determine the base effect, default to treating it as not AP-scaled
                 notScaledByAP = true;
-                // MpLog::Debug(MpLog::Area::Combat, ">>>> MELEE SPELL SCALING: Could not determine base effect for spell, defaulting to spell scaling");
             }
 
             // if the effect type of the spell is not physical (aka not mitigated by armor/defense) then it needs to instead have the typical
@@ -190,8 +187,6 @@ private:
                 uint32 meleeDamage = static_cast<uint32>(std::max(0, static_cast<int32>(damage)));
 
                 damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
-
-                // MpLog::Debug(MpLog::Area::Combat, ">>MELEE SPELL SCALING: {} hits with spell: {} ID: {} meleeDamage: {} damage: {}", attacker->GetName(), spellInfo->SpellName[0], spellInfo->Id, meleeDamage, damage);
             } else {
 
                 // get the creatures original attack power
@@ -201,8 +196,6 @@ private:
                 // now take the original attack power * 0.08 and add it to the spell damage
                 uint32 apDmg = static_cast<uint32>(creatureData->originalStats->AttackPower * 0.10f);
                 uint32 finalDmg = spellDmg + apDmg;
-
-                // MpLog::Debug(MpLog::Area::Combat, ">> AP BASED DAMAGE Scaledown: origDamage: {} | spellDmg: {} | apDmg: {} | finalDmg: {}", static_cast<int32>(damage), spellDmg, apDmg, finalDmg);
 
                 damage = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
 
@@ -238,14 +231,9 @@ private:
             CreatureBaseStats const* spellCBS = sObjectMgr->GetCreatureBaseStats(tempLevel, creatureCaster->getClass());
             float CBSPowerSpell = spellCBS->BaseDamage[cInfo->expansion];
 
-            // MpLog::Debug(MpLog::Area::Combat, "SPELL SCALING: Creature Lvl {} -> {} | Spell Lvl {} | tempLevel: {} | CBSPowerCreature: {} CBSPowerSpell: {}",
-            //                creatureData->originalLevel, creatureCaster->GetLevel(), tempLevel, CBSPowerCreature, CBSPowerSpell);
-
             // Reverse the CalcValue scaling: originalDamage = scaledDamage / (CBSPowerCreature / CBSPowerSpell)
             if (CBSPowerCreature > 0.0f) {
                 originalDamage = static_cast<int32>(static_cast<int32>(damage) * (CBSPowerSpell / CBSPowerCreature));
-            //     MpLog::Debug(MpLog::Area::Combat, "SPELL SCALING: Reversed CalcValue scaling - Scaled: {} -> Original: {} (Factor: {:.2f})",
-            //                    damage, originalDamage, CBSPowerSpell / CBSPowerCreature);
             }
         }
 
@@ -297,13 +285,8 @@ public:
         }
 
         if(!sMpScaler->EligibleDamageTarget(target)) {
-            if(spellInfo) {
-                // MpLog::Info(MpLog::Area::Combat, "ModifySpellDamageTaken: Target is not eligible for spell: {} ID: {}", spellInfo->SpellName[0], spellInfo->Id);
-            }
             return;
         }
-
-        // MpLog::Debug(MpLog::Area::Combat, "ModifySpellDamageTaken: {} hits {} with spell: {} ID: {}", attacker ? attacker->GetName() : "[null]", target ? target->GetName() : "[null]", spellInfo ? spellInfo->SpellName[0] : "[no spell]", spellInfo ? spellInfo->Id : 0);
 
         // Use the generic ProcessSpellDamage function
         ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_SPELL, "SPELL DAMAGE");
@@ -342,7 +325,6 @@ public:
 
     uint32 modifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType,Unit* target, Unit* attacker, uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr) {
         if (!target || !attacker) {
-            // MpLog::Info(MpLog::Area::Combat, "modifyIncomingDmgHeal: Target and attacker are null for event {}", eventType);
             return damageOrHeal;
         }
 
@@ -430,20 +412,16 @@ public:
                 case MpScaler::UNIT_EVENT_SPELL:
                     if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682) {
                         if(spellInfo) {
-                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = sMpScaler->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
                                 creature, target, instanceData->boss.spell);
                         } else {
                             alteredDmgHeal = damageOrHeal * instanceData->boss.spell;
-                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                         }
                     } else {
                         if(spellInfo) {
-                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = sMpScaler->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
                                 creature, target, instanceData->creature.spell);
                         } else {
-                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = damageOrHeal * instanceData->creature.spell;
                         }
                     }

@@ -16,11 +16,6 @@ struct CreatureEventState {
     uint8 deaths = 0;  // Count of deaths
 };
 
-// Type aliases for creature event handling
-// using CreatureHook = std::function<void(Creature*)>;
-// using HookList = std::vector<CreatureHook>;
-// using HandlerMap = std::unordered_map<uint32, HookList>;
-
 // Type alias for variadic event hooks
 template<typename... Args>
 using CreatureHook = std::function<void(Args...)>;

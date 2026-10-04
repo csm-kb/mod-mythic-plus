@@ -71,44 +71,10 @@ public:
         MpLog::Info(MpLog::Area::Instance, "Total Deaths: {}", totalDeaths);
         if (totalDeaths > 1)
         {
-            // Death-limit enforcement (GroupReset) is not implemented yet; see sub-project 2 notes.
+            // Death-limit enforcement is not implemented yet; see sub-project 2 notes.
             MpLog::Debug(MpLog::Area::Instance, "Group {} death threshold reached in map {} instance {}",
                 group->GetGUID().GetCounter(), map->GetId(), map->GetInstanceId());
         }
-//         if(totalDeaths > 1) {
-//             Map* map = player->GetMap();
-//             if(!map) {
-//                 return;
-//             }
-//             Group* group = player->GetGroup();
-//             if(!group) {
-//                 MpLog::Warn(MpLog::Area::Instance, "Player {} is not in a group.", player->GetName());
-//                 return;
-//             }
-
-// // map->RemoveAllPlayers();
-//                 MpLog::Info(MpLog::Area::Instance, "Starting scheduled failure notification");
-//                 // auto testlambda = [](TaskContext ctx) { return; };
-                // sMpScheduler->ScheduleWorldTask(1s, [](TaskContext ctx) {
-                //     MpLog::Info(MpLog::Area::Instance, "<<<<<<<<<<<  Player Death Scheduler fire >>>>>>>>>>>>>");
-                // });
-
-                        // sMpScheduler->GetWorldScheduler().Schedule(1s, [playerName = player->GetName()](TaskContext ctx) {
-            //     MpLog::Info(MpLog::Area::Instance, "<<<<<<<<<<<  Player Death Scheduler fire {} >>>>>>>>>>>>>", playerName);
-            //     return;
-            // });
-                    // std::vector<Player*> players = GetGroupMembers(player);
-                    // MpLog::Info(MpLog::Area::Instance, "Failed mythic+ instance run notification fired. ");
-                    // WorldPacket data;
-
-                    // for(Player* player : players)
-                    // {
-                    //     MpLog::Info(MpLog::Area::Instance, "Seding notification of failure to player: {}", player->GetName());
-                    //     player->GetSession()->SendShowBank(player->GetGUID());
-                    //     // player->GetSession()->SendNotification("Your group has died too many time to continue.");
-                    //     // ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_BOSS_EMOTE, LANG_UNIVERSAL, nullptr, player, message);
-                    //     // player->GetSession()->SendPacket(&data);
-                    // }
     }
 
     void OnPlayerBeforeLootMoney(Player* player, Loot* loot) override

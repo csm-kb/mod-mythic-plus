@@ -11,10 +11,6 @@ class MythicPlus_AllCreatureScript : public AllCreatureScript
 public:
     MythicPlus_AllCreatureScript() : AllCreatureScript("MythicPlus_AllCreatureScript") {}
 
-    // void OnBeforeCreatureSelectLevel(const CreatureTemplate* /*creatureTemplate*/, Creature* creature, uint8& level) override
-    // {
-    // }
-
     /**
      * @brief This hook runs every update for all creatures in the world.
      * We only need to concern ourselves with creatures in the scope of our mythic+ instances.

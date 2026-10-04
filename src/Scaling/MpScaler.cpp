@@ -148,10 +148,6 @@ void MpScaler::AddCreatureForScaling(Creature* creature)
     }
 
     sMpState->SetCreatureData(creature, MpCreatureData(creature));
-    // MpLog::Debug(MpLog::Area::Scaling, "Added creature {} to instance data for instance {}",
-    //     creature->GetName(),
-    //     creature->GetMap()->GetMapName()
-    // );
 }
 
 void MpScaler::AddScaledCreature(Creature* creature, MpInstanceData const& instanceData)
@@ -170,22 +166,6 @@ void MpScaler::AddScaledCreature(Creature* creature, MpInstanceData const& insta
     } else {
         ScaleCreature(level, creature, &instanceData.creature, instanceData.difficulty);
     }
-
-    // Update AI now the creature has been scaled.
-    // auto ai = new MpScriptAI(creature, instanceData->difficulty);
-    // creature->SetAI(ai);
-
-    // We know the creature is scaled and in the instance to fire the event.
-    // sCreatureHooks->AddToInstance(creature);
-
-
-    // MpLog::Debug(MpLog::Area::Scaling, "Scaled Creature {} Entry {} Id {} level from {} to {}",
-    //     creature->GetName(),
-    //     creature->GetEntry(),
-    //     creature->GetGUID().GetCounter(),
-    //     creature->GetLevel(),
-    //     level
-    // );
 }
 
 // Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.

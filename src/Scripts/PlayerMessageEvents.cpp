@@ -17,8 +17,8 @@
  * message events from the client hidden chat channel and process them, as well as return events back to
  * the client.  It's a very simplified version of how Eluna / AIO manage messages from UI to C++ mods.
  *
- * All Messages come into a chat channel from a specific user on a hidden channel with details in the MythicPlus.h
- * class for the protocol data definition.
+ * All Messages come into a chat channel from a specific user on a hidden channel; the protocol is defined in
+ * MpEventProcessor.h.
  */
 
 class MythicPlus_PlayerMessageEvents : public PlayerScript
@@ -52,39 +52,6 @@ public:
 
         return true;
     }
-
-    /**
-     * When a player logs in add them to the data channel specifically for Mythic+ communication
-     * between UI and server module.
-     *
-     * Load advancement data for the player at load time used to apply buffs.
-     */
-    // void OnLogin(Player* player) override
-    // {
-    //     if(!player) {
-    //         return;
-    //     }
-
-    //     // Create a channel called MpEx if it does not exist
-    //     MpLog::Info(MpLog::Area::Events, "Player {} logged in on team {}", player->GetName(), player->GetTeamId());
-    //     ChannelMgr* cmg = ChannelMgr::forTeam(player->GetTeamId());
-
-    //     if(!cmg) {
-    //         MpLog::Error(MpLog::Area::Events, "Failed to get channel manager for team {}", player->GetTeamId());
-    //         return;
-    //     }
-
-    //     Channel* channel = cmg->GetChannel(static_cast<std::string>(MP_DATA_CHAT_CHANNEL), player);
-    //     if(!channel) {
-    //         MpLog::Error(MpLog::Area::Events, "Failed to get mythic data channel for player {}", player->GetName());
-    //         Channel* nchan = new Channel(static_cast<std::string>(MP_DATA_CHAT_CHANNEL), 17, 0, player->GetTeamId());
-    //         if(!nchan) {
-    //             MpLog::Error(MpLog::Area::Events, "Failed to create mythic data channel for player {}", player->GetName());
-    //             return;
-    //         }
-    //     }
-
-    // }
 };
 
 void Add_MP_PlayerMessageEvents()

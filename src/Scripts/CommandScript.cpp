@@ -12,7 +12,6 @@
 
 using namespace Acore::ChatCommands;
 
-// make sure this is the new way to do this, i think it's the old busted shit
 class MythicPlus_CommandScript : public CommandScript
 {
 public:
@@ -125,10 +124,6 @@ public:
         }
 
         std::string difficulty = args[0];
-        // if(!sMpScaler->IsDifficultyEnabled(difficulty)) {
-        //     handler->PSendSysMessage("|cFFFF0000 The difficulty level you have selected is not enabled.");
-        //     return true;
-        // }
 
         if (!group->IsLeader(player->GetGUID())) {
             handler->PSendSysMessage("|cFFFF0000 You must be the group leader to set a Mythic+ difficulty.");

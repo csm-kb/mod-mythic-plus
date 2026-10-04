@@ -57,8 +57,6 @@ std::string MpAdvancementsToString(MpAdvancements advancement)
 int32 AdvancementMgr::LoadAdvancementRanks() {
     _advancementRanks.clear();
 
-    //
-    // const char*
     constexpr std::string_view query = R"(
         SELECT
             upgradeRank,
@@ -86,10 +84,6 @@ int32 AdvancementMgr::LoadAdvancementRanks() {
         MpLog::Error(MpLog::Area::Advancement, "Failed to load advancement ranks from database");
         return 0;
     }
-
-    // Load all the material types into memory for reference
-
-
 
     do {
         Field* fields = result->Fetch();
@@ -538,27 +532,3 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: unknown error", player->GetName());
     }
 }
-
-// void _DBSaveAdvancement(Player* player, MpAdvancementRank* advancementRank, MpPlayerRank* playerRank)
-// {
-//     // Save the advancement to the database
-//     constexpr std::string_view query = R"(
-//         INSERT INTO mp_player_advancements (guid, advancementId, bonus, upgradeRank, diceSpent)
-//         VALUES ({}, {}, {}, {}, {})
-//         ON DUPLICATE KEY UPDATE
-//             bonus = {},
-//             upgradeRank = {},
-//             diceSpent = {}
-//     )";
-
-//     CharacterDatabase.Execute(query,
-//         player->GetGUID().GetCounter(),
-//         advancementRank->advancementId,
-//         roll,
-//         playerRank->rank,
-//         playerRank->diceSpent,
-//         roll,
-//         playerRank->rank,
-//         playerRank->diceSpent
-//     );
-// }

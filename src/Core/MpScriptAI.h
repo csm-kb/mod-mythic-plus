@@ -1,6 +1,5 @@
 #include "Creature.h"
 #include "CreatureAI.h"
-// #include "CreatureHooks.h"
 #include "MpLog.h"
 #include "MpTypes.h"
 #include "ScriptMgr.h"
@@ -27,13 +26,10 @@ public:
     }
 
     void JustDied(Unit* killer) override {
-        // sCreatureHooks->JustDied(me->ToCreature(), killer);
         BaseAI::JustDied(killer);
     }
 
     void Reset() override {
-        // sCreatureHooks->JustSpawned(me->ToCreature());
-
         BaseAI::Reset();
     }
 };

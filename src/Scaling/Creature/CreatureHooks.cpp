@@ -16,22 +16,6 @@ void CreatureHooks::RegisterOnAddToInstance(uint32 entry, CreatureHook<Creature*
     (*_OnAddToInstanceHandlers)[entry].push_back(callback);
 }
 
-// Call health events if the creature's health is at or below the percentage
-// void CheckHealthEvents(Creature* creature) {
-//     uint32 entry = creature->GetEntry();
-//     uint32 currentHealthPct = creature->GetHealthPct();
-
-//     if (_healthPercentEvents->contains(entry)) {
-//         for (const auto& [percent, callbacks] : _healthPercentEvents->at(entry)) {
-//             if (currentHealthPct <= percent) {
-//                 for (auto& callback : callbacks) {
-//                     callback(creature); // Trigger custom behavior
-//                 }
-//             }
-//         }
-//     }
-// }
-
 void CreatureHooks::JustDied(Creature* creature, Unit* killer) {
     if(!creature) {
         MpLog::Debug(MpLog::Area::Scaling, "JustDied() called with nullptr for creature");
