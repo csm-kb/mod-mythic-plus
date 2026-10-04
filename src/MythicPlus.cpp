@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 // Special case for Headless Horseman Event
 const uint32 HEADLESS_HORSEMAN = 23682;
@@ -37,12 +38,7 @@ bool MythicPlus::IsDifficultySet(Player const* player)
         return false;
     }
 
-    MpGroupData const* groupData = sMpDataStore->GetGroupData(group->GetGUID());
-    if (!groupData) {
-        return false;
-    }
-
-    return true;
+    return sMpState->GetGroupData(group->GetGUID()).has_value();
 }
 
 bool MythicPlus::EligibleHealTarget(Unit* target)
@@ -151,28 +147,28 @@ void MythicPlus::AddCreatureForScaling(Creature* creature)
         return;
     }
 
-    sMpDataStore->AddCreatureData(creature->GetGUID(), MpCreatureData(creature));
+    sMpState->SetCreatureData(creature->GetGUID(), MpCreatureData(creature));
     // MpLog::Debug(MpLog::Area::Scaling, "Added creature {} to instance data for instance {}",
     //     creature->GetName(),
     //     creature->GetMap()->GetMapName()
     // );
 }
 
-void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData* instanceData)
+void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData const& instanceData)
 {
     MpCreatureData creatureData = MpCreatureData(creature);
     creatureData.SetScaled(true);
-    creatureData.SetDifficulty(instanceData->difficulty);
+    creatureData.SetDifficulty(instanceData.difficulty);
     creatureData.lastDeathState = creature->getDeathState();
 
-    sMpDataStore->AddCreatureData(creature->GetGUID(), creatureData);
+    sMpState->SetCreatureData(creature->GetGUID(), std::move(creatureData));
 
     // allow small variance in level for non-boss creatures
-    uint8 level = uint8(urand(instanceData->creature.avgLevel - 1, instanceData->creature.avgLevel + 1));
+    uint8 level = uint8(urand(instanceData.creature.avgLevel - 1, instanceData.creature.avgLevel + 1));
     if(creature->IsDungeonBoss() || creature->GetEntry() == 23682) {
-        ScaleCreature(instanceData->boss.avgLevel, creature, &instanceData->boss, instanceData->difficulty);
+        ScaleCreature(instanceData.boss.avgLevel, creature, &instanceData.boss, instanceData.difficulty);
     } else {
-        ScaleCreature(level, creature, &instanceData->creature, instanceData->difficulty);
+        ScaleCreature(level, creature, &instanceData.creature, instanceData.difficulty);
     }
 
     // Update AI now the creature has been scaled.
@@ -192,37 +188,30 @@ void MythicPlus::AddScaledCreature(Creature* creature, MpInstanceData* instanceD
     // );
 }
 
-void MythicPlus::ScaleRemaining(Player* player, MpInstanceData* instanceData)
+// Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.
+void MythicPlus::ScaleRemaining(Player* player, MpInstanceData const& instanceData)
 {
-    std::vector<MpCreatureData*> creatures = sMpDataStore->GetUnscaledCreatures(player->GetMapId(), player->GetInstanceId());
-    for (MpCreatureData* creatureData : creatures) {
-        AddScaledCreature(creatureData->creature, instanceData);
-    }
+    Map* map = player->GetMap();
+    for (ObjectGuid const& guid : sMpState->GetInstanceCreatureGuids(map->GetId(), map->GetInstanceId(), true))
+        if (Creature* creature = map->GetCreature(guid))
+            AddScaledCreature(creature, instanceData);
 }
 
-void MythicPlus::ScaleAll(Player* player, MpInstanceData* instanceData)
+// Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.
+void MythicPlus::ScaleAll(Player* player, MpInstanceData const& instanceData)
 {
-    std::vector<MpCreatureData*> creatures = sMpDataStore->GetInstanceCreatures(player->GetMapId(), player->GetInstanceId());
-    for (MpCreatureData* creatureData : creatures) {
+    Map* map = player->GetMap();
+    for (ObjectGuid const& guid : sMpState->GetInstanceCreatureGuids(map->GetId(), map->GetInstanceId(), false))
+    {
         // Only scale living creatures
-        if (creatureData->creature && creatureData->creature->IsAlive()) {
-            ScaleCreature(creatureData->creature->GetLevel(), creatureData->creature, &instanceData->creature, instanceData->difficulty);
-        }
+        Creature* creature = map->GetCreature(guid);
+        if (creature && creature->IsAlive())
+            ScaleCreature(creature->GetLevel(), creature, &instanceData.creature, instanceData.difficulty);
     }
 }
 
-// Perform any memory cleanup when the creature is removed from the world and no longer needed.
-void MythicPlus::RemoveCreature(Creature* creature)
-{
-    MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
-    if (!creatureData) {
-        return;
-    }
-
-    sMpDataStore->RemoveCreatureData(creature->GetGUID());
-}
-
-void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* multipliers, MpDifficulty difficulty)
+void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers const* multipliers,
+    MpDifficulty difficulty)
 {
     CreatureTemplate const* cInfo = creature->GetCreatureTemplate();
     uint32 mapId = creature->GetMapId();
@@ -267,10 +256,13 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
         creature->SetStatFlatModifier(UNIT_MOD_MANA, BASE_VALUE, (float)mana * 3.0f);
     }
 
-    MpInstanceData *instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    // The stored record's difficulty is used, as before; the caller's difficulty only covers a missing record.
+    std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
+        creature->GetInstanceId());
+    MpDifficulty instanceDifficulty = instanceData ? instanceData->difficulty : difficulty;
 
     // Handle new melee/range scaling with simple formula (for simplicity range will just be 80% of melee bonus)
-    float meleeMultiplier = sMpDataStore->GetMeleeScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    float meleeMultiplier = sMpRepo->GetMeleeScaleFactor(creature->GetMapId(), instanceDifficulty);
 
     // Since Heroic Scaling can get out of hand. Reduce the instance multiplier by way too much 10%
     if(instanceMap->IsHeroic() || instanceMap->Is25ManRaid()) {
@@ -289,11 +281,11 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
         rangeAp *= sMpConfig->normalEnemyReducer;
     }
 
-    MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
-    if(creatureData) {
-        creatureData->NewAttackPower = ap;
-        creatureData->AttackPowerScaleMultiplier = meleeMultiplier;
-    }
+    sMpState->UpdateCreatureData(creature->GetGUID(), [ap, meleeMultiplier](MpCreatureData& data)
+    {
+        data.NewAttackPower = ap;
+        data.AttackPowerScaleMultiplier = meleeMultiplier;
+    });
 
     // Set scaled attack power
     creature->SetStatFlatModifier(UNIT_MOD_ATTACK_POWER, BASE_VALUE, ap);
@@ -318,8 +310,8 @@ void MythicPlus::ScaleCreature(uint8 level, Creature* creature, MpMultipliers* m
 }
 
 int32 MythicPlus::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel) {
-    float origHpPool = sMpDataStore->GetPlayerHealthAvg(originalLevel);
-    float targetHpPool = sMpDataStore->GetPlayerHealthAvg(targetLevel);
+    float origHpPool = sMpRepo->GetPlayerHealthAvg(originalLevel);
+    float targetHpPool = sMpRepo->GetPlayerHealthAvg(targetLevel);
 
     // Using a % of expected damage of the average player pool creates a better consistent experience when scaling spells
     float percentDamage = baseDamage / origHpPool;
@@ -363,20 +355,22 @@ int32 MythicPlus::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHea
     return scaledHeal;
 }
 
-int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, MpCreatureData* creatureData, Creature* creature, Unit* /* target */, float damageMultiplier)
+int32 MythicPlus::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCreatureData const* creatureData,
+    Creature* creature, Unit* /* target */, float damageMultiplier)
 {
     if (!spellInfo) {
         MpLog::Debug(MpLog::Area::Combat, "Invalid spell info ScaleDamageSpell()");
         return damage;
     }
 
-    MpInstanceData *instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
+        creature->GetInstanceId());
     if (!instanceData) {
         MpLog::Debug(MpLog::Area::Combat, "No instance data found for spell scaling, using original damage");
         return damage;
     }
 
-    float scaleFactor = sMpDataStore->GetSpellScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    float scaleFactor = sMpRepo->GetSpellScaleFactor(creature->GetMapId(), instanceData->difficulty);
 
     MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> ScaleFactor: {} DamageMultiplier: {}", scaleFactor, damageMultiplier);
 
@@ -407,8 +401,8 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
             if(owner && owner->IsCreature()) {
                 Creature* ownerCreature = owner->ToCreature();
 
-                // Look up the owner creature's original level from MpDataStore
-                MpCreatureData* ownerCreatureData = sMpDataStore->GetCreatureData(ownerCreature->GetGUID());
+                // Look up the owner creature's original level from the runtime state
+                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature->GetGUID());
                 if (ownerCreatureData) {
                     MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original level {} owner level {}", creature->GetName(), ownerCreature->GetName(), ownerCreatureData->originalLevel, ownerCreature->GetLevel());
                     int32 ownerOriginalLevel = ownerCreatureData->originalLevel;
@@ -474,20 +468,22 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
     return damage + scaledAdditionalDamage;
 }
 
-int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCreatureData* creatureData, Creature* creature, Creature* target, float healMultiplier)
+int32 MythicPlus::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatureData const* creatureData,
+    Creature* creature, Creature* target, float healMultiplier)
 {
     if (!spellInfo) {
         MpLog::Debug(MpLog::Area::Combat, "Invalid spell info ScaleHealSpell()");
         return heal;
     }
 
-    MpInstanceData *instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
+        creature->GetInstanceId());
     if (!instanceData) {
         MpLog::Debug(MpLog::Area::Combat, "No instance data found for heal scaling, using original heal");
         return heal;
     }
 
-    float scaleFactor = sMpDataStore->GetHealScaleFactor(creature->GetMapId(), instanceData->difficulty);
+    float scaleFactor = sMpRepo->GetHealScaleFactor(creature->GetMapId(), instanceData->difficulty);
 
     MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> HealScaleFactor: {} HealMultiplier: {}", scaleFactor, healMultiplier);
 
@@ -519,15 +515,15 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
             if(owner && owner->IsCreature()) {
                 Creature* ownerCreature = owner->ToCreature();
 
-                // Look up the owner creature's original level from MpDataStore
-                MpCreatureData* ownerCreatureData = sMpDataStore->GetCreatureData(ownerCreature->GetGUID());
+                // Look up the owner creature's original level from the runtime state
+                std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature->GetGUID());
                 if (ownerCreatureData) {
                     if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
-                        MpCreatureData* targetCreatureData = sMpDataStore->GetCreatureData(target->GetGUID());
+                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                             MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
@@ -542,7 +538,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
                     }
                     // Scale heal based on target's health, not caster's health
                     if (target) {
-                        MpCreatureData* targetCreatureData = sMpDataStore->GetCreatureData(target->GetGUID());
+                        std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
 
@@ -564,7 +560,7 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
         // Scale heal based on target's health, not caster's health
         if (target) {
             // Get target's original instance health for scaling comparison
-            MpCreatureData* targetCreatureData = sMpDataStore->GetCreatureData(target->GetGUID());
+            std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target->GetGUID());
             uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                 targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                 MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
@@ -787,7 +783,7 @@ uint32 CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uin
     float healthVariation;
 
     //  This is the fine grained hpScaleFactor set for the instance (and/or) creature overrides in the database.
-    int32 hpScaleFactor = sMpDataStore->GetHealthScaleFactor(mapId, difficulty);
+    int32 hpScaleFactor = sMpRepo->GetHealthScaleFactor(mapId, difficulty);
 
     // Add some variance to the healthpool so enemies are not all the same
     if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->isElite() || cInfo->rank == CREATURE_ELITE_RARE) {

@@ -1,4 +1,4 @@
-// #include "MpDataStore.h"
+// #include "MpRepository.h"
 // #include "MpLog.h"
 
 // class CreatureOverride {
@@ -8,7 +8,7 @@
 //     Creature* creature;
 
 //     CreatureOverride(uint32 entry): entry(entry), difficulty(difficulty) {
-//         sMpDataStore->AddCreatureOverride(this->entry, this);
+//         sMpRepo->AddCreatureOverride(this->entry, this);
 //     }
 
 //     virtual void Modify(Creature* creature) final {

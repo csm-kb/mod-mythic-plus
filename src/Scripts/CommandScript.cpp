@@ -1,14 +1,14 @@
 
 #include "Chat.h"
 #include "AdvancementMgr.h"
-#include "MpDataStore.h"
 #include "MythicPlus.h"
-#include "MpDataStore.h"
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "StringConvert.h"
+
+#include <optional>
 
 using namespace Acore::ChatCommands;
 
@@ -61,7 +61,7 @@ public:
 
     static bool HandleReload(ChatHandler* handler)
     {
-        sMpDataStore->LoadScaleFactors();
+        sMpRepo->LoadScaleFactors();
         handler->PSendSysMessage("Mythic+ scale factors updated.");
 
         return true;
@@ -77,7 +77,7 @@ public:
         }
 
         CreatureTemplate const* creatureTemplate = target->GetCreatureTemplate();
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(target->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target->GetGUID());
 
 
         handler->PSendSysMessage(LANG_NPCINFO_LEVEL, target->GetLevel());
@@ -142,20 +142,22 @@ public:
         }
 
         if (difficulty == "mythic") {
-            sMpDataStore->AddGroupData(group, MpGroupData(group, MP_DIFFICULTY_MYTHIC));
+            sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_MYTHIC));
         }
         else if (difficulty == "legendary") {
-            sMpDataStore->AddGroupData(group,MpGroupData(group, MP_DIFFICULTY_LEGENDARY));
+            sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_LEGENDARY));
         }
         else if (difficulty == "ascendant") {
-            sMpDataStore->AddGroupData(group, MpGroupData(group, MP_DIFFICULTY_ASCENDANT));
+            sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_ASCENDANT));
         }
         else if (difficulty == "heroic") {
-            sMpDataStore->RemoveGroupData(group);
+            sMpState->RemoveGroupData(group->GetGUID());
+            sMpRepo->DBRemoveGroupData(group->GetGUID());
             group->SetDungeonDifficulty(DUNGEON_DIFFICULTY_HEROIC);
         }
         else if (difficulty == "normal") {
-            sMpDataStore->RemoveGroupData(group);
+            sMpState->RemoveGroupData(group->GetGUID());
+            sMpRepo->DBRemoveGroupData(group->GetGUID());
             group->SetDungeonDifficulty(DUNGEON_DIFFICULTY_NORMAL);
         }
         else {
@@ -197,17 +199,18 @@ public:
         );
 
         if (player->GetGroup()) {
-            auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
+            ObjectGuid groupGuid = player->GetGroup()->GetGUID();
+            std::optional<MpGroupData> groupData = sMpState->GetGroupData(groupGuid);
             if (groupData) {
                 MpScaleFactor scaleFactors;
 
                 if(map->IsDungeon()) {
-                    scaleFactors = sMpDataStore->GetScaleFactor(mapId, groupData->difficulty);
+                    scaleFactors = sMpRepo->GetScaleFactor(mapId, groupData->difficulty);
                 }
 
                 status += Acore::StringFormat("  Group Difficulty: {}\n Group Deaths: {}\n  Scale FactorStr {}\n",
                     (groupData->difficulty) ? groupData->difficulty : 0,
-                    (groupData->GetDeaths(player->GetMapId(), player->GetInstanceId())),
+                    sMpState->GetGroupDeaths(groupGuid, player->GetMapId(), player->GetInstanceId()),
                     scaleFactors.ToString()
                 );
             } else {
@@ -227,13 +230,13 @@ public:
             return true;
         }
 
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
-        if(!creatureData) {
+        if(!sMpState->GetCreatureData(creature->GetGUID())) {
             handler->PSendSysMessage("Creature is not eligible for rescaling.");
             return true;
         }
 
-        auto instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+        std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
+            creature->GetInstanceId());
         if(!instanceData) {
             handler->PSendSysMessage("No instance data found for this creature.");
             return true;
@@ -267,13 +270,13 @@ public:
         int32 mapId = map->GetId();
         int32 instanceId = map->GetInstanceId();
 
-        auto instanceData = sMpDataStore->GetInstanceData(mapId, instanceId);
+        std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(mapId, instanceId);
         if(!instanceData) {
             handler->PSendSysMessage("No mythic instance data found for this map.");
             return true;
         }
 
-        sMythicPlus->ScaleAll(player, instanceData);
+        sMythicPlus->ScaleAll(player, *instanceData);
         handler->PSendSysMessage("All creatures rescaled.");
 
         return true;
@@ -310,7 +313,7 @@ public:
 
 
         if (player->GetGroup()) {
-            auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
+            std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
@@ -321,7 +324,7 @@ public:
                 }
 
                 float value = *parsed;
-                sMpDataStore->SetMeleeScaleFactor(player->GetMapId(), groupData->difficulty, value);
+                sMpRepo->SetMeleeScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Melee scale factor set to: {}", value));
                 return true;
             }
@@ -345,7 +348,7 @@ public:
         }
 
         if (player->GetGroup()) {
-            auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
+            std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
@@ -356,7 +359,7 @@ public:
                 }
 
                 float value = *parsed;
-                sMpDataStore->SetSpellScaleFactor(player->GetMapId(), groupData->difficulty, value);
+                sMpRepo->SetSpellScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Spell scale factor set to: {}", value));
                 return true;
             }
@@ -381,7 +384,7 @@ public:
         }
 
         if (player->GetGroup()) {
-            auto groupData = sMpDataStore->GetGroupData(player->GetGroup()->GetGUID());
+            std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
             if(groupData) {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
@@ -392,7 +395,7 @@ public:
                 }
 
                 float value = *parsed;
-                sMpDataStore->SetHealthScaleFactor(player->GetMapId(), groupData->difficulty, value);
+                sMpRepo->SetHealthScaleFactor(player->GetMapId(), groupData->difficulty, value);
                 handler->PSendSysMessage(Acore::StringFormat("Health scale factor set to: {}", value));
                 return true;
             }

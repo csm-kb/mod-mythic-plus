@@ -6,6 +6,8 @@
 #include "ScriptMgr.h"
 #include "SpellAuraEffects.h"
 
+#include <optional>
+
 class MythicPlus_UnitScript : public UnitScript
 {
 public:
@@ -56,7 +58,7 @@ private:
             attacker = *attackers.begin();
             if (Creature* creatureAttacker = attacker->ToCreature()) {
 
-                   if (MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureAttacker->GetGUID())) {
+                   if (sMpState->GetCreatureData(creatureAttacker->GetGUID())) {
                     damage = static_cast<DamageType>(modifyIncomingDmgHeal(eventType, target, creatureAttacker,
                                                                          static_cast<uint32>(damage), spellInfo)) * sMpConfig->nonCreatureSpellReducer;
                     return;
@@ -69,7 +71,7 @@ private:
                     damage);
 
                 if (map) {
-                    if (MpInstanceData* instanceData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId())) {
+                    if (auto instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId())) {
                         damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMpConfig->nonCreatureSpellReducer);
                         return;
                     }
@@ -78,7 +80,7 @@ private:
         }
         // Fallback to instance-based scaling if we can't find a nearest creature
         else if (map) {
-            if (MpInstanceData* instanceData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId())) {
+            if (auto instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId())) {
                 damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMpConfig->nonCreatureSpellReducer);
                 return;
             }
@@ -152,7 +154,7 @@ private:
         }
 
         Creature* creatureCaster = attacker->ToCreature();
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureCaster->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creatureCaster->GetGUID());
 
         if (!creatureCaster) {
             MpLog::Debug(MpLog::Area::Combat, "Creature caster is null in map {}", attacker ? attacker->GetMap()->GetId() : 0);
@@ -365,10 +367,17 @@ public:
             return damageOrHeal;
         }
 
-        MpInstanceData* instanceData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId());
+        std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
         if(!instanceData) {
             return damageOrHeal;
         }
+
+        // Only spell scaling reads the attacker's record; melee hits skip the lookup
+        std::optional<MpCreatureData> attackerData;
+        if (spellInfo) {
+            attackerData = sMpState->GetCreatureData(attacker->GetGUID());
+        }
+        MpCreatureData const* attackerDataPtr = attackerData ? &*attackerData : nullptr;
 
         std::string eventName = "";
         switch (eventType) {
@@ -422,7 +431,8 @@ public:
                     if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682) {
                         if(spellInfo) {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
-                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, target, instanceData->boss.spell);
+                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                                creature, target, instanceData->boss.spell);
                         } else {
                             alteredDmgHeal = damageOrHeal * instanceData->boss.spell;
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
@@ -430,7 +440,8 @@ public:
                     } else {
                         if(spellInfo) {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
-                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, target, instanceData->creature.spell);
+                            alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                                creature, target, instanceData->creature.spell);
                         } else {
                             // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = damageOrHeal * instanceData->creature.spell;
@@ -450,13 +461,15 @@ public:
         if(sMythicPlus->EligibleHealTarget(target) && (eventType == MythicPlus::UNIT_EVENT_HEAL || eventType == MythicPlus::UNIT_EVENT_HOT)) {
             if(creature->IsDungeonBoss()) {
                 if(spellInfo) {
-                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, attacker->ToCreature(), instanceData->boss.spell * 0.7f);
+                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                        creature, attacker->ToCreature(), instanceData->boss.spell * 0.7f);
                 } else {
                     alteredDmgHeal = damageOrHeal * instanceData->boss.spell * 0.7f;
                 }
             } else {
                 if(spellInfo) {
-                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, attacker->ToCreature(), instanceData->creature.spell * 0.7f);
+                    alteredDmgHeal = sMythicPlus->ScaleHealSpell(spellInfo, damageOrHeal, attackerDataPtr,
+                        creature, attacker->ToCreature(), instanceData->creature.spell * 0.7f);
                 } else {
                     alteredDmgHeal = damageOrHeal * instanceData->creature.spell * 0.70f;
                 }

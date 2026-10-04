@@ -1,8 +1,12 @@
-
-#include "MpDataStore.h"
-#include "MpLog.h"
-#include "ScriptMgr.h"
 #include "Group.h"
+#include "MpLog.h"
+#include "MpRepository.h"
+#include "MpRuntimeState.h"
+#include "ObjectAccessor.h"
+#include "Player.h"
+#include "ScriptMgr.h"
+
+#include <optional>
 
 // this handles updating custom group difficulties used in auto balancing mobs and
 // scripts that enable buffs on mobs randomly
@@ -22,28 +26,33 @@ class MythicPlus_GroupScript : public GroupScript
             return;
         }
 
-        MpGroupData *gd = sMpDataStore->GetGroupData(group->GetGUID());
-        MpPlayerData* pd = sMpDataStore->GetPlayerData(guid);
-        if(!pd) {
-
-            MpDifficulty difficulty = GetPlayerDifficulty(player);
-            MpPlayerData playerData = MpPlayerData(player, difficulty, group->GetGUID().GetCounter());
-            sMpDataStore->AddPlayerData(guid, &playerData);
-        } else {
-
-            // If the player is joining a new group then reset the death counters otherwise let them ride
-            if (pd->groupId != group->GetGUID().GetCounter()) {
-                pd->groupId = group->GetGUID().GetCounter();
-                pd->ResetAllDeathCounts();
+        // If the player is joining a new group then reset the death counters otherwise let them ride
+        uint32 groupId = group->GetGUID().GetCounter();
+        bool known = sMpState->UpdatePlayerData(guid, [groupId](MpPlayerData& pd)
+        {
+            if (pd.groupId != groupId)
+            {
+                pd.groupId = groupId;
+                pd.ResetAllDeathCounts();
             }
+        });
+
+        if (!known) {
+            MpDifficulty difficulty = GetPlayerDifficulty(player);
+            sMpState->SetPlayerData(guid, MpPlayerData(guid, player->GetName(), difficulty, groupId));
         }
 
-        if(!gd) {
+        bool added = false;
+        auto addMember = [guid, &added](MpGroupData& gd) { added = gd.AddMember(guid); };
+        if (!sMpState->UpdateGroupData(group->GetGUID(), addMember)) {
             MpLog::Warn(MpLog::Area::Instance, "Group data not found for group {}", group->GetGUID().GetCounter());
             return;
         }
 
-        gd->AddPlayerData(pd);
+        if (!added) {
+            MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector",
+                player->GetName());
+        }
     }
 
     void OnCreate(Group* group, Player* leader) override {
@@ -55,25 +64,18 @@ class MythicPlus_GroupScript : public GroupScript
             return;
         }
 
-        // Start a group and set the data up for the group
+        // Start a group and set the data up for the group, with the leader as its first member
         MpDifficulty difficulty = GetPlayerDifficulty(leader);
-        MpGroupData gd = MpGroupData(group, difficulty);
-
-        // Insert the leader of the group after group data struct is built
-        MpPlayerData* pd = sMpDataStore->GetPlayerData(leader->GetGUID());
-        if(pd) {
-            gd.AddPlayerData(pd);
-        } else {
-            MpPlayerData playerData = MpPlayerData(leader, difficulty, group->GetGUID().GetCounter());
-            gd.AddPlayerData(&playerData);
-        }
+        MpGroupData gd = MpGroupData(group->GetGUID(), difficulty);
+        gd.AddMember(leader->GetGUID());
 
         // Store the data into our memory store
-        sMpDataStore->AddGroupData(group, gd);
+        sMpState->SetGroupData(group, std::move(gd));
     }
 
     void OnDisband(Group* group) override {
-        sMpDataStore->RemoveGroupData(group);
+        sMpState->RemoveGroupData(group->GetGUID());
+        sMpRepo->DBRemoveGroupData(group->GetGUID());
     }
 
     // Get the difficulty for a player that is assigned
@@ -82,7 +84,7 @@ class MythicPlus_GroupScript : public GroupScript
             return MP_DIFFICULTY_NORMAL;
         }
 
-        MpPlayerData* pd = sMpDataStore->GetPlayerData(player->GetGUID());
+        std::optional<MpPlayerData> pd = sMpState->GetPlayerData(player->GetGUID());
         if(pd) {
             return pd->difficulty;
         } else {

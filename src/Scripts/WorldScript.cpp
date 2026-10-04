@@ -1,6 +1,6 @@
 #include "MpConfig.h"
 #include "MythicPlus.h"
-#include "MpDataStore.h"
+#include "MpRepository.h"
 #include "AdvancementMgr.h"
 #include "MpLog.h"
 #include "Player.h"
@@ -28,7 +28,7 @@ public:
 
     void OnStartup() override
     {
-        int32 size = sMpDataStore->LoadScaleFactors();
+        int32 size = sMpRepo->LoadScaleFactors();
         MpLog::Info(MpLog::Area::Config, "Loaded {} Mythic+ Scaling Factors from database...", size);
 
         size = sAdvancementMgr->LoadAdvancementRanks();
@@ -37,7 +37,7 @@ public:
         size = sAdvancementMgr->LoadMaterialTypes();
         MpLog::Info(MpLog::Area::Config, "Loaded {} material types...", size);
 
-        sMpDataStore->LoadPlayerHealthAvg();
+        sMpRepo->LoadPlayerHealthAvg();
         MpLog::Info(MpLog::Area::Config, "Loaded player health averages used for scaling calculations...");
 
         // Registering event handlers for the Mythic+ events from client

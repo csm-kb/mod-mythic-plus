@@ -1,6 +1,5 @@
 #include "MpBots.h"
 #include "MpLog.h"
-#include "MpDataStore.h"
 #include "MpScheduler.h"
 #include "MythicPlus.h"
 #include "Player.h"
@@ -9,6 +8,9 @@
 #include "TaskScheduler.h"
 #include "AdvancementMgr.h"
 #include "Formulas.h"
+
+#include <optional>
+#include <utility>
 
 class MythicPlus_PlayerScript : public PlayerScript
 {
@@ -38,27 +40,34 @@ public:
             return;
         }
 
-        MpGroupData *data = sMpDataStore->GetGroupData(player->GetGroup());
+        std::optional<MpGroupData> data = sMpState->GetGroupData(group->GetGUID());
         if (!data) {
             return;
         }
 
-        MpPlayerData *playerData = sMpDataStore->GetPlayerData(player->GetGUID());
-        if (!playerData) {
+        uint32 mapId = map->GetId();
+        uint32 instanceId = map->GetInstanceId();
+        uint32 playerDeaths = 0;
+        if (!sMpState->UpdatePlayerData(player->GetGUID(), [mapId, instanceId, &playerDeaths](MpPlayerData& pd)
+            {
+                playerDeaths = pd.AddDeath(mapId, instanceId);
+            }))
+        {
             return;
         }
 
-        playerData->AddDeath(map->GetId(), map->GetInstanceId());
+        MpLog::Info(MpLog::Area::Instance, "Player {} added death to instance data {}", player->GetName(),
+            playerDeaths);
 
         if(killer) {
-            sMpDataStore->DBAddPlayerDeath(player, killer, data->difficulty);
+            sMpRepo->DBAddPlayerDeath(player, killer, data->difficulty);
         } else {
-            sMpDataStore->DBAddPlayerDeath(player);
+            sMpRepo->DBAddPlayerDeath(player);
         }
 
-        sMpDataStore->DBAddGroupDeath(group, player->GetMapId(), player->GetInstanceId(), data->difficulty);
+        sMpRepo->DBAddGroupDeath(group, player->GetMapId(), player->GetInstanceId(), data->difficulty);
 
-        uint32 totalDeaths = data->GetDeaths(player->GetMapId(), player->GetInstanceId());
+        uint32 totalDeaths = sMpState->GetGroupDeaths(group->GetGUID(), player->GetMapId(), player->GetInstanceId());
         MpLog::Info(MpLog::Area::Instance, "Total Deaths: {}", totalDeaths);
         if (totalDeaths > 1)
         {
@@ -114,7 +123,7 @@ public:
         }
 
         // Check if this is a Mythic+ scaled creature
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature->GetGUID());
         if (!creatureData || !creatureData->IsScaled()) return;
 
         // Different gold ranges based on creature rank
@@ -165,7 +174,7 @@ public:
         }
 
         // Check if this is a Mythic+ scaled creature
-        MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
+        std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature->GetGUID());
         if (!creatureData || !creatureData->IsScaled()) return;
 
         // Recalculate XP using scaled level instead of original level
@@ -213,7 +222,7 @@ public:
             return;
         }
 
-        MpGroupData* data = sMpDataStore->GetGroupData(group);
+        std::optional<MpGroupData> data = sMpState->GetGroupData(group->GetGUID());
 
         // If there is not any mythic+ data set for this group do nothing.
         if(!data) {
@@ -226,23 +235,30 @@ public:
             return;
         }
 
-        // get the player data or set it up
-        MpPlayerData* playerData = sMpDataStore->GetPlayerData(player->GetGUID());
-        if(!playerData) {
-            playerData = new MpPlayerData(player, data->difficulty, group->GetGUID().GetCounter());
-            sMpDataStore->AddPlayerData(player->GetGUID(), playerData);
+        // Track the bound instance on the player data, setting the player data up if needed
+        ObjectGuid playerGuid = player->GetGUID();
+        auto mapKey = std::make_pair(mapId, player->GetInstanceId());
+        auto bindInstance = [&mapKey](MpPlayerData& pd)
+        {
+            pd.instanceData.emplace(mapKey, MpPlayerInstanceData{ .deaths = 0 });
+        };
+
+        if (!sMpState->UpdatePlayerData(playerGuid, bindInstance)) {
+            MpPlayerData playerData(playerGuid, player->GetName(), data->difficulty, group->GetGUID().GetCounter());
+            bindInstance(playerData);
+            sMpState->SetPlayerData(playerGuid, std::move(playerData));
         }
 
-        // Add this players data to the group data
-        data->AddPlayerData(playerData);
+        // Add this player to the group data
+        bool added = false;
+        auto addMember = [playerGuid, &added](MpGroupData& gd) { added = gd.AddMember(playerGuid); };
+        if (sMpState->UpdateGroupData(group->GetGUID(), addMember) && !added) {
+            MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector",
+                player->GetName());
+        }
 
-        auto mapKey = sMpDataStore->GetInstanceDataKey(mapId, player->GetInstanceId());
-        playerData->instanceData.emplace(mapKey, MpPlayerInstanceData{
-            .deaths = 0,
-        });
-
-        sMpDataStore->DBUpdatePlayerInstanceData(player->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId());
-        sMpDataStore->DBUpdateGroupData(group->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId(), 0);
+        sMpRepo->DBUpdatePlayerInstanceData(player->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId());
+        sMpRepo->DBUpdateGroupData(group->GetGUID(), data->difficulty, map->GetId(), map->GetInstanceId(), 0);
     }
 
     std::vector<Player*> GetGroupMembers(Player* currentPlayer)

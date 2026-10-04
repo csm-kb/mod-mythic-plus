@@ -2,10 +2,12 @@
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "Map.h"
-#include "MpDataStore.h"
+#include "MapMgr.h"
 #include "MythicPlus.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+
+#include <optional>
 
 
 class MythicPlus_AllMapScript : public AllMapScript
@@ -38,14 +40,13 @@ public:
         }
 
         // if there is not any group data for this group then just bail
-        const MpGroupData* groupData = sMpDataStore->GetGroupData(group->GetGUID());
+        std::optional<MpGroupData> groupData = sMpState->GetGroupData(group->GetGUID());
         if (!groupData) {
             return;
         }
 
         // Check if we already have mythic instance data set for this map and group
-        MpInstanceData* existingData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId());
-        if (existingData) {
+        if (sMpState->GetInstanceData(map->GetId(), map->GetInstanceId())) {
             if(player->GetName() == group->GetLeaderName()) {
                 MpLog::Debug(MpLog::Area::Instance, "Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
                     map->GetMapName(),
@@ -71,9 +72,8 @@ public:
 
         instanceData.difficulty = groupData->difficulty;
 
-        // Attempt to cast map to InstanceMap, making sure it is not null
-        instanceData.instance = dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId()));
-        if (!instanceData.instance)
+        // Make sure the map resolves to an InstanceMap; the record keeps only {mapId, instanceId}
+        if (!dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId())))
         {
             MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.", map->GetId(), map->GetInstanceId());
             return;
@@ -85,15 +85,16 @@ public:
             map->GetInstanceId(),
             instanceData.ToString()
         );
-        sMpDataStore->AddInstanceData(map->GetId(), map->GetInstanceId(), instanceData);
+        sMpState->SetInstanceData(map->GetId(), map->GetInstanceId(), instanceData);
 
         // Save the instance data for the user to the database
         if (player) {
-            sMpDataStore->DBUpdatePlayerInstanceData(player->GetGUID(), groupData->difficulty, map->GetId(), map->GetInstanceId(), 0);
+            sMpRepo->DBUpdatePlayerInstanceData(player->GetGUID(), groupData->difficulty, map->GetId(),
+                map->GetInstanceId(), 0);
         }
 
         // Once we have instance data set we can scale the remaining characters in our instance
-        sMythicPlus->ScaleRemaining(player, &instanceData);
+        sMythicPlus->ScaleRemaining(player, instanceData);
     }
 
     // When an instance is destroyed remove the instance data from the data store
@@ -104,11 +105,11 @@ public:
         }
 
         // Removes currenct GroupData Instance Data and removes from database storage
-        sMpDataStore->RemoveInstanceData(map->GetId(), map->GetInstanceId());
+        sMpState->RemoveInstanceData(map->GetId(), map->GetInstanceId());
 
         // remove group instance and group instance data from database during a reset
-        sMpDataStore->DBRemovePlayerInstanceData(map->GetInstanceId());
-        sMpDataStore->DBRemoveGroupInstanceData(map->GetInstanceId());
+        sMpRepo->DBRemovePlayerInstanceData(map->GetInstanceId());
+        sMpRepo->DBRemoveGroupInstanceData(map->GetInstanceId());
     }
 };
 

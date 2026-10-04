@@ -5,6 +5,8 @@
 #include "Player.h"
 #include "Map.h"
 
+#include <optional>
+
 class MythicPlus_GlobalScript : public GlobalScript
 {
 public:
@@ -29,7 +31,7 @@ public:
             return;
         }
 
-        MpInstanceData* mythicSettings = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId());
+        std::optional<MpInstanceData> mythicSettings = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
 
         // if there are not mythic settings set for this group and map skip
         if (!mythicSettings) {

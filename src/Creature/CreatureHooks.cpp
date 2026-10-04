@@ -2,6 +2,8 @@
 #include "MythicPlus.h"
 #include "MpLog.h"
 
+#include <optional>
+
 void CreatureHooks::RegisterJustDied(uint32 entry, CreatureHook<Creature*, Unit*> callback) {
     (*_JustDiedHandlers)[entry].push_back(callback);
 }
@@ -58,10 +60,11 @@ void CreatureHooks::JustSpawned(Creature* creature) {
     }
 
     uint32 entry = creature->GetEntry();
-    MpInstanceData* instanceData = sMpDataStore->GetInstanceData(creature->GetMapId(), creature->GetInstanceId());
+    std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
+        creature->GetInstanceId());
 
     if(instanceData) {
-        sMythicPlus->AddScaledCreature(creature, instanceData);
+        sMythicPlus->AddScaledCreature(creature, *instanceData);
     }
 
     if (_OnSpawnHandlers->contains(entry)) {
