@@ -1,6 +1,6 @@
 #include "CreatureAI.h"
 #include "MpDataStore.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "MythicPlus.h"
 #include "MpScriptAI.h"
 #include "ScriptMgr.h"
@@ -77,7 +77,7 @@ public:
 
         // this is a creature that was not scaled at instance load time, we need to scale it now.
         if(!creatureData) {
-            MpLogger::debug("OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}", creature->GetName());
+            MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}", creature->GetName());
             sMythicPlus->AddScaledCreature(creature, sMpDataStore->GetInstanceData(creature->GetMap()->GetId(), creature->GetMap()->GetInstanceId()));
             return;
         }
@@ -90,7 +90,7 @@ public:
         }
 
         if(currentState == DeathState::Alive && creatureData->lastDeathState == DeathState::Corpse) {
-            MpLogger::debug("OnAllCreatureUpdate: Creature Death event scaling creature: {} level: {} guid: {} event: {}", creature->GetName(), creatureData->creature->GetLevel(), creature->GetGUID().ToString(), creature->getDeathState());
+            MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Creature Death event scaling creature: {} level: {} guid: {} event: {}", creature->GetName(), creatureData->creature->GetLevel(), creature->GetGUID().ToString(), creature->getDeathState());
             if(creature->IsDungeonBoss() || creature->GetEntry() == 23682) {
                 sMythicPlus->AddScaledCreature(creature, instanceData);
             } else {
@@ -133,6 +133,6 @@ public:
 
 void Add_MP_AllCreatureScripts()
 {
-    MpLogger::debug("Add_MP_AllCreatureScripts");
+    MpLog::Debug(MpLog::Area::Scaling, "Add_MP_AllCreatureScripts");
     new MythicPlus_AllCreatureScript();
 }

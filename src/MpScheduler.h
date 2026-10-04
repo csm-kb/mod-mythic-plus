@@ -1,7 +1,7 @@
 #ifndef MYTHICPLUS_SCHEDULER_H
 #define MYTHICPLUS_SCHEDULER_H
 
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "ScriptMgr.h"
 #include "TaskScheduler.h"
 #include <chrono>

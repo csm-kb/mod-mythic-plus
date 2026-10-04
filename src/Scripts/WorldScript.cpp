@@ -2,7 +2,7 @@
 #include "MythicPlus.h"
 #include "MpDataStore.h"
 #include "AdvancementMgr.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "MpEventHandlers.cpp"
@@ -105,25 +105,25 @@ public:
     void OnStartup() override
     {
         int32 size = sMpDataStore->LoadScaleFactors();
-        MpLogger::info("Loaded {} Mythic+ Scaling Factors from database...", size);
+        MpLog::Info(MpLog::Area::Config, "Loaded {} Mythic+ Scaling Factors from database...", size);
 
         size = sAdvancementMgr->LoadAdvancementRanks();
-        MpLogger::info("Loaded {} advancement ranks...", size);
+        MpLog::Info(MpLog::Area::Config, "Loaded {} advancement ranks...", size);
 
         size = sAdvancementMgr->LoadMaterialTypes();
-        MpLogger::info("Loaded {} material types...", size);
+        MpLog::Info(MpLog::Area::Config, "Loaded {} material types...", size);
 
         sMpDataStore->LoadPlayerHealthAvg();
-        MpLogger::info("Loaded player health averages used for scaling calculations...");
+        MpLog::Info(MpLog::Area::Config, "Loaded player health averages used for scaling calculations...");
 
         // Registering event handlers for the Mythic+ events from client
         MP_Register_EventHandlers();
-        MpLogger::info("Registered Mythic+ Event Handlers...");
+        MpLog::Info(MpLog::Area::Config, "Registered Mythic+ Event Handlers...");
     }
 };
 
 void Add_MP_WorldScripts()
 {
-    MpLogger::debug("Add_MP_WorldScripts()");
+    MpLog::Debug(MpLog::Area::Config, "Add_MP_WorldScripts()");
     new MythicPlus_WorldScript();
 }

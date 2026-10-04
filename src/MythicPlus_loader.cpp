@@ -1,5 +1,5 @@
 #include "MpScheduler.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Spells/AdvancmentSpells.cpp"
 
 // Creature Overrides

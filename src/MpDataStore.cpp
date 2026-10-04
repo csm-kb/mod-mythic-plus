@@ -2,37 +2,37 @@
 #include "MpDataStore.h"
 #include "Chat.h"
 #include "Group.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Chat.h"
 
 // Adds an entry for the group difficult to memory and updats database
 void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
     if(!group) {
-        MpLogger::error("AddGroupData called with null group pointer");
+        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with null group pointer");
         return;
     }
 
     ObjectGuid guid = group->GetGUID();
 
     if (!guid) {
-        MpLogger::error("AddGroupData called with invalid group GUID");
+        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with invalid group GUID");
         return;
     }
 
     if (!groupData.difficulty) {
-        MpLogger::error("AddGroupData called with invalid difficulty");
+        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with invalid difficulty");
         return;
     }
 
     Player* leader = group->GetLeader();
     if(!leader) {
-        MpLogger::error("AddGroupData called with null group leader");
+        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with null group leader");
         return;
     }
 
     Map* map = leader->GetMap();
     if (!map) {
-        MpLogger::error("AddGroupData called with null map for group leader");
+        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with null map for group leader");
         return;
     }
 
@@ -54,7 +54,7 @@ void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
                     Player* player = itr->GetSource();
 
                     if(!player) {
-                        MpLogger::error("AddGroupData called with null player in instance");
+                        MpLog::Error(MpLog::Area::Instance, "AddGroupData called with null player in instance");
                         continue;
                     }
 
@@ -77,7 +77,7 @@ void MpDataStore::AddGroupData(Group *group, MpGroupData groupData) {
                 Player* player = itr->GetSource();
 
                 if(!player) {
-                    MpLogger::error("AddGroupData called with null player in instance");
+                    MpLog::Error(MpLog::Area::Instance, "AddGroupData called with null player in instance");
                     continue;
                 }
 
@@ -115,17 +115,17 @@ void MpDataStore::PushGroupInstanceKey(Group *group, uint32 mapId, uint32 instan
     ObjectGuid guid = group->GetGUID();
 
     if (!guid) {
-        MpLogger::error("PushGroupInstanceKey called with invalid group GUID");
+        MpLog::Error(MpLog::Area::Instance, "PushGroupInstanceKey called with invalid group GUID");
         return;
     }
 
     if (!mapId || !instanceId) {
-        MpLogger::error("PushGroupInstanceKey called with invalid mapId or instanceId");
+        MpLog::Error(MpLog::Area::Instance, "PushGroupInstanceKey called with invalid mapId or instanceId");
         return;
     }
 
     if (!_groupData->contains(guid)) {
-        MpLogger::error("PushGroupInstanceKey called with invalid group GUID");
+        MpLog::Error(MpLog::Area::Instance, "PushGroupInstanceKey called with invalid group GUID");
         return;
     }
 
@@ -134,7 +134,7 @@ void MpDataStore::PushGroupInstanceKey(Group *group, uint32 mapId, uint32 instan
 
 // This clears out any group data from memory and the database
 void MpDataStore::RemoveGroupData(Group *group) {
-    MpLogger::debug("RemoveGroupData for group {}", group->GetGUID().GetCounter());
+    MpLog::Debug(MpLog::Area::Instance, "RemoveGroupData for group {}", group->GetGUID().GetCounter());
     _groupData->erase(group->GetGUID());
 
     CharacterDatabase.Execute("DELETE FROM mp_group_data WHERE groupId = {}", group->GetGUID().GetCounter());
@@ -147,12 +147,12 @@ void MpDataStore::AddPlayerData(ObjectGuid guid, MpPlayerData* pd) {
 }
 
 void MpDataStore::RemovePlayerData(ObjectGuid guid) {
-    MpLogger::debug("RemovePlayerData for player {}", guid.GetCounter());
+    MpLog::Debug(MpLog::Area::Instance, "RemovePlayerData for player {}", guid.GetCounter());
     _playerData->erase(guid);
 }
 
 void MpDataStore::ResetPlayerData(ObjectGuid guid) {
-    MpLogger::debug("ResetPlayerData for player {}", guid.GetCounter());
+    MpLog::Debug(MpLog::Area::Instance, "ResetPlayerData for player {}", guid.GetCounter());
     _playerData->erase(guid);
 }
 
@@ -174,7 +174,7 @@ void MpDataStore::RemoveInstanceData(uint32 mapId, uint32 instanceId) {
 }
 
 void MpDataStore::AddCreatureData(ObjectGuid guid, MpCreatureData creatureData) {
-    // MpLogger::debug("AddInstanceCreatureData for creature {}", guid.GetCounter());
+    // MpLog::Debug(MpLog::Area::Instance, "AddInstanceCreatureData for creature {}", guid.GetCounter());
     _instanceCreatureData->insert_or_assign(guid, std::move(creatureData));
 }
 
@@ -211,7 +211,7 @@ std::vector<MpCreatureData*> MpDataStore::GetInstanceCreatures(uint32 mapId, uin
  }
 
 void MpDataStore::RemoveCreatureData(ObjectGuid guid) {
-    // MpLogger::debug("RemoveInstanceCreatureData data for creature {}", guid.GetCounter());
+    // MpLog::Debug(MpLog::Area::Instance, "RemoveInstanceCreatureData data for creature {}", guid.GetCounter());
     _instanceCreatureData->erase(guid);
 }
 
@@ -289,7 +289,7 @@ int32 MpDataStore::LoadScaleFactors() {
     //                                                 0       1          2              3        4        5
     QueryResult result = WorldDatabase.Query("SELECT mapId, melee_bonus, spell_bonus, heal_bonus, hp_bonus, difficulty FROM mp_scale_factors");
     if (!result) {
-        MpLogger::error("Failed to load mythic scale factors from database");
+        MpLog::Error(MpLog::Area::Instance, "Failed to load mythic scale factors from database");
         return 0;
     }
 
@@ -351,7 +351,7 @@ void MpDataStore::LoadPlayerHealthAvg() {
         } while (result->NextRow());
 
     } else {
-        MpLogger::error("Failed to load player health averages from database");
+        MpLog::Error(MpLog::Area::Instance, "Failed to load player health averages from database");
     }
 }
 
@@ -361,7 +361,7 @@ void MpDataStore::LoadPlayerHealthAvg() {
 */
 void MpDataStore::DBUpdatePlayerInstanceData(ObjectGuid playerGuid, MpDifficulty difficulty, uint32 mapId, uint32 instanceId, uint32 deaths) {
     if (!playerGuid) {
-        MpLogger::error("DBAddPlayerData called with invalid playerData");
+        MpLog::Error(MpLog::Area::Instance, "DBAddPlayerData called with invalid playerData");
         return;
     }
 
@@ -376,7 +376,7 @@ void MpDataStore::DBUpdatePlayerInstanceData(ObjectGuid playerGuid, MpDifficulty
 
 void MpDataStore::DBResetPlayerDeaths(Player* player) {
     if (!player) {
-        MpLogger::error("DBUpdateDeaths called with invalid playerId");
+        MpLog::Error(MpLog::Area::Instance, "DBUpdateDeaths called with invalid playerId");
         return;
     }
 
@@ -389,7 +389,7 @@ void MpDataStore::DBResetPlayerDeaths(Player* player) {
 
 void MpDataStore::DBAddPlayerDeath(Player* player) {
     if (!player) {
-        MpLogger::error("DBAddPlayerDeath called with invalid player");
+        MpLog::Error(MpLog::Area::Instance, "DBAddPlayerDeath called with invalid player");
         return;
     }
     CharacterDatabase.Execute("UPDATE mp_player_instance_data SET deaths = deaths + 1 WHERE guid = {} and mapId = {} and instanceId = {}",
@@ -402,7 +402,7 @@ void MpDataStore::DBAddPlayerDeath(Player* player) {
 // Logs death for player that occurs by a creature directly.
 void MpDataStore::DBAddPlayerDeath(Player* player, Creature* creature, MpDifficulty difficulty) {
     if (!player) {
-        MpLogger::error("DBAddPlayerDeath called with invalid player");
+        MpLog::Error(MpLog::Area::Instance, "DBAddPlayerDeath called with invalid player");
         return;
     }
 
@@ -424,7 +424,7 @@ void MpDataStore::DBAddPlayerDeath(Player* player, Creature* creature, MpDifficu
 
 void MpDataStore::DBUpdateGroupData(ObjectGuid groupGuid, MpDifficulty difficulty, uint32 mapId, uint32 instanceId, uint32 deaths) {
     if (!groupGuid) {
-        MpLogger::error("DBUpdateGroupData called with invalid groupGuid");
+        MpLog::Error(MpLog::Area::Instance, "DBUpdateGroupData called with invalid groupGuid");
         return;
     }
     CharacterDatabase.Execute("REPLACE INTO mp_group_data (groupId, difficulty, mapId, instanceId, deaths) VALUES ({},{},{},{},{}) ",
@@ -438,17 +438,17 @@ void MpDataStore::DBUpdateGroupData(ObjectGuid groupGuid, MpDifficulty difficult
 
 void MpDataStore::DBAddGroupDeath(Group* group, uint32 mapId, uint32 instanceId, MpDifficulty difficulty) {
     if (!group) {
-        MpLogger::error("DBAddGroupDeath called with invalid group");
+        MpLog::Error(MpLog::Area::Instance, "DBAddGroupDeath called with invalid group");
         return;
     }
 
     if(!difficulty) {
-        MpLogger::error("DBAddGroupDeath called with invalid difficulty");
+        MpLog::Error(MpLog::Area::Instance, "DBAddGroupDeath called with invalid difficulty");
         return;
     }
 
     if(!mapId || !instanceId) {
-        MpLogger::error("DBAddGroupDeath called with invalid mapId or instanceId");
+        MpLog::Error(MpLog::Area::Instance, "DBAddGroupDeath called with invalid mapId or instanceId");
         return;
     }
 
@@ -462,7 +462,7 @@ void MpDataStore::DBAddGroupDeath(Group* group, uint32 mapId, uint32 instanceId,
 
 void MpDataStore::DBRemovePlayerData(ObjectGuid playerGuid) {
     if (!playerGuid) {
-        MpLogger::error("DBRemovePlayerData called with invalid playerGuid");
+        MpLog::Error(MpLog::Area::Instance, "DBRemovePlayerData called with invalid playerGuid");
         return;
     }
 
@@ -471,7 +471,7 @@ void MpDataStore::DBRemovePlayerData(ObjectGuid playerGuid) {
 
 void MpDataStore::DBRemovePlayerInstanceData(uint32 instanceId) {
     if (!instanceId) {
-        MpLogger::error("DBRemovePlayerInstanceData: missing instanceId to remove player instance ");
+        MpLog::Error(MpLog::Area::Instance, "DBRemovePlayerInstanceData: missing instanceId to remove player instance ");
         return;
     }
 
@@ -481,7 +481,7 @@ void MpDataStore::DBRemovePlayerInstanceData(uint32 instanceId) {
 
 void MpDataStore::DBUpdateGroupTimerDeaths(ObjectGuid groupGuid, uint32 mapId, uint32 instanceId, uint32 timer, uint32 deaths) {
     if (!groupGuid) {
-        MpLogger::error("DBUpdateGroupTimerDeaths called with invalid groupGuid");
+        MpLog::Error(MpLog::Area::Instance, "DBUpdateGroupTimerDeaths called with invalid groupGuid");
         return;
     }
 
@@ -496,7 +496,7 @@ void MpDataStore::DBUpdateGroupTimerDeaths(ObjectGuid groupGuid, uint32 mapId, u
 
 void MpDataStore::DBRemoveGroupData(ObjectGuid groupGuid) {
     if (!groupGuid) {
-        MpLogger::error("DBRemoveGroupData called with invalid groupGuid");
+        MpLog::Error(MpLog::Area::Instance, "DBRemoveGroupData called with invalid groupGuid");
         return;
     }
 
@@ -506,7 +506,7 @@ void MpDataStore::DBRemoveGroupData(ObjectGuid groupGuid) {
 // Remove instance data using the instanceId
 void MpDataStore::DBRemoveGroupInstanceData(uint32 instanceId) {
     if (!instanceId) {
-        MpLogger::error("DBRemoveGroupData called with invalid groupGuid");
+        MpLog::Error(MpLog::Area::Instance, "DBRemoveGroupData called with invalid groupGuid");
         return;
     }
 

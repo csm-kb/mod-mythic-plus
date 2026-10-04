@@ -1,7 +1,7 @@
 #include "MpClientDispatcher.h"
 #include "MpEventProcessor.h"
 #include "Player.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Chat.h"
 #include "WorldPacket.h"
 
@@ -15,7 +15,7 @@
 bool MpClientDispatcher::Dispatch(MpClientEvent event, Player* player, std::vector<std::string>& args)
 {
     if(!MpClientEventNames.contains(event)) {
-        MpLogger::warn("No event registered for event: {}", event);
+        MpLog::Warn(MpLog::Area::Events, "No event registered for event: {}", event);
         return false;
     }
 
@@ -30,7 +30,7 @@ bool MpClientDispatcher::Dispatch(MpClientEvent event, Player* player, std::vect
     std::string prefix = std::string(MP_DATA_CHAT_CHANNEL);
     std::string fullmsg = prefix + "\t" + message;
 
-    MpLogger::debug("Dispatching client event: {} length {} for event {}", fullmsg, fullmsg.length(), std::string(eventName));
+    MpLog::Debug(MpLog::Area::Events, "Dispatching client event: {} length {} for event {}", fullmsg, fullmsg.length(), std::string(eventName));
 
     WorldPacket data(SMSG_MESSAGECHAT, 100);
     data << uint8(ChatMsg::CHAT_MSG_WHISPER);

@@ -2,7 +2,7 @@
 #include "CharacterDatabase.h"
 #include "WorldDatabase.h"
 #include "Player.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "MythicPlus.h"
 #include "MpConstants.h"
 
@@ -84,7 +84,7 @@ int32 AdvancementMgr::LoadAdvancementRanks() {
 
     QueryResult result = WorldDatabase.Query(query);
     if (!result) {
-        MpLogger::error("Failed to load advancement ranks from database");
+        MpLog::Error(MpLog::Area::Advancement, "Failed to load advancement ranks from database");
         return 0;
     }
 
@@ -168,7 +168,7 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
     // If the player does not have any upgrades just return perfectly fine not a problem until they purchase one.
 
     if(!result) {
-        MpLogger::info("Player {} has no advancements", player->GetName());
+        MpLog::Info(MpLog::Area::Advancement, "Player {} has no advancements", player->GetName());
         return;
     }
 
@@ -193,13 +193,13 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
         // List of all ranks keyed by rank, advancementId
         _playerAdvancements[guid][advancement] = playerRank;
 
-        MpLogger::debug("Loaded player {} advancement {} rank {} with bonus {}",
+        MpLog::Debug(MpLog::Area::Advancement, "Loaded player {} advancement {} rank {} with bonus {}",
             player->GetName(), static_cast<int>(advancement), upgradeRank, bonus);
 
         count++;
     } while (result->NextRow());
 
-    MpLogger::info("Loaded {} advancements for player {}", count, player->GetName());
+    MpLog::Info(MpLog::Area::Advancement, "Loaded {} advancements for player {}", count, player->GetName());
 }
 
 /**
@@ -230,7 +230,7 @@ int32 AdvancementMgr::LoadMaterialTypes() {
 
         return result->GetRowCount();
     } else {
-        MpLogger::error("Query failed to load material types from database");
+        MpLog::Error(MpLog::Area::Advancement, "Query failed to load material types from database");
         return 0;
     }
 }
@@ -244,7 +244,7 @@ MpAdvancementRank* AdvancementMgr::GetAdvancementRank(uint32 rank, MpAdvancement
     }
     else
     {
-        MpLogger::error("Advancement Id {} and rank {} could not be found", rank, advancement);
+        MpLog::Error(MpLog::Area::Advancement, "Advancement Id {} and rank {} could not be found", rank, advancement);
         return nullptr;
     }
 }
@@ -252,7 +252,7 @@ MpAdvancementRank* AdvancementMgr::GetAdvancementRank(uint32 rank, MpAdvancement
 MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvancements advancement)
 {
     if(!player) {
-        MpLogger::error("Could not retrieve player advancement for null player {}", player->GetName());
+        MpLog::Error(MpLog::Area::Advancement, "Could not retrieve player advancement for null player {}", player->GetName());
         return nullptr;
     }
 
@@ -270,7 +270,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
 
     // Validators to make sure inputs are correct to perform the upgrade
     if(!player) {
-        MpLogger::error("Could not upgrade advancement for player, player was nullpointer");
+        MpLog::Error(MpLog::Area::Advancement, "Could not upgrade advancement for player, player was nullpointer");
         throw new std::runtime_error("Could not upgrade advancement for player, player was nullpointer");
     }
     if(diceCostLevel < 1 || diceCostLevel > 3) {
@@ -290,14 +290,14 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     }
 
     if(playerRank->rank == MP_MAX_ADVANCEMENT_RANK) {
-        MpLogger::debug("Player {} has reached the maximum rank for advancement {}", player->GetName(), advancement);
+        MpLog::Debug(MpLog::Area::Advancement, "Player {} has reached the maximum rank for advancement {}", player->GetName(), advancement);
         return 0;
     }
 
     uint32 newRank = playerRank->rank + 1;
     MpAdvancementRank* advancementRank = GetAdvancementRank(newRank, advancement);
     if(advancementRank == nullptr || !advancementRank->IsValid()) {
-        MpLogger::error("Advancement rank could not be found. Rank: {} Advancement: {}", newRank, static_cast<int>(advancement));
+        MpLog::Error(MpLog::Area::Advancement, "Advancement rank could not be found. Rank: {} Advancement: {}", newRank, static_cast<int>(advancement));
         return 0;
     }
 
@@ -308,14 +308,14 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
 
     // If the player has the items needed to upgrade this advancement, then remove the items from the player inventory and apply the upgrade
     if(!_PlayerHasItems(player, advancementRank, diceCostLevel, itemEntry1, itemEntry2, itemEntry3)) {
-        MpLogger::debug("Player {} does not have the required items to upgrade advancement {}", player->GetName(), advancement);
+        MpLog::Debug(MpLog::Area::Advancement, "Player {} does not have the required items to upgrade advancement {}", player->GetName(), advancement);
         return 0;
     }
 
     // Charge the player the cost of the upgrade
     _ChargeItemCost(player, advancementRank, diceCostLevel, itemEntry1, itemEntry2, itemEntry3);
 
-    MpLogger::debug("Player {} has upgraded advancement {} to rank {}", player->GetName(), advancement, newRank);
+    MpLog::Debug(MpLog::Area::Advancement, "Player {} has upgraded advancement {} to rank {}", player->GetName(), advancement, newRank);
 
     // Finally get the bonus to apply for the player
     float roll = round(_RollAdvancement(advancementRank, diceCostLevel));
@@ -327,7 +327,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     // round the roll to a whole number and add to player rank
     playerRank->bonus += roll;
 
-    MpLogger::debug("Player {} has upgraded advancement {} to rank {} with bonus {} to new total bonus of {}", player->GetName(), advancement, newRank, roll, playerRank->bonus);
+    MpLog::Debug(MpLog::Area::Advancement, "Player {} has upgraded advancement {} to rank {} with bonus {} to new total bonus of {}", player->GetName(), advancement, newRank, roll, playerRank->bonus);
 
     // Save the advancement to the database
     _SaveAdvancement(player, advancementRank, playerRank, advancementRank->rollCost[diceCostLevel-1], roll, itemEntry1, itemEntry2, itemEntry3);
@@ -336,7 +336,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     uint32 spellId = MpConstants::GetAdvancementAura(advancement);
     if (spellId > 0)
     {
-        MpLogger::info("Refreshing advancement aura {} for player {}", spellId, player->GetName());
+        MpLog::Info(MpLog::Area::Advancement, "Refreshing advancement aura {} for player {}", spellId, player->GetName());
 
         // First remove the aura completely
         player->RemoveAura(spellId);
@@ -380,11 +380,11 @@ float AdvancementMgr::_RollAdvancement(MpAdvancementRank* advancementRank, uint3
         max = advancementRank->highRange.second;
         break;
     default:
-        MpLogger::error("Invalid dice cost level valid vales (1,2,3) received {} for rank roll {}", diceCostLevel, advancementRank->rank);
+        MpLog::Error(MpLog::Area::Advancement, "Invalid dice cost level valid vales (1,2,3) received {} for rank roll {}", diceCostLevel, advancementRank->rank);
         break;
     }
 
-    MpLogger::debug("Rolling for rank {} dice level {} min {} max {}", advancementRank->rank, diceCostLevel, min, max);
+    MpLog::Debug(MpLog::Area::Advancement, "Rolling for rank {} dice level {} min {} max {}", advancementRank->rank, diceCostLevel, min, max);
 
     return frand(min, max);
 }
@@ -395,13 +395,13 @@ float AdvancementMgr::_RollAdvancement(MpAdvancementRank* advancementRank, uint3
  */
 bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancementRank, uint32 diceCostLevel, uint32 itemEntry1, uint32 itemEntry2, uint32 itemEntry3)
 {
-    MpLogger::debug("Checking items for player {} dice level {} item1 {} item2 {} item3 {}",
+    MpLog::Debug(MpLog::Area::Advancement, "Checking items for player {} dice level {} item1 {} item2 {} item3 {}",
         player->GetName(), diceCostLevel, itemEntry1, itemEntry2, itemEntry3);
 
     // Check if player has the required dice to upgrade the advancement
     uint32 diceCost = advancementRank->rollCost[diceCostLevel-1];
     if(!player->HasItemCount(MpConstants::ANCIENT_DICE, diceCost)) {
-        MpLogger::info("Player {} does not have enough dice to upgrade advancement {}",
+        MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough dice to upgrade advancement {}",
             player->GetName(), advancementRank->advancementId);
         return false;
     }
@@ -414,7 +414,7 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
 
         uint32 requiredCount = advancementRank->material1.second;
         if (!player->HasItemCount(itemEntry1, requiredCount)) {
-            MpLogger::info("Player {} does not have enough of item {} for advancement {}, requires: {}",
+            MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry1, advancementRank->advancementId, requiredCount);
             return false;
         }
@@ -423,13 +423,13 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
     // Check material 2 (optional)
     if (advancementRank->material2.first > 0) {
         if (itemEntry2 == 0) {
-            MpLogger::debug("Secondary material is required but not provided");
+            MpLog::Debug(MpLog::Area::Advancement, "Secondary material is required but not provided");
             return false;
         }
 
         uint32 requiredCount = advancementRank->material2.second;
         if (!player->HasItemCount(itemEntry2, requiredCount)) {
-            MpLogger::info("Player {} does not have enough of item {} for advancement {}, requires: {}",
+            MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry2, advancementRank->advancementId, requiredCount);
             return false;
         }
@@ -438,19 +438,19 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
     // Check material 3 (optional)
     if (advancementRank->material3.first > 0) {
         if (itemEntry3 == 0) {
-            MpLogger::debug("Tertiary material is required but not provided");
+            MpLog::Debug(MpLog::Area::Advancement, "Tertiary material is required but not provided");
             return false;
         }
 
         uint32 requiredCount = advancementRank->material3.second;
         if (!player->HasItemCount(itemEntry3, requiredCount)) {
-            MpLogger::info("Player {} does not have enough of item {} for advancement {}, requires: {}",
+            MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry3, advancementRank->advancementId, requiredCount);
             return false;
         }
     }
 
-    MpLogger::debug("Player {} has all required materials to upgrade advancement {}",
+    MpLog::Debug(MpLog::Area::Advancement, "Player {} has all required materials to upgrade advancement {}",
         player->GetName(), advancementRank->advancementId);
     return true;
 }
@@ -458,7 +458,7 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
 // Remove all items required for the upgrade.
 void AdvancementMgr::_ChargeItemCost(Player *player, MpAdvancementRank* advancementRank, uint32 diceCostLevel, uint32 itemEntry1, uint32 itemEntry2, uint32 itemEntry3)
 {
-    MpLogger::debug("Charging player {} dice level {} item1 {} item2 {} item3 {}",
+    MpLog::Debug(MpLog::Area::Advancement, "Charging player {} dice level {} item1 {} item2 {} item3 {}",
         player->GetName(), diceCostLevel, itemEntry1, itemEntry2, itemEntry3);
 
     // Remove the dice cost
@@ -480,7 +480,7 @@ void AdvancementMgr::_ChargeItemCost(Player *player, MpAdvancementRank* advancem
         player->DestroyItemCount(itemEntry3, advancementRank->material3.second, true);
     }
 
-    MpLogger::debug("Successfully charged player {} for advancement upgrade", player->GetName());
+    MpLog::Debug(MpLog::Area::Advancement, "Successfully charged player {} for advancement upgrade", player->GetName());
 }
 
 void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advancementRank, MpPlayerRank* playerRank, uint32 diceCost, float roll, uint32 itemEntry1, uint32 itemEntry2, uint32 itemEntry3)
@@ -496,7 +496,7 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 diceSpent = {}
         )";
 
-        MpLogger::debug("Saving advancement for player {} bonus {} advancement {} rank {}", player->GetName(), playerRank->bonus, advancementRank->advancementId, playerRank->rank);
+        MpLog::Debug(MpLog::Area::Advancement, "Saving advancement for player {} bonus {} advancement {} rank {}", player->GetName(), playerRank->bonus, advancementRank->advancementId, playerRank->rank);
         CharacterDatabase.DirectExecute(insert,
                 player->GetGUID().GetCounter(),
                 advancementRank->advancementId,
@@ -508,9 +508,9 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 playerRank->diceSpent
             );
     } catch (const std::exception& e) {
-        MpLogger::error("Failed to save advancement for player {}: {}", player->GetName(), e.what());
+        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: {}", player->GetName(), e.what());
     } catch (...) {
-        MpLogger::error("Failed to save advancement for player {}: unknown error", player->GetName());
+        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: unknown error", player->GetName());
     }
 
     try {
@@ -519,7 +519,7 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
             VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
         )";
 
-        MpLogger::debug("Saving advancement history for player {} advancement {} rank {}", player->GetName(), advancementRank->advancementId, playerRank->rank);
+        MpLog::Debug(MpLog::Area::Advancement, "Saving advancement history for player {} advancement {} rank {}", player->GetName(), advancementRank->advancementId, playerRank->rank);
         CharacterDatabase.Execute(insertHistory,
                 player->GetGUID().GetCounter(),
                 advancementRank->advancementId,
@@ -534,9 +534,9 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 advancementRank->material3.second
             );
     } catch (const std::exception& e) {
-        MpLogger::error("Failed to save advancement history for player {}: {}", player->GetName(), e.what());
+        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: {}", player->GetName(), e.what());
     } catch (...) {
-        MpLogger::error("Failed to save advancement history for player {}: unknown error", player->GetName());
+        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: unknown error", player->GetName());
     }
 }
 

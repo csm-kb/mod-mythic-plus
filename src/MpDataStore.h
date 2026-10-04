@@ -6,7 +6,7 @@
 #include "Group.h"
 #include "MapMgr.h"
 #include "Player.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "ObjectGuid.h"
 #include "MpTypes.h"
 
@@ -47,7 +47,7 @@ struct MpPlayerData
             instanceData[key] = MpPlayerInstanceData{.deaths = 1};
         }
 
-        MpLogger::info("========= Player {} added death to instance data {}", guid.GetCounter(), instanceData[key].deaths);
+        MpLog::Info(MpLog::Area::Instance, "========= Player {} added death to instance data {}", guid.GetCounter(), instanceData[key].deaths);
     }
 
     uint32 GetDeaths(uint32 mapId, uint32 instanceId) const {
@@ -112,7 +112,7 @@ struct MpGroupData
             return existingData->player == playerData->player;
         })) {
 
-            MpLogger::warn("PlayerData for player {} is already in the players vector", playerData->player->GetName());
+            MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector", playerData->player->GetName());
             return;
         }
 

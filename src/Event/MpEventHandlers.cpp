@@ -1,5 +1,5 @@
 #include "MpEvent.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "../AdvancementMgr.h"
 #include "MpEventProcessor.h"
 #include "MpClientDispatcher.h"
@@ -53,7 +53,7 @@ std::string EventCodeToString(MP_EVENT_CODE code)
 bool SendEventError(Player* player, const std::string& /* method*/, MP_EVENT_CODE code, std::string message)
 {
     std::vector<std::string> clientError = { std::to_string(static_cast<int>(code)), message };
-    MpLogger::error("(Event Processor) Sending client error: {} {}", code, message);
+    MpLog::Error(MpLog::Area::Events, "(Event Processor) Sending client error: {} {}", code, message);
     sMpClientDispatcher->Dispatch(MpClientEvent::Error, player, clientError);
     return false;
 }
@@ -77,9 +77,9 @@ class UpgradeAdvancements : public MpEventInterface
             std::vector<std::string> eventData;
 
             std::string eventName = EventName();
-            MpLogger::info("(EventProcessor) Executing {}", eventName.c_str());
+            MpLog::Info(MpLog::Area::Events, "(EventProcessor) Executing {}", eventName.c_str());
             for(auto& arg : args) {
-                MpLogger::info("{} Arg: {}", EventName(), arg);
+                MpLog::Info(MpLog::Area::Events, "{} Arg: {}", EventName(), arg);
             }
 
             // Validate the message is in the right format
@@ -161,9 +161,9 @@ class GetPlayerRank : public MpEventInterface
             // Store the event data to send back to the client for parsing
             std::vector<std::string> eventData;
 
-            MpLogger::info("(EventProcessor) Executing {}}", EventName());
+            MpLog::Info(MpLog::Area::Events, "(EventProcessor) Executing {}}", EventName());
             for(auto& arg : args) {
-                MpLogger::info("{} Arg: {}", EventName(), arg);
+                MpLog::Info(MpLog::Area::Events, "{} Arg: {}", EventName(), arg);
             }
 
             // Validate the message is int he right format

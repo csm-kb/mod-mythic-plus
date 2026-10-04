@@ -1,4 +1,4 @@
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "MythicPlus.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -41,7 +41,7 @@ public:
 
         if(lang == LANG_ADDON) {
             if(msg.empty()) {
-                MpLogger::info("Empty AddOn message received from player: {}", player->GetName());
+                MpLog::Info(MpLog::Area::Events, "Empty AddOn message received from player: {}", player->GetName());
                 return true;
             }
 
@@ -67,20 +67,20 @@ public:
     //     }
 
     //     // Create a channel called MpEx if it does not exist
-    //     MpLogger::info("Player {} logged in on team {}", player->GetName(), player->GetTeamId());
+    //     MpLog::Info(MpLog::Area::Events, "Player {} logged in on team {}", player->GetName(), player->GetTeamId());
     //     ChannelMgr* cmg = ChannelMgr::forTeam(player->GetTeamId());
 
     //     if(!cmg) {
-    //         MpLogger::error("Failed to get channel manager for team {}", player->GetTeamId());
+    //         MpLog::Error(MpLog::Area::Events, "Failed to get channel manager for team {}", player->GetTeamId());
     //         return;
     //     }
 
     //     Channel* channel = cmg->GetChannel(static_cast<std::string>(MP_DATA_CHAT_CHANNEL), player);
     //     if(!channel) {
-    //         MpLogger::error("Failed to get mythic data channel for player {}", player->GetName());
+    //         MpLog::Error(MpLog::Area::Events, "Failed to get mythic data channel for player {}", player->GetName());
     //         Channel* nchan = new Channel(static_cast<std::string>(MP_DATA_CHAT_CHANNEL), 17, 0, player->GetTeamId());
     //         if(!nchan) {
-    //             MpLogger::error("Failed to create mythic data channel for player {}", player->GetName());
+    //             MpLog::Error(MpLog::Area::Events, "Failed to create mythic data channel for player {}", player->GetName());
     //             return;
     //         }
     //     }
@@ -90,6 +90,6 @@ public:
 
 void Add_MP_PlayerMessageEvents()
 {
-    MpLogger::debug("Add_MP_PlayerEventMessages");
+    MpLog::Debug(MpLog::Area::Events, "Add_MP_PlayerEventMessages");
     new MythicPlus_PlayerMessageEvents();
 }

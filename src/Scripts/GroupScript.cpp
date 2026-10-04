@@ -1,6 +1,6 @@
 
 #include "MpDataStore.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "ScriptMgr.h"
 #include "Group.h"
 
@@ -18,7 +18,7 @@ class MythicPlus_GroupScript : public GroupScript
 
         Player* player = ObjectAccessor::FindPlayer(guid);
         if (!player) {
-            MpLogger::warn("Player not found for guid {}", guid.GetCounter());
+            MpLog::Warn(MpLog::Area::Instance, "Player not found for guid {}", guid.GetCounter());
             return;
         }
 
@@ -39,7 +39,7 @@ class MythicPlus_GroupScript : public GroupScript
         }
 
         if(!gd) {
-            MpLogger::warn("Group data not found for group {}", group->GetGUID().GetCounter());
+            MpLog::Warn(MpLog::Area::Instance, "Group data not found for group {}", group->GetGUID().GetCounter());
             return;
         }
 
@@ -95,6 +95,6 @@ class MythicPlus_GroupScript : public GroupScript
 
 void Add_MP_GroupScripts()
 {
-    MpLogger::debug("Add_MP_GroupScripts()");
+    MpLog::Debug(MpLog::Area::Instance, "Add_MP_GroupScripts()");
     new MythicPlus_GroupScript();
 }

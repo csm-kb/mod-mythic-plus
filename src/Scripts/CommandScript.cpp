@@ -4,7 +4,7 @@
 #include "MpDataStore.h"
 #include "MythicPlus.h"
 #include "MpDataStore.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "StringConvert.h"
@@ -113,7 +113,7 @@ public:
         Group* group = player->GetGroup();
 
         if (!group) {
-            MpLogger::debug("HandleSetMythic() No Group for player: {}", player->GetName());
+            MpLog::Debug(MpLog::Area::Instance, "HandleSetMythic() No Group for player: {}", player->GetName());
             handler->PSendSysMessage("|cFFFF0000 You must be in a group to be able to set a Mythic+ difficulty.");
             return true;
         }
@@ -280,7 +280,7 @@ public:
 
     static bool HandleDisable(ChatHandler* handler)
     {
-        MpLogger::debug("HandleDisable()");
+        MpLog::Debug(MpLog::Area::Instance, "HandleDisable()");
         sMythicPlus->Enabled = false;
         handler->SendSysMessage("Mythic+ mod has been disabled.");
         return true;
@@ -288,7 +288,7 @@ public:
 
     static bool HandleEnable(ChatHandler* handler)
     {
-        MpLogger::debug("HandleEnable()");
+        MpLog::Debug(MpLog::Area::Instance, "HandleEnable()");
         sMythicPlus->Enabled = true;
         handler->SendSysMessage("Mythic+ mod has been enabled.");
         return true;
@@ -429,6 +429,6 @@ public:
 
 void Add_MP_CommandScripts()
 {
-    MpLogger::debug("Add_MP_CommandScripts()");
+    MpLog::Debug(MpLog::Area::Instance, "Add_MP_CommandScripts()");
     new MythicPlus_CommandScript();
 }

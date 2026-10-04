@@ -1,4 +1,4 @@
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "MpDataStore.h"
 #include "MpScheduler.h"
 #include "MythicPlus.h"
@@ -34,19 +34,16 @@ public:
 
         Group* group = player->GetGroup();
         if(!group) {
-            MpLogger::warn("Missing group data for player {}", player->GetName());
             return;
         }
 
         MpGroupData *data = sMpDataStore->GetGroupData(player->GetGroup());
         if (!data) {
-            MpLogger::warn("Missing group data for player {}", player->GetName());
             return;
         }
 
         MpPlayerData *playerData = sMpDataStore->GetPlayerData(player->GetGUID());
         if (!playerData) {
-            MpLogger::warn("Missing player data for player {}", player->GetName());
             return;
         }
 
@@ -61,11 +58,11 @@ public:
         sMpDataStore->DBAddGroupDeath(group, player->GetMapId(), player->GetInstanceId(), data->difficulty);
 
         uint32 totalDeaths = data->GetDeaths(player->GetMapId(), player->GetInstanceId());
-        MpLogger::info("Total Deaths: {}", totalDeaths);
+        MpLog::Info(MpLog::Area::Instance, "Total Deaths: {}", totalDeaths);
         if (totalDeaths > 1)
         {
             // Death-limit enforcement (GroupReset) is not implemented yet; see sub-project 2 notes.
-            MpLogger::debug("Group {} death threshold reached in map {} instance {}",
+            MpLog::Debug(MpLog::Area::Instance, "Group {} death threshold reached in map {} instance {}",
                 group->GetGUID().GetCounter(), map->GetId(), map->GetInstanceId());
         }
 //         if(totalDeaths > 1) {
@@ -75,28 +72,28 @@ public:
 //             }
 //             Group* group = player->GetGroup();
 //             if(!group) {
-//                 MpLogger::warn("Player {} is not in a group.", player->GetName());
+//                 MpLog::Warn(MpLog::Area::Instance, "Player {} is not in a group.", player->GetName());
 //                 return;
 //             }
 
 // // map->RemoveAllPlayers();
-//                 MpLogger::info("Starting scheduled failure notification");
+//                 MpLog::Info(MpLog::Area::Instance, "Starting scheduled failure notification");
 //                 // auto testlambda = [](TaskContext ctx) { return; };
                 // sMpScheduler->ScheduleWorldTask(1s, [](TaskContext ctx) {
-                //     MpLogger::info("<<<<<<<<<<<  Player Death Scheduler fire >>>>>>>>>>>>>");
+                //     MpLog::Info(MpLog::Area::Instance, "<<<<<<<<<<<  Player Death Scheduler fire >>>>>>>>>>>>>");
                 // });
 
                         // sMpScheduler->GetWorldScheduler().Schedule(1s, [playerName = player->GetName()](TaskContext ctx) {
-            //     MpLogger::info("<<<<<<<<<<<  Player Death Scheduler fire {} >>>>>>>>>>>>>", playerName);
+            //     MpLog::Info(MpLog::Area::Instance, "<<<<<<<<<<<  Player Death Scheduler fire {} >>>>>>>>>>>>>", playerName);
             //     return;
             // });
                     // std::vector<Player*> players = GetGroupMembers(player);
-                    // MpLogger::info("Failed mythic+ instance run notification fired. ");
+                    // MpLog::Info(MpLog::Area::Instance, "Failed mythic+ instance run notification fired. ");
                     // WorldPacket data;
 
                     // for(Player* player : players)
                     // {
-                    //     MpLogger::info("Seding notification of failure to player: {}", player->GetName());
+                    //     MpLog::Info(MpLog::Area::Instance, "Seding notification of failure to player: {}", player->GetName());
                     //     player->GetSession()->SendShowBank(player->GetGUID());
                     //     // player->GetSession()->SendNotification("Your group has died too many time to continue.");
                     //     // ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_BOSS_EMOTE, LANG_UNIVERSAL, nullptr, player, message);
@@ -192,7 +189,7 @@ public:
     }
     void OnPlayerLogin(Player* player) override
     {
-        MpLogger::info("Player {} logged in", player->GetName());
+        MpLog::Info(MpLog::Area::Instance, "Player {} logged in", player->GetName());
 
         // Load the player advancement data for the player when they login
         sAdvancementMgr->LoadPlayerAdvancements(player);
@@ -200,7 +197,7 @@ public:
         // Cast all unique advancement spells
         for(uint32 i = 1; i <= 10; ++i) {
             uint32 spellId = 80000000 + i;
-            MpLogger::info("Casting spell {} to player {}", spellId, player->GetName());
+            MpLog::Info(MpLog::Area::Instance, "Casting spell {} to player {}", spellId, player->GetName());
             player->AddAura(spellId, player);
         }
     }
@@ -228,7 +225,7 @@ public:
 
         Map* map = player->GetMap();
         if(!map) {
-            MpLogger::warn("Player {} is not in a map", player->GetName());
+            MpLog::Warn(MpLog::Area::Instance, "Player {} is not in a map", player->GetName());
             return;
         }
 
@@ -258,7 +255,7 @@ public:
         Group* group = currentPlayer->GetGroup();
         if (!group)
         {
-            MpLogger::warn("Player is not in a group.");
+            MpLog::Warn(MpLog::Area::Instance, "Player is not in a group.");
             return groupPlayers;
         }
 
@@ -273,6 +270,6 @@ public:
 
 void Add_MP_PlayerScripts()
 {
-    MpLogger::debug("Add_MP_PlayerScripts()");
+    MpLog::Debug(MpLog::Area::Instance, "Add_MP_PlayerScripts()");
     new MythicPlus_PlayerScript();
 }

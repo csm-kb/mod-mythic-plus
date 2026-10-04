@@ -1,6 +1,6 @@
 #include "CreatureHooks.h"
 #include "MythicPlus.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 
 void CreatureHooks::RegisterJustDied(uint32 entry, CreatureHook<Creature*, Unit*> callback) {
     (*_JustDiedHandlers)[entry].push_back(callback);
@@ -32,12 +32,12 @@ void CreatureHooks::RegisterOnAddToInstance(uint32 entry, CreatureHook<Creature*
 
 void CreatureHooks::JustDied(Creature* creature, Unit* killer) {
     if(!creature) {
-        MpLogger::debug("JustDied() called with nullptr for creature");
+        MpLog::Debug(MpLog::Area::Scaling, "JustDied() called with nullptr for creature");
         return;
     }
 
     if(!killer) {
-        MpLogger::debug("JustDied() called with nullptr for killer");
+        MpLog::Debug(MpLog::Area::Scaling, "JustDied() called with nullptr for killer");
         return;
     }
 
@@ -45,7 +45,7 @@ void CreatureHooks::JustDied(Creature* creature, Unit* killer) {
     uint32 entry = creature->GetEntry();
     if (_JustDiedHandlers->contains(entry)) {
         for (auto& callback : _JustDiedHandlers->at(entry)) {
-            MpLogger::debug("JustDied() called for creature: {}", entry);
+            MpLog::Debug(MpLog::Area::Scaling, "JustDied() called for creature: {}", entry);
             callback(creature, killer);
         }
     }
@@ -53,7 +53,7 @@ void CreatureHooks::JustDied(Creature* creature, Unit* killer) {
 
 void CreatureHooks::JustSpawned(Creature* creature) {
     if(!creature) {
-        MpLogger::debug("JustSpawned() called with nullptr for creature");
+        MpLog::Debug(MpLog::Area::Scaling, "JustSpawned() called with nullptr for creature");
         return;
     }
 
@@ -67,7 +67,7 @@ void CreatureHooks::JustSpawned(Creature* creature) {
     if (_OnSpawnHandlers->contains(entry)) {
         for (auto& callback : _OnSpawnHandlers->at(entry)) {
             callback(creature);
-            MpLogger::debug("JustSpawned() called in CreatureHook: {}", entry);
+            MpLog::Debug(MpLog::Area::Scaling, "JustSpawned() called in CreatureHook: {}", entry);
         }
     }
 }
@@ -78,7 +78,7 @@ void CreatureHooks::AddToInstance(Creature* creature) {
     if (_OnAddToInstanceHandlers->contains(entry)) {
         for (auto& callback : _OnAddToInstanceHandlers->at(entry)) {
             callback(creature);
-            MpLogger::debug("AddedToInstance() called in CreatureHook: {}", entry);
+            MpLog::Debug(MpLog::Area::Scaling, "AddedToInstance() called in CreatureHook: {}", entry);
         }
     }
 }

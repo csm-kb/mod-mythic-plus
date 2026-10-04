@@ -1,4 +1,4 @@
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Player.h"
 #include "MythicPlus.h"
 #include "ScriptMgr.h"
@@ -60,7 +60,7 @@ private:
                     return;
                 }
             } else {
-                MpLogger::debug("====== SPELL SCALING: Non-Creature attacker - Name: {}, Spell: {}({}), Damage: {}",
+                MpLog::Debug(MpLog::Area::Combat, "====== SPELL SCALING: Non-Creature attacker - Name: {}, Spell: {}({}), Damage: {}",
                     attackerName,
                     spellInfo ? spellInfo->SpellName[0] : "No Spell",
                     spellInfo ? spellInfo->Id : 0,
@@ -155,11 +155,11 @@ private:
         MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureCaster->GetGUID());
 
         if (!creatureCaster) {
-            MpLogger::error("Creature caster is null in map {}", attacker ? attacker->GetMap()->GetId() : 0);
+            MpLog::Debug(MpLog::Area::Combat, "Creature caster is null in map {}", attacker ? attacker->GetMap()->GetId() : 0);
             return;
         }
         if (!creatureData) {
-            MpLogger::error("Failed to get creature data for {} in map {}", creatureCaster->GetName(), attacker ? attacker->GetMap()->GetId() : 0);
+            MpLog::Debug(MpLog::Area::Combat, "Failed to get creature data for {} in map {}", creatureCaster->GetName(), attacker ? attacker->GetMap()->GetId() : 0);
             return;
         }
 
@@ -172,14 +172,14 @@ private:
             if (spellInfo && !spellInfo->Effects.empty()) {
                 int32 baseEffect = spellInfo->Effects[0].CalcValue(attacker, nullptr, nullptr);
                 if (damage <= (baseEffect * 1.15f)) {
-                    // MpLogger::debug(">>>> MELEE SPELL SCALING: Spell {} (ID: {}) is not scaled by AP damage: {} vs originalEffect: {}",
+                    // MpLog::Debug(MpLog::Area::Combat, ">>>> MELEE SPELL SCALING: Spell {} (ID: {}) is not scaled by AP damage: {} vs originalEffect: {}",
                     //     spellInfo->SpellName[0], spellInfo->Id, damage, baseEffect);
                     notScaledByAP = true;
                 }
             } else {
                 // If we can't determine the base effect, default to treating it as not AP-scaled
                 notScaledByAP = true;
-                // MpLogger::debug(">>>> MELEE SPELL SCALING: Could not determine base effect for spell, defaulting to spell scaling");
+                // MpLog::Debug(MpLog::Area::Combat, ">>>> MELEE SPELL SCALING: Could not determine base effect for spell, defaulting to spell scaling");
             }
 
             // if the effect type of the spell is not physical (aka not mitigated by armor/defense) then it needs to instead have the typical
@@ -189,7 +189,7 @@ private:
 
                 damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
 
-                // MpLogger::debug(">>MELEE SPELL SCALING: {} hits with spell: {} ID: {} meleeDamage: {} damage: {}", attacker->GetName(), spellInfo->SpellName[0], spellInfo->Id, meleeDamage, damage);
+                // MpLog::Debug(MpLog::Area::Combat, ">>MELEE SPELL SCALING: {} hits with spell: {} ID: {} meleeDamage: {} damage: {}", attacker->GetName(), spellInfo->SpellName[0], spellInfo->Id, meleeDamage, damage);
             } else {
 
                 // get the creatures original attack power
@@ -200,7 +200,7 @@ private:
                 uint32 apDmg = static_cast<uint32>(creatureData->originalStats->AttackPower * 0.10f);
                 uint32 finalDmg = spellDmg + apDmg;
 
-                // MpLogger::debug(">> AP BASED DAMAGE Scaledown: origDamage: {} | spellDmg: {} | apDmg: {} | finalDmg: {}", static_cast<int32>(damage), spellDmg, apDmg, finalDmg);
+                // MpLog::Debug(MpLog::Area::Combat, ">> AP BASED DAMAGE Scaledown: origDamage: {} | spellDmg: {} | apDmg: {} | finalDmg: {}", static_cast<int32>(damage), spellDmg, apDmg, finalDmg);
 
                 damage = modifyIncomingDmgHeal(MythicPlus::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
 
@@ -236,13 +236,13 @@ private:
             CreatureBaseStats const* spellCBS = sObjectMgr->GetCreatureBaseStats(tempLevel, creatureCaster->getClass());
             float CBSPowerSpell = spellCBS->BaseDamage[cInfo->expansion];
 
-            // MpLogger::debug("SPELL SCALING: Creature Lvl {} -> {} | Spell Lvl {} | tempLevel: {} | CBSPowerCreature: {} CBSPowerSpell: {}",
+            // MpLog::Debug(MpLog::Area::Combat, "SPELL SCALING: Creature Lvl {} -> {} | Spell Lvl {} | tempLevel: {} | CBSPowerCreature: {} CBSPowerSpell: {}",
             //                creatureData->originalLevel, creatureCaster->GetLevel(), tempLevel, CBSPowerCreature, CBSPowerSpell);
 
             // Reverse the CalcValue scaling: originalDamage = scaledDamage / (CBSPowerCreature / CBSPowerSpell)
             if (CBSPowerCreature > 0.0f) {
                 originalDamage = static_cast<int32>(static_cast<int32>(damage) * (CBSPowerSpell / CBSPowerCreature));
-            //     MpLogger::debug("SPELL SCALING: Reversed CalcValue scaling - Scaled: {} -> Original: {} (Factor: {:.2f})",
+            //     MpLog::Debug(MpLog::Area::Combat, "SPELL SCALING: Reversed CalcValue scaling - Scaled: {} -> Original: {} (Factor: {:.2f})",
             //                    damage, originalDamage, CBSPowerSpell / CBSPowerCreature);
             }
         }
@@ -296,12 +296,12 @@ public:
 
         if(!sMythicPlus->EligibleDamageTarget(target)) {
             if(spellInfo) {
-                // MpLogger::info("ModifySpellDamageTaken: Target is not eligible for spell: {} ID: {}", spellInfo->SpellName[0], spellInfo->Id);
+                // MpLog::Info(MpLog::Area::Combat, "ModifySpellDamageTaken: Target is not eligible for spell: {} ID: {}", spellInfo->SpellName[0], spellInfo->Id);
             }
             return;
         }
 
-        // MpLogger::debug("ModifySpellDamageTaken: {} hits {} with spell: {} ID: {}", attacker ? attacker->GetName() : "[null]", target ? target->GetName() : "[null]", spellInfo ? spellInfo->SpellName[0] : "[no spell]", spellInfo ? spellInfo->Id : 0);
+        // MpLog::Debug(MpLog::Area::Combat, "ModifySpellDamageTaken: {} hits {} with spell: {} ID: {}", attacker ? attacker->GetName() : "[null]", target ? target->GetName() : "[null]", spellInfo ? spellInfo->SpellName[0] : "[no spell]", spellInfo ? spellInfo->Id : 0);
 
         // Use the generic ProcessSpellDamage function
         ProcessSpellDamage(target, attacker, damage, spellInfo, MythicPlus::UNIT_EVENT_SPELL, "SPELL DAMAGE");
@@ -340,7 +340,7 @@ public:
 
     uint32 modifyIncomingDmgHeal(MythicPlus::MP_UNIT_EVENT_TYPE eventType,Unit* target, Unit* attacker, uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr) {
         if (!target || !attacker) {
-            // MpLogger::info("modifyIncomingDmgHeal: Target and attacker are null for event {}", eventType);
+            // MpLog::Info(MpLog::Area::Combat, "modifyIncomingDmgHeal: Target and attacker are null for event {}", eventType);
             return damageOrHeal;
         }
 
@@ -363,7 +363,7 @@ public:
 
         Creature* creature = attacker ? attacker->ToCreature() : nullptr;
         if (!creature) {
-            MpLogger::debug("Attacker was considered not a creature");
+            MpLog::Debug(MpLog::Area::Combat, "Attacker was considered not a creature");
             return damageOrHeal;
         }
 
@@ -414,7 +414,7 @@ public:
                     // Only log if damage was actually modified
                     if(alteredDmgHeal != damageOrHeal) {
                         std::string damageType = (creature->GetMeleeDamageSchoolMask() == SPELL_SCHOOL_MASK_NORMAL) ? "Melee Damage" : "Elemental Damage";
-                        MpLogger::debug(">>> Modify {}: Creature Name: {} originalDmg: {} alteredDmg: {} School Mask: {}",
+                        MpLog::Debug(MpLog::Area::Combat, ">>> Modify {}: Creature Name: {} originalDmg: {} alteredDmg: {} School Mask: {}",
                             damageType, creature->GetName(), damageOrHeal, alteredDmgHeal, creature->GetMeleeDamageSchoolMask());
                     }
 
@@ -423,18 +423,18 @@ public:
                 case MythicPlus::UNIT_EVENT_SPELL:
                     if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == 23682) {
                         if(spellInfo) {
-                            // MpLogger::debug("Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
+                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, target, instanceData->boss.spell);
                         } else {
                             alteredDmgHeal = damageOrHeal * instanceData->boss.spell;
-                            // MpLogger::debug("Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
+                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                         }
                     } else {
                         if(spellInfo) {
-                            // MpLogger::debug("Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
+                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using ScaleDamageSpell() Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = sMythicPlus->ScaleDamageSpell(spellInfo, damageOrHeal, sMpDataStore->GetCreatureData(attacker->GetGUID()), creature, target, instanceData->creature.spell);
                         } else {
-                            // MpLogger::debug("Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
+                            // MpLog::Debug(MpLog::Area::Combat, "Scaling spell {} using flat modifier Original Damage: {} New Damage: {}", spellInfo->SpellName[0], damageOrHeal, alteredDmgHeal);
                             alteredDmgHeal = damageOrHeal * instanceData->creature.spell;
                         }
                     }
@@ -463,7 +463,7 @@ public:
                     alteredDmgHeal = damageOrHeal * instanceData->creature.spell * 0.70f;
                 }
             }
-            MpLogger::debug("Incoming heal: {}({}) {} hits {}",
+            MpLog::Debug(MpLog::Area::Combat, "Incoming heal: {}({}) {} hits {}",
                 alteredDmgHeal,
                 damageOrHeal,
                 attacker ? attacker->GetName() : "[null]",

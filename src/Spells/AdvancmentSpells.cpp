@@ -3,7 +3,7 @@
 #include "PetDefines.h"
 #include "Player.h"
 #include "AdvancementMgr.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "SpellAuraEffects.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
@@ -28,12 +28,12 @@ class spell_mp_titans_strength_aura : public AuraScript
         }
 
         amount =  static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Titans Strength to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Titans Strength to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_titans_strength_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_titans_strength_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_titans_strength_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_STAT);
     }
 };
@@ -53,12 +53,12 @@ class spell_mp_steel_forged_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Steel Forged to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Steel Forged to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_steel_forged_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_steel_forged_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_steel_forged_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_STAT);
     }
 };
@@ -78,12 +78,12 @@ class spell_mp_celestial_grace_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Celestial Grace to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Celestial Grace to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_celestial_grace_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_celestial_grace_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_celestial_grace_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_STAT);
     }
 };
@@ -103,12 +103,12 @@ class spell_mp_forbidden_knowledge_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Forbidden Knowledge to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Forbidden Knowledge to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_forbidden_knowledge_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_forbidden_knowledge_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_forbidden_knowledge_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_STAT);
     }
 };
@@ -128,12 +128,12 @@ class spell_mp_spectral_reflexes_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Spectral Reflexes to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Spectral Reflexes to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_spectral_reflexes_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_spectral_reflexes_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_spectral_reflexes_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_STAT);
     }
 };
@@ -153,12 +153,12 @@ class spell_mp_eldritch_barrier_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Eldritch Barrier to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Eldritch Barrier to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_eldritch_barrier_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_eldritch_barrier_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_eldritch_barrier_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
     }
 };
@@ -178,12 +178,12 @@ class spell_mp_hellfire_shielding_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Hellfire Shielding to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Hellfire Shielding to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_hellfire_shielding_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_hellfire_shielding_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_hellfire_shielding_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
     }
 };
@@ -202,12 +202,12 @@ class spell_mp_primal_endurance_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Primal Endurance to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Primal Endurance to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_primal_endurance_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_primal_endurance_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_primal_endurance_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
     }
 };
@@ -227,12 +227,12 @@ class spell_mp_lichs_bane_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Lich's Bane to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Lich's Bane to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_lichs_bane_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_lichs_bane_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_lichs_bane_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
     }
 };
@@ -252,12 +252,12 @@ class spell_mp_glacial_fortress_aura : public AuraScript
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLogger::info("In Calc Amount Advancement Glacial Fortress to Player {} bonus {}", player->GetName(), amount);
+        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement Glacial Fortress to Player {} bonus {}", player->GetName(), amount);
     }
 
     void Register() override
     {
-        MpLogger::info("Registering spell_mp_glacial_fortress_aura");
+        MpLog::Info(MpLog::Area::Advancement, "Registering spell_mp_glacial_fortress_aura");
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_glacial_fortress_aura::HandleEffectCalcAmount, EFFECT_0, SPELL_AURA_MOD_RESISTANCE);
     }
 };

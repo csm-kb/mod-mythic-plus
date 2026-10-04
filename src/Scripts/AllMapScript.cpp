@@ -1,5 +1,5 @@
 #include "Chat.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "Map.h"
 #include "MpDataStore.h"
 #include "MythicPlus.h"
@@ -31,7 +31,7 @@ public:
 
         Group* group = player->GetGroup();
         if (group) {
-            MpLogger::debug("Player {} entered map {} in groupLeader {}", player->GetName(), map->GetMapName(), group->GetLeaderName());
+            MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(), map->GetMapName(), group->GetLeaderName());
         } else {
             return;
         }
@@ -46,7 +46,7 @@ public:
         MpInstanceData* existingData = sMpDataStore->GetInstanceData(map->GetId(), map->GetInstanceId());
         if (existingData) {
             if(player->GetName() == group->GetLeaderName()) {
-                MpLogger::debug("Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
+                MpLog::Debug(MpLog::Area::Instance, "Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
                     map->GetMapName(),
                     map->GetInstanceId(),
                     group->GetLeaderName()
@@ -79,7 +79,7 @@ public:
                 instanceData.itemOffset = sMythicPlus->ascendantItemOffset;
                 break;
             default:
-                MpLogger::debug("No difficulty set for group {}", group->GetGUID().GetCounter());
+                MpLog::Debug(MpLog::Area::Instance, "No difficulty set for group {}", group->GetGUID().GetCounter());
                 return;
         }
 
@@ -89,11 +89,11 @@ public:
         instanceData.instance = dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId()));
         if (!instanceData.instance)
         {
-            MpLogger::error("Failed to find InstanceMap for map ID {} and instance ID {}.", map->GetId(), map->GetInstanceId());
+            MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.", map->GetId(), map->GetInstanceId());
             return;
         }
 
-        MpLogger::debug("Setting up instance data for group {} for map {} instance {} data {}",
+        MpLog::Debug(MpLog::Area::Instance, "Setting up instance data for group {} for map {} instance {} data {}",
             group->GetGUID().GetCounter(),
             map->GetMapName(),
             map->GetInstanceId(),
@@ -128,6 +128,6 @@ public:
 
 void Add_MP_AllMapScripts()
 {
-    MpLogger::debug("Add_MP_AllMapScripts()");
+    MpLog::Debug(MpLog::Area::Instance, "Add_MP_AllMapScripts()");
     new MythicPlus_AllMapScript();
 }

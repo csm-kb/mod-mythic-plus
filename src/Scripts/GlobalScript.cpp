@@ -1,4 +1,4 @@
-#include "MpLogger.h"
+#include "MpLog.h"
 #include "MythicPlus.h"
 #include "MpConstants.h"
 #include "ScriptMgr.h"
@@ -33,7 +33,7 @@ public:
 
         // if there are not mythic settings set for this group and map skip
         if (!mythicSettings) {
-            MpLogger::warn("No mythic settings found for map {} instance {}", map->GetMapName(), map->GetInstanceId());
+            MpLog::Warn(MpLog::Area::Loot, "No mythic settings found for map {} instance {}", map->GetMapName(), map->GetInstanceId());
             return;
         }
 
@@ -75,7 +75,7 @@ public:
         ItemTemplate const* newItemTempl = sObjectMgr->GetItemTemplate(newItemId);
 
         if(!newItemTempl) {
-            MpLogger::warn("New Loot Item not found for itemid {} original item: {} ({})", newItemId, origItem->Name1, origItem->ItemId);
+            MpLog::Warn(MpLog::Area::Loot, "New Loot Item not found for itemid {} original item: {} ({})", newItemId, origItem->Name1, origItem->ItemId);
             return;
         }
 
@@ -83,7 +83,7 @@ public:
 
         // Revalidate the LootStoreItem to ensure consistency
         if (!LootStoreItem->IsValid(store, newItemId)) {
-            MpLogger::info("LootStoreItem is not valid after updating itemid to {} in OnBeforeDropAddItem()", newItemId);
+            MpLog::Info(MpLog::Area::Loot, "LootStoreItem is not valid after updating itemid to {} in OnBeforeDropAddItem()", newItemId);
             return;
         }
     }
@@ -92,6 +92,6 @@ public:
 
 void Add_MP_GlobalScripts()
 {
-    MpLogger::debug("Add_MP_GlobalScripts()");
+    MpLog::Debug(MpLog::Area::Loot, "Add_MP_GlobalScripts()");
     new MythicPlus_GlobalScript();
 }

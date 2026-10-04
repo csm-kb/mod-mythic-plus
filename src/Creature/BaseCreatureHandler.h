@@ -1,5 +1,5 @@
 #include "CreatureHooks.h"
-#include "MpLogger.h"
+#include "MpLog.h"
 
 class BaseCreatureHandler {
 public:
@@ -7,7 +7,7 @@ public:
 
         ASSERT(entry > 0);
 
-        MpLogger::debug("Registering JustDied and OnSpawn events for entry: ", entry);
+        MpLog::Debug(MpLog::Area::Scaling, "Registering JustDied and OnSpawn events for entry: ", entry);
 
         // Register the JustDied event
         sCreatureHooks->RegisterJustDied(entry, [this](Creature* creature, Unit* killer) {
