@@ -24,7 +24,8 @@ MpScaleFactor MpRepository::GetScaleFactor(int32 mapId, int32 difficulty) const
     }
 
     // Just send back untouched bonus database will override.
-    return MpScaleFactor{
+    return MpScaleFactor
+    {
         .meleeBonus = 1.0f,
         .spellBonus = 1.0f,
         .healBonus = 1.0f,
@@ -116,7 +117,6 @@ int32 MpRepository::LoadScaleFactors()
         };
 
         scaleFactors.emplace(GetScaleFactorKey(mapId, difficulty), scaleFactor);
-
     } while (result->NextRow());
 
     int32 size = int32(scaleFactors.size());
@@ -163,7 +163,6 @@ void MpRepository::LoadPlayerHealthAvg()
             uint32 baseHealth = fields[1].Get<uint32>();
 
             playerHealthAvg[level] = baseHealth;
-
         } while (result->NextRow());
     }
 

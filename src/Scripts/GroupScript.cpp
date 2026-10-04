@@ -15,13 +15,16 @@ class MythicPlus_GroupScript : public GroupScript
     public:
     MythicPlus_GroupScript() : GroupScript("MythicPlus_GroupScript") { }
 
-    void OnAddMember(Group* group, ObjectGuid guid) override {
-        if (!group || !guid) {
+    void OnAddMember(Group* group, ObjectGuid guid) override
+    {
+        if (!group || !guid)
+        {
             return;
         }
 
         Player* player = ObjectAccessor::FindPlayer(guid);
-        if (!player) {
+        if (!player)
+        {
             MpLog::Warn(MpLog::Area::Instance, "Player not found for guid {}", guid.GetCounter());
             return;
         }
@@ -37,30 +40,36 @@ class MythicPlus_GroupScript : public GroupScript
             }
         });
 
-        if (!known) {
+        if (!known)
+        {
             MpDifficulty difficulty = GetPlayerDifficulty(player);
             sMpState->SetPlayerData(guid, MpPlayerData(guid, player->GetName(), difficulty, groupId));
         }
 
         bool added = false;
         auto addMember = [guid, &added](MpGroupData& gd) { added = gd.AddMember(guid); };
-        if (!sMpState->UpdateGroupData(group->GetGUID(), addMember)) {
+        if (!sMpState->UpdateGroupData(group->GetGUID(), addMember))
+        {
             MpLog::Warn(MpLog::Area::Instance, "Group data not found for group {}", group->GetGUID().GetCounter());
             return;
         }
 
-        if (!added) {
+        if (!added)
+        {
             MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector",
                 player->GetName());
         }
     }
 
-    void OnCreate(Group* group, Player* leader) override {
-        if (!group) {
+    void OnCreate(Group* group, Player* leader) override
+    {
+        if (!group)
+        {
             return;
         }
 
-        if(!leader) {
+        if (!leader)
+        {
             return;
         }
 
@@ -73,21 +82,27 @@ class MythicPlus_GroupScript : public GroupScript
         sMpState->SetGroupData(group, std::move(gd));
     }
 
-    void OnDisband(Group* group) override {
+    void OnDisband(Group* group) override
+    {
         sMpState->RemoveGroupData(group->GetGUID());
         sMpRepo->DBRemoveGroupData(group->GetGUID());
     }
 
     // Get the difficulty for a player that is assigned
-    MpDifficulty GetPlayerDifficulty(Player* player) {
-        if(!player) {
+    MpDifficulty GetPlayerDifficulty(Player* player)
+    {
+        if (!player)
+        {
             return MP_DIFFICULTY_NORMAL;
         }
 
         std::optional<MpPlayerData> pd = sMpState->GetPlayerData(player->GetGUID());
-        if(pd) {
+        if (pd)
+        {
             return pd->difficulty;
-        } else {
+        }
+        else
+        {
             return player->GetDifficulty(false) == Difficulty::DUNGEON_DIFFICULTY_NORMAL ? MP_DIFFICULTY_NORMAL : MP_DIFFICULTY_HEROIC;
         }
 

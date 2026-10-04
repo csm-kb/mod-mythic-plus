@@ -26,7 +26,8 @@ enum MP_SCHEDULE_GROUP
 class MpScheduler
 {
 public:
-    static MpScheduler* instance () {
+    static MpScheduler* instance ()
+    {
         static MpScheduler instance;
         return &instance;
     }
@@ -34,7 +35,8 @@ public:
     MpScheduler(const MpScheduler&) = delete;
     MpScheduler& operator=(const MpScheduler&) = delete;
 
-    TaskScheduler& GetWorldScheduler() {
+    TaskScheduler& GetWorldScheduler()
+    {
         return _worldScheduler;
     }
 
@@ -54,8 +56,8 @@ class MpScheduler_WorldScript : public WorldScript
     public:
         MpScheduler_WorldScript() : WorldScript("MpScheduler_GlobalScript") { }
 
-    void OnUpdate(uint32 diff) override {
+    void OnUpdate(uint32 diff) override
+    {
         sMpScheduler->GetWorldScheduler().Update(diff);
     }
 };
-

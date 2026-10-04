@@ -47,5 +47,4 @@ inline std::unordered_map<MpClientEvent, std::string_view> MpClientEventNames = 
     {MpClientEvent::GetAdvancementRank, "GetAdvancementRank"}
 }};
 
-
 #endif

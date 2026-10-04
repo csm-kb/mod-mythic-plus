@@ -1,4 +1,3 @@
-
 #include "MpEventProcessor.h"
 #include "MpLog.h"
 #include "MpClientDispatcher.h"
@@ -9,15 +8,17 @@
 #include <string>
 #include <vector>
 
-bool MpEventProcessor::ProcessMessage(Player* player, const std::string& msg) {
-
-    if(!player) {
+bool MpEventProcessor::ProcessMessage(Player* player, const std::string& msg)
+{
+    if (!player)
+    {
         MpLog::Error(MpLog::Area::Events, "Null player passed to processMessage");
         return false;
     }
 
     // check prefix of message channel is formatted correctly
-    if(! msg.starts_with(MP_DATA_CHAT_CHANNEL)) {
+    if (! msg.starts_with(MP_DATA_CHAT_CHANNEL))
+    {
         MpLog::Error(MpLog::Area::Events, "Invalid message format received from player {} message: {}", player->GetName(), msg);
         return false;
     }
@@ -38,19 +39,22 @@ bool MpEventProcessor::ProcessMessage(Player* player, const std::string& msg) {
     MpLog::Info(MpLog::Area::Events, "MpEvent Processor - event: {} guid: {} args: {}", event, guid, args.size());
 
     // If th message was not able to be parsed it is a failure
-    if(event == MpEvent::Invalid) {
+    if (event == MpEvent::Invalid)
+    {
         MpLog::Warn(MpLog::Area::Events, "Invalid event, could not be parsed for player {} message: {}", player->GetName(), message);
         return false;
     }
 
     // if the message is not from the same player who called it ignore it as it is attempt to hack the system
-    if(player->GetGUID().GetCounter() != guid) {
+    if (player->GetGUID().GetCounter() != guid)
+    {
         MpLog::Warn(MpLog::Area::Events, "Player {} sent a message {} for eventId: {} player guid does not match", player->GetName(), message, event);
         return false;
     }
 
     // If the event is not registered ignore it
-    if(!_eventHandlers.contains(event)) {
+    if (!_eventHandlers.contains(event))
+    {
         MpLog::Info(MpLog::Area::Events, "No handler registered for event: {}", event);
         return false;
     }
@@ -58,14 +62,16 @@ bool MpEventProcessor::ProcessMessage(Player* player, const std::string& msg) {
     return Dispatch(event, player, args);
 }
 
-void MpEventProcessor::RegisterHandler(MpEvent event, std::shared_ptr<MpEventInterface> handler) {
+void MpEventProcessor::RegisterHandler(MpEvent event, std::shared_ptr<MpEventInterface> handler)
+{
     _eventHandlers[event] = handler;
 }
 
 // This fires the execution to the actual event.
-bool MpEventProcessor::Dispatch(MpEvent event, Player* player, std::vector<std::string>& args) {
-    if(!_eventHandlers.contains(event)) {
-
+bool MpEventProcessor::Dispatch(MpEvent event, Player* player, std::vector<std::string>& args)
+{
+    if (!_eventHandlers.contains(event))
+    {
         // Send a client message back also to the player
         std::vector<std::string> clientError = { "Error", "No handler registered for event: " + std::to_string(static_cast<int>(event)) };
         sMpClientDispatcher->Dispatch(MpClientEvent::Error, player, clientError);
@@ -88,7 +94,8 @@ MpEvent MpEventProcessor::_getEventByName(std::string_view eventName)
  */
 EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, const std::string& msg)
 {
-    if(msg[0] != 'p') {
+    if (msg[0] != 'p')
+    {
         MpLog::Warn(MpLog::Area::Events, "Invalid player message format received from player {} message: {}", player->GetName(), msg);
         return EventParseRslt{MpEvent::Invalid, 0, {}};
     }
@@ -99,7 +106,8 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, const std::
     // split the protocol into valid parts
     std::vector<std::string> parts = _splitString(msg, delimiter);
 
-    if (parts.size() < 3) {
+    if (parts.size() < 3)
+    {
         MpLog::Warn(MpLog::Area::Events, "Malformed player message received from player {}: {}", player->GetName(), msg);
         return EventParseRslt{MpEvent::Invalid, 0, {}};
     }
@@ -113,13 +121,16 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, const std::
 }
 
 // Split the string passed in by delimiters
-std::vector<std::string> MpEventProcessor::_splitString(const std::string& s, char delimiter) {
+std::vector<std::string> MpEventProcessor::_splitString(const std::string& s, char delimiter)
+{
     std::vector<std::string> tokens;
     size_t start = 0;
     size_t end = s.find(delimiter);
 
-    while (end != std::string::npos) {
-        if (end != start) {
+    while (end != std::string::npos)
+    {
+        if (end != start)
+        {
             tokens.emplace_back(s.substr(start, end - start));
         }
         start = end + 1;
@@ -127,7 +138,8 @@ std::vector<std::string> MpEventProcessor::_splitString(const std::string& s, ch
     }
 
     // Add the last token if it's not empty
-    if (start < s.length()) {
+    if (start < s.length())
+    {
         tokens.emplace_back(s.substr(start));
     }
 

@@ -44,13 +44,13 @@ struct MpScaleFactor
     float healBonus;
     float healthBonus;
 
-    std::string ToString() const {
+    std::string ToString() const
+    {
         return "MpScaleFactor: { meleeBonus: " + std::to_string(meleeBonus) +
                ", healthBonus: " + std::to_string(healthBonus) +
                ", spellBonus: " + std::to_string(spellBonus) +
                ", healBonus: " + std::to_string(healBonus) + "}";
     }
-
 };
 
 struct MpMultipliers
@@ -62,7 +62,8 @@ struct MpMultipliers
     float armor;
     uint8 avgLevel;
 
-    std::string ToString() const {
+    std::string ToString() const
+    {
     return "MpMultipliers: { health: " + std::to_string(health) +
             ", melee: " + std::to_string(melee) +
             ", melee: " + std::to_string(baseDamage) +

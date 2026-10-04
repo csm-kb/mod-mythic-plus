@@ -17,19 +17,23 @@ class MpScriptAI : public BaseAI
     MpDifficulty _difficulty;
 
 public:
-    MpScriptAI(Creature* creature, MpDifficulty difficulty) : BaseAI(creature) {
+    MpScriptAI(Creature* creature, MpDifficulty difficulty) : BaseAI(creature)
+    {
         _difficulty = difficulty;
     }
 
-    MpScriptAI(Creature* creature) : BaseAI(creature) {
+    MpScriptAI(Creature* creature) : BaseAI(creature)
+    {
         _difficulty = MpDifficulty::MP_DIFFICULTY_MYTHIC;
     }
 
-    void JustDied(Unit* killer) override {
+    void JustDied(Unit* killer) override
+    {
         BaseAI::JustDied(killer);
     }
 
-    void Reset() override {
+    void Reset() override
+    {
         BaseAI::Reset();
     }
 };

@@ -9,7 +9,6 @@
 
 #include <optional>
 
-
 class MythicPlus_AllMapScript : public AllMapScript
 {
 public:
@@ -24,30 +23,38 @@ public:
      */
     void OnPlayerEnterAll(Map* map, Player* player) override
     {
-        if (!sMpScaler->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map))
+        {
             return;
         }
 
-        if(!sMpScaler->IsDifficultySet(player)) {
+        if (!sMpScaler->IsDifficultySet(player))
+        {
             return;
         }
 
         Group* group = player->GetGroup();
-        if (group) {
+        if (group)
+        {
             MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(), map->GetMapName(), group->GetLeaderName());
-        } else {
+        }
+        else
+        {
             return;
         }
 
         // if there is not any group data for this group then just bail
         std::optional<MpGroupData> groupData = sMpState->GetGroupData(group->GetGUID());
-        if (!groupData) {
+        if (!groupData)
+        {
             return;
         }
 
         // Check if we already have mythic instance data set for this map and group
-        if (sMpState->GetInstanceData(map->GetId(), map->GetInstanceId())) {
-            if(player->GetName() == group->GetLeaderName()) {
+        if (sMpState->GetInstanceData(map->GetId(), map->GetInstanceId()))
+        {
+            if (player->GetName() == group->GetLeaderName())
+            {
                 MpLog::Debug(MpLog::Area::Instance, "Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
                     map->GetMapName(),
                     map->GetInstanceId(),
@@ -88,7 +95,8 @@ public:
         sMpState->SetInstanceData(map->GetId(), map->GetInstanceId(), instanceData);
 
         // Save the instance data for the user to the database
-        if (player) {
+        if (player)
+        {
             sMpRepo->DBUpdatePlayerInstanceData(player->GetGUID(), groupData->difficulty, map->GetId(),
                 map->GetInstanceId(), 0);
         }
@@ -100,7 +108,8 @@ public:
     // When an instance is destroyed remove the instance data from the data store
     void OnDestroyInstance(MapInstanced* /*mapInstanced*/, Map* map) override
     {
-        if (!sMpScaler->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map))
+        {
             return;
         }
 

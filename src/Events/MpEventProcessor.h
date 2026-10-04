@@ -8,7 +8,6 @@
 #include <string_view>
 #include <vector>
 
-
 /**
  * In order to allow communication from client UIs without modifying mod-eluna directly to support
  * this mods functionality the following custom chat channel below is for all MP UI Client interactions.
@@ -44,9 +43,9 @@ using EventParseRslt = std::tuple<MpEvent, uint32_t, std::vector<std::string>>;
  */
 class MpEventProcessor
 {
-
 public:
-    static MpEventProcessor* instance() {
+    static MpEventProcessor* instance()
+    {
         static MpEventProcessor instance;
         return &instance;
     }

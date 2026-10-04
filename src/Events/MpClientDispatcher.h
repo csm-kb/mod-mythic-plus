@@ -10,9 +10,9 @@
 
 class MpClientDispatcher
 {
-
 public:
-    static MpClientDispatcher* instance() {
+    static MpClientDispatcher* instance()
+    {
         static MpClientDispatcher instance;
         return &instance;
     }
@@ -26,10 +26,8 @@ public:
 private:
     MpClientDispatcher() {};
     ~MpClientDispatcher() {};
-
 };
 
 #define sMpClientDispatcher MpClientDispatcher::instance()
 
 #endif
-

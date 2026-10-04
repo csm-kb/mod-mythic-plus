@@ -14,7 +14,8 @@
  */
 bool MpClientDispatcher::Dispatch(MpClientEvent event, Player* player, std::vector<std::string>& args)
 {
-    if(!MpClientEventNames.contains(event)) {
+    if (!MpClientEventNames.contains(event))
+    {
         MpLog::Warn(MpLog::Area::Events, "No event registered for event: {}", event);
         return false;
     }
@@ -23,7 +24,8 @@ bool MpClientDispatcher::Dispatch(MpClientEvent event, Player* player, std::vect
     std::string_view eventName = MpClientEventNames.at(event);
     uint32 playerGuid = player->GetGUID().GetCounter();
     std::string message = "s|" + std::to_string(playerGuid) + "|" + std::string(eventName);
-    for(auto& arg : args) {
+    for (auto& arg : args)
+    {
         message += "|" + arg;
     }
 

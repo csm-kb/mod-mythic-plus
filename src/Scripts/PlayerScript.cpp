@@ -26,22 +26,26 @@ public:
 
     void OnPlayerKilledByCreature(Creature* killer, Player* player) override
     {
-        if (!player) {
+        if (!player)
+        {
             return;
         }
 
         Map* map = player->GetMap();
-        if(!sMpScaler->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map))
+        {
             return;
         }
 
         Group* group = player->GetGroup();
-        if(!group) {
+        if (!group)
+        {
             return;
         }
 
         std::optional<MpGroupData> data = sMpState->GetGroupData(group->GetGUID());
-        if (!data) {
+        if (!data)
+        {
             return;
         }
 
@@ -59,9 +63,12 @@ public:
         MpLog::Info(MpLog::Area::Instance, "Player {} added death to instance data {}", player->GetName(),
             playerDeaths);
 
-        if(killer) {
+        if (killer)
+        {
             sMpRepo->DBAddPlayerDeath(player, killer, data->difficulty);
-        } else {
+        }
+        else
+        {
             sMpRepo->DBAddPlayerDeath(player);
         }
 
@@ -84,7 +91,8 @@ public:
         Creature* creature = player->GetMap()->GetCreature(loot->sourceWorldObjectGUID);
         if (!creature) return;
 
-        if (MpBots::IsNpcBotOrPet(creature)) {
+        if (MpBots::IsNpcBotOrPet(creature))
+        {
             return;
         }
 
@@ -135,7 +143,8 @@ public:
         Creature* creature = victim->ToCreature();
         if (!creature) return;
 
-        if (MpBots::IsNpcBotOrPet(creature)) {
+        if (MpBots::IsNpcBotOrPet(creature))
+        {
             return;
         }
 
@@ -152,7 +161,8 @@ public:
 
         // Apply same modifiers as original calculation
         float xpMod = 1.0f;
-        if (creature->isElite()) {
+        if (creature->isElite())
+        {
             xpMod *= creature->GetMap()->IsDungeon() ? 2.75f : 2.0f;
         }
         xpMod *= creature->GetCreatureTemplate()->ModExperience;
@@ -167,7 +177,8 @@ public:
         sAdvancementMgr->LoadPlayerAdvancements(player);
 
         // Cast all unique advancement spells
-        for(uint32 i = 1; i <= 10; ++i) {
+        for (uint32 i = 1; i <= 10; ++i)
+        {
             uint32 spellId = 80000000 + i;
             MpLog::Info(MpLog::Area::Instance, "Casting spell {} to player {}", spellId, player->GetName());
             player->AddAura(spellId, player);
@@ -177,26 +188,30 @@ public:
     // When a player is bound to an instance need to make sure they are saved in the data soure to retrieve later.
     void OnPlayerBindToInstance(Player* player, Difficulty /*difficulty*/, uint32 mapId, bool /*permanent*/) override
     {
-        if(!player) {
+        if (!player)
+        {
             return;
         }
 
         Group* group = player->GetGroup();
 
         // If they are not in a group do nothing.
-        if(!group) {
+        if (!group)
+        {
             return;
         }
 
         std::optional<MpGroupData> data = sMpState->GetGroupData(group->GetGUID());
 
         // If there is not any mythic+ data set for this group do nothing.
-        if(!data) {
+        if (!data)
+        {
             return;
         }
 
         Map* map = player->GetMap();
-        if(!map) {
+        if (!map)
+        {
             MpLog::Warn(MpLog::Area::Instance, "Player {} is not in a map", player->GetName());
             return;
         }
@@ -209,7 +224,8 @@ public:
             pd.instanceData.emplace(mapKey, MpPlayerInstanceData{ .deaths = 0 });
         };
 
-        if (!sMpState->UpdatePlayerData(playerGuid, bindInstance)) {
+        if (!sMpState->UpdatePlayerData(playerGuid, bindInstance))
+        {
             MpPlayerData playerData(playerGuid, player->GetName(), data->difficulty, group->GetGUID().GetCounter());
             bindInstance(playerData);
             sMpState->SetPlayerData(playerGuid, std::move(playerData));
@@ -218,7 +234,8 @@ public:
         // Add this player to the group data
         bool added = false;
         auto addMember = [playerGuid, &added](MpGroupData& gd) { added = gd.AddMember(playerGuid); };
-        if (sMpState->UpdateGroupData(group->GetGUID(), addMember) && !added) {
+        if (sMpState->UpdateGroupData(group->GetGUID(), addMember) && !added)
+        {
             MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector",
                 player->GetName());
         }
@@ -244,7 +261,6 @@ public:
 
         return groupPlayers;
     }
-
 };
 
 void Add_MP_PlayerScripts()

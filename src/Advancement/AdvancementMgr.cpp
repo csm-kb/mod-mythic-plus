@@ -54,7 +54,8 @@ std::string MpAdvancementsToString(MpAdvancements advancement)
  *   This loads the ranks from the database and stores them into memory for access.  This should only be
  *   called on server start-up as it is static data that should only change no new builds.
  */
-int32 AdvancementMgr::LoadAdvancementRanks() {
+int32 AdvancementMgr::LoadAdvancementRanks()
+{
     _advancementRanks.clear();
 
     constexpr std::string_view query = R"(
@@ -80,12 +81,14 @@ int32 AdvancementMgr::LoadAdvancementRanks() {
     )";
 
     QueryResult result = WorldDatabase.Query(query);
-    if (!result) {
+    if (!result)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Failed to load advancement ranks from database");
         return 0;
     }
 
-    do {
+    do
+    {
         Field* fields = result->Fetch();
         uint32 upgradeRank = fields[0].Get<uint32>();
         uint32 advancementId = fields[1].Get<uint32>();
@@ -123,7 +126,6 @@ int32 AdvancementMgr::LoadAdvancementRanks() {
         };
 
         _advancementRanks.try_emplace(std::make_pair(upgradeRank, advancement), rank);
-
     } while (result->NextRow());
 
     return _advancementRanks.size();
@@ -141,8 +143,8 @@ int32 AdvancementMgr::LoadAdvancementRanks() {
  *   This loads the player advancements when a player logs in stores it into memory for access by spell scripts that
  *   are applied to the player on login to apply the bonuses.
  */
-void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
-
+void AdvancementMgr::LoadPlayerAdvancements(Player* player)
+{
     std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
 
     constexpr std::string_view query = R"(
@@ -160,7 +162,8 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
 
     // If the player does not have any upgrades just return perfectly fine not a problem until they purchase one.
 
-    if(!result) {
+    if (!result)
+    {
         MpLog::Info(MpLog::Area::Advancement, "Player {} has no advancements", player->GetName());
         return;
     }
@@ -169,7 +172,8 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
     uint32 guid = player->GetGUID().GetCounter();
 
     // Loop through all results to load all advancements for this player
-    do {
+    do
+    {
         Field* fields = result->Fetch();
         uint32 advancementId = fields[1].Get<uint32>();
         float bonus = fields[2].Get<float>();
@@ -198,8 +202,8 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player) {
 /**
  * Load Material Types from the database into memory
  */
-int32 AdvancementMgr::LoadMaterialTypes() {
-
+int32 AdvancementMgr::LoadMaterialTypes()
+{
     constexpr std::string_view query = R"(
     SELECT
         materialId,
@@ -207,22 +211,25 @@ int32 AdvancementMgr::LoadMaterialTypes() {
     FROM mp_material_types
     )";
 
-    if(QueryResult result = WorldDatabase.Query(query)) {
-
-        do {
+    if (QueryResult result = WorldDatabase.Query(query))
+    {
+        do
+        {
             Field* fields = result->Fetch();
             uint32 materialId = fields[0].Get<uint32>();
             uint32 entry = fields[1].Get<uint32>();
 
-            if(!_materialTypes.contains(materialId)) {
+            if (!_materialTypes.contains(materialId))
+            {
                 _materialTypes.emplace(materialId,std::vector<uint32>());
             }
             _materialTypes.at(materialId).push_back(entry);
-
         } while (result->NextRow());
 
         return result->GetRowCount();
-    } else {
+    }
+    else
+    {
         MpLog::Error(MpLog::Area::Advancement, "Query failed to load material types from database");
         return 0;
     }
@@ -244,7 +251,8 @@ MpAdvancementRank* AdvancementMgr::GetAdvancementRank(uint32 rank, MpAdvancement
 
 MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvancements advancement)
 {
-    if(!player) {
+    if (!player)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Could not retrieve player advancement for null player {}", player->GetName());
         return nullptr;
     }
@@ -262,18 +270,21 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
 
     // Validators to make sure inputs are correct to perform the upgrade
-    if(!player) {
+    if (!player)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Could not upgrade advancement for player, player was nullpointer");
         throw new std::runtime_error("Could not upgrade advancement for player, player was nullpointer");
     }
-    if(diceCostLevel < 1 || diceCostLevel > 3) {
+    if (diceCostLevel < 1 || diceCostLevel > 3)
+    {
         throw new std::runtime_error(Acore::StringFormat("Invalid dice cost level valid vales (1,2,3) received {} for player {}", diceCostLevel, player->GetName()));
     }
 
     MpPlayerRank* playerRank = GetPlayerAdvancementRank(player, advancement);
 
     // IF there is not create the base struct and add to the player map for this advancement
-    if(!playerRank) {
+    if (!playerRank)
+    {
         MpPlayerRank newPlayerRank;
         newPlayerRank.advancementId = advancement;
 
@@ -282,14 +293,16 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
         playerRank = &playerAdvMap.at(advancement);
     }
 
-    if(playerRank->rank == MP_MAX_ADVANCEMENT_RANK) {
+    if (playerRank->rank == MP_MAX_ADVANCEMENT_RANK)
+    {
         MpLog::Debug(MpLog::Area::Advancement, "Player {} has reached the maximum rank for advancement {}", player->GetName(), advancement);
         return 0;
     }
 
     uint32 newRank = playerRank->rank + 1;
     MpAdvancementRank* advancementRank = GetAdvancementRank(newRank, advancement);
-    if(advancementRank == nullptr || !advancementRank->IsValid()) {
+    if (advancementRank == nullptr || !advancementRank->IsValid())
+    {
         MpLog::Error(MpLog::Area::Advancement, "Advancement rank could not be found. Rank: {} Advancement: {}", newRank, static_cast<int>(advancement));
         return 0;
     }
@@ -300,7 +313,8 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     uint32 itemEntry3 = advancementRank->material3.first;
 
     // If the player has the items needed to upgrade this advancement, then remove the items from the player inventory and apply the upgrade
-    if(!_PlayerHasItems(player, advancementRank, diceCostLevel, itemEntry1, itemEntry2, itemEntry3)) {
+    if (!_PlayerHasItems(player, advancementRank, diceCostLevel, itemEntry1, itemEntry2, itemEntry3))
+    {
         MpLog::Debug(MpLog::Area::Advancement, "Player {} does not have the required items to upgrade advancement {}", player->GetName(), advancement);
         return 0;
     }
@@ -393,20 +407,24 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
 
     // Check if player has the required dice to upgrade the advancement
     uint32 diceCost = advancementRank->rollCost[diceCostLevel-1];
-    if(!player->HasItemCount(MpConstants::ANCIENT_DICE, diceCost)) {
+    if (!player->HasItemCount(MpConstants::ANCIENT_DICE, diceCost))
+    {
         MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough dice to upgrade advancement {}",
             player->GetName(), advancementRank->advancementId);
         return false;
     }
 
     // Check material 1 (required)
-    if (advancementRank->material1.first > 0) {
-        if (itemEntry1 == 0) {
+    if (advancementRank->material1.first > 0)
+    {
+        if (itemEntry1 == 0)
+        {
             throw std::runtime_error("Primary material entry is required but was not provided");
         }
 
         uint32 requiredCount = advancementRank->material1.second;
-        if (!player->HasItemCount(itemEntry1, requiredCount)) {
+        if (!player->HasItemCount(itemEntry1, requiredCount))
+        {
             MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry1, advancementRank->advancementId, requiredCount);
             return false;
@@ -414,14 +432,17 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
     }
 
     // Check material 2 (optional)
-    if (advancementRank->material2.first > 0) {
-        if (itemEntry2 == 0) {
+    if (advancementRank->material2.first > 0)
+    {
+        if (itemEntry2 == 0)
+        {
             MpLog::Debug(MpLog::Area::Advancement, "Secondary material is required but not provided");
             return false;
         }
 
         uint32 requiredCount = advancementRank->material2.second;
-        if (!player->HasItemCount(itemEntry2, requiredCount)) {
+        if (!player->HasItemCount(itemEntry2, requiredCount))
+        {
             MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry2, advancementRank->advancementId, requiredCount);
             return false;
@@ -429,14 +450,17 @@ bool AdvancementMgr::_PlayerHasItems(Player* player, MpAdvancementRank* advancem
     }
 
     // Check material 3 (optional)
-    if (advancementRank->material3.first > 0) {
-        if (itemEntry3 == 0) {
+    if (advancementRank->material3.first > 0)
+    {
+        if (itemEntry3 == 0)
+        {
             MpLog::Debug(MpLog::Area::Advancement, "Tertiary material is required but not provided");
             return false;
         }
 
         uint32 requiredCount = advancementRank->material3.second;
-        if (!player->HasItemCount(itemEntry3, requiredCount)) {
+        if (!player->HasItemCount(itemEntry3, requiredCount))
+        {
             MpLog::Info(MpLog::Area::Advancement, "Player {} does not have enough of item {} for advancement {}, requires: {}",
                 player->GetName(), itemEntry3, advancementRank->advancementId, requiredCount);
             return false;
@@ -459,17 +483,20 @@ void AdvancementMgr::_ChargeItemCost(Player *player, MpAdvancementRank* advancem
     player->DestroyItemCount(MpConstants::ANCIENT_DICE, diceCost, true);
 
     // Remove material 1 if it exists
-    if (itemEntry1 > 0 && advancementRank->material1.first > 0) {
+    if (itemEntry1 > 0 && advancementRank->material1.first > 0)
+    {
         player->DestroyItemCount(itemEntry1, advancementRank->material1.second, true);
     }
 
     // Remove material 2 if it exists
-    if (itemEntry2 > 0 && advancementRank->material2.first > 0) {
+    if (itemEntry2 > 0 && advancementRank->material2.first > 0)
+    {
         player->DestroyItemCount(itemEntry2, advancementRank->material2.second, true);
     }
 
     // Remove material 3 if it exists
-    if (itemEntry3 > 0 && advancementRank->material3.first > 0) {
+    if (itemEntry3 > 0 && advancementRank->material3.first > 0)
+    {
         player->DestroyItemCount(itemEntry3, advancementRank->material3.second, true);
     }
 
@@ -479,7 +506,8 @@ void AdvancementMgr::_ChargeItemCost(Player *player, MpAdvancementRank* advancem
 void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advancementRank, MpPlayerRank* playerRank, uint32 diceCost, float roll, uint32 itemEntry1, uint32 itemEntry2, uint32 itemEntry3)
 {
     // Save the advancement to the database
-    try {
+    try
+    {
         constexpr std::string_view insert = R"(
             INSERT INTO mp_player_advancements (guid, advancementId, bonus, upgradeRank, diceSpent)
             VALUES ({}, {}, {}, {}, {})
@@ -500,13 +528,18 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 playerRank->rank,
                 playerRank->diceSpent
             );
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: {}", player->GetName(), e.what());
-    } catch (...) {
+    }
+    catch (...)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: unknown error", player->GetName());
     }
 
-    try {
+    try
+    {
         constexpr std::string_view insertHistory = R"(
             INSERT INTO mp_player_advancement_history (guid, advancementId, bonus, upgradeRank, diceSpent, entryId1, entryId2, entryId3, itemCost1, itemCost2, itemCost3)
             VALUES ({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
@@ -526,9 +559,13 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 advancementRank->material2.second,
                 advancementRank->material3.second
             );
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: {}", player->GetName(), e.what());
-    } catch (...) {
+    }
+    catch (...)
+    {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: unknown error", player->GetName());
     }
 }

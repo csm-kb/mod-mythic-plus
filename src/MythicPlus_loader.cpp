@@ -2,7 +2,8 @@
 #include "MpLog.h"
 
 // This adds schedulers for use across scripts scoped to MythicPlus
-void Add_MP_Schedulers() {
+void Add_MP_Schedulers()
+{
     new MpScheduler_WorldScript();
 }
 
@@ -20,7 +21,8 @@ void Add_MP_PlayerMessageEvents();
 // Spell Scripts
 void AddSC_AdvancementSpells();
 
-void Addmod_mythic_plusScripts() {
+void Addmod_mythic_plusScripts()
+{
     Add_MP_AllCreatureScripts();
     Add_MP_AllMapScripts();
     Add_MP_CommandScripts();

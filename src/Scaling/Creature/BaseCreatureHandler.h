@@ -1,10 +1,11 @@
 #include "CreatureHooks.h"
 #include "MpLog.h"
 
-class BaseCreatureHandler {
+class BaseCreatureHandler
+{
 public:
-    BaseCreatureHandler(uint32 entry) {
-
+    BaseCreatureHandler(uint32 entry)
+    {
         ASSERT(entry > 0);
 
         MpLog::Debug(MpLog::Area::Scaling, "Registering JustDied and OnSpawn events for entry: ", entry);

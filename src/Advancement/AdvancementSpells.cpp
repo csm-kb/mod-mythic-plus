@@ -12,7 +12,6 @@
 #include "UnitAI.h"
 #include "World.h"
 
-
 class spell_mp_titans_strength_aura : public AuraScript
 {
     PrepareAuraScript(spell_mp_titans_strength_aura);
@@ -22,7 +21,8 @@ class spell_mp_titans_strength_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_STRENGTH);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -47,7 +47,8 @@ class spell_mp_steel_forged_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_STAMINA);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -72,7 +73,8 @@ class spell_mp_celestial_grace_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_SPIRIT);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -97,7 +99,8 @@ class spell_mp_forbidden_knowledge_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_INTELLECT);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -122,7 +125,8 @@ class spell_mp_spectral_reflexes_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_AGILITY);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -147,7 +151,8 @@ class spell_mp_eldritch_barrier_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_RESIST_ARCANE);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -172,7 +177,8 @@ class spell_mp_hellfire_shielding_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_RESIST_FIRE);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -196,7 +202,8 @@ class spell_mp_primal_endurance_aura : public AuraScript
     {
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_RESIST_NATURE);
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -221,7 +228,8 @@ class spell_mp_lichs_bane_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_RESIST_SHADOW);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }
@@ -246,7 +254,8 @@ class spell_mp_glacial_fortress_aura : public AuraScript
         Player* player = GetCaster()->ToPlayer();
         auto rank = sAdvancementMgr->GetPlayerAdvancementRank(player, MpAdvancements::MP_ADV_RESIST_FROST);
 
-        if(!rank) {
+        if (!rank)
+        {
             amount = 0; // player does not have an advancement
             return;
         }

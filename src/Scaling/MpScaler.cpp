@@ -20,11 +20,13 @@ const uint32 HEADLESS_HORSEMAN = 23682;
 
 bool MpScaler::IsMapEligible(Map* map)
 {
-    if (!sMpConfig->enabled) {
+    if (!sMpConfig->enabled)
+    {
         return false;
     }
 
-    if (map->IsDungeon()) {
+    if (map->IsDungeon())
+    {
         return true;
     }
 
@@ -34,7 +36,8 @@ bool MpScaler::IsMapEligible(Map* map)
 bool MpScaler::IsDifficultySet(Player const* player)
 {
     Group const* group = player->GetGroup();
-    if (!group) {
+    if (!group)
+    {
         return false;
     }
 
@@ -43,21 +46,25 @@ bool MpScaler::IsDifficultySet(Player const* player)
 
 bool MpScaler::EligibleHealTarget(Unit* target)
 {
-    if (!target) {
+    if (!target)
+    {
         return false;
     }
 
-    if (target->GetTypeId() == TYPEID_CORPSE || target->GetTypeId() == TYPEID_GAMEOBJECT) {
+    if (target->GetTypeId() == TYPEID_CORPSE || target->GetTypeId() == TYPEID_GAMEOBJECT)
+    {
         return false;
     }
 
-    if (MpBots::IsNpcBotOrOwnedSummon(target)) {
+    if (MpBots::IsNpcBotOrOwnedSummon(target))
+    {
         return false;
     }
 
     // Ensure target is a valid creature before checking eligibility
     Creature* creatureTarget = target->ToCreature();
-    if (creatureTarget && sMpScaler->IsCreatureEligible(creatureTarget)) {
+    if (creatureTarget && sMpScaler->IsCreatureEligible(creatureTarget))
+    {
         return true;
     }
 
@@ -66,20 +73,24 @@ bool MpScaler::EligibleHealTarget(Unit* target)
 
 bool MpScaler::EligibleDamageTarget(Unit* target)
 {
-    if (!target) {
+    if (!target)
+    {
         return false;
     }
 
-    if (target->GetTypeId() == TYPEID_PLAYER) {
+    if (target->GetTypeId() == TYPEID_PLAYER)
+    {
         return true;
     }
 
-    if (MpBots::IsNpcBotOrOwnedSummon(target)) {
+    if (MpBots::IsNpcBotOrOwnedSummon(target))
+    {
         return true;
     }
 
     Creature* creature = target->ToCreature();
-    if (creature && (creature->IsPet() || creature->IsSummon() || creature->IsHunterPet()) && creature->GetOwner() && creature->IsControlledByPlayer()) {
+    if (creature && (creature->IsPet() || creature->IsSummon() || creature->IsHunterPet()) && creature->GetOwner() && creature->IsControlledByPlayer())
+    {
         return true;
     }
 
@@ -88,39 +99,47 @@ bool MpScaler::EligibleDamageTarget(Unit* target)
 
 bool MpScaler::IsCreatureEligible(Creature* creature)
 {
-    if (!creature) {
+    if (!creature)
+    {
         return false;
     }
 
     std::string scriptName = creature->GetScriptName();
-    if(scriptName.starts_with("boss_")) {
+    if (scriptName.starts_with("boss_"))
+    {
         return true;
     }
 
-    if (creature->IsDungeonBoss()) {
+    if (creature->IsDungeonBoss())
+    {
         return true;
     }
 
-    if (creature->GetEntry() == HEADLESS_HORSEMAN) {
+    if (creature->GetEntry() == HEADLESS_HORSEMAN)
+    {
         return true;
     }
 
     // Check if the creature is a pet or summon controlled by a player
-    if ((creature->IsHunterPet() || creature->IsPet() || creature->IsSummon()) && creature->IsControlledByPlayer()) {
+    if ((creature->IsHunterPet() || creature->IsPet() || creature->IsSummon()) && creature->IsControlledByPlayer())
+    {
         return false;
     }
 
     // Skip critters, totems, and triggers
-    if (creature->IsCritter() || creature->IsTotem() || creature->IsTrigger()) {
+    if (creature->IsCritter() || creature->IsTotem() || creature->IsTrigger())
+    {
         return false;
     }
 
     // Safely check if the creature is an NPC Bot
-    if (MpBots::IsNpcBot(creature)) {
+    if (MpBots::IsNpcBot(creature))
+    {
         return false;
     }
 
-    if (MpBots::GetNpcBotOwner(creature)) {
+    if (MpBots::GetNpcBotOwner(creature))
+    {
         return false;
     }
 
@@ -143,7 +162,8 @@ bool MpScaler::IsCreatureEligible(Creature* creature)
 
 void MpScaler::AddCreatureForScaling(Creature* creature)
 {
-    if (!IsCreatureEligible(creature)) {
+    if (!IsCreatureEligible(creature))
+    {
         return;
     }
 
@@ -161,9 +181,12 @@ void MpScaler::AddScaledCreature(Creature* creature, MpInstanceData const& insta
 
     // allow small variance in level for non-boss creatures
     uint8 level = uint8(urand(instanceData.creature.avgLevel - 1, instanceData.creature.avgLevel + 1));
-    if(creature->IsDungeonBoss() || creature->GetEntry() == 23682) {
+    if (creature->IsDungeonBoss() || creature->GetEntry() == 23682)
+    {
         ScaleCreature(instanceData.boss.avgLevel, creature, &instanceData.boss, instanceData.difficulty);
-    } else {
+    }
+    else
+    {
         ScaleCreature(level, creature, &instanceData.creature, instanceData.difficulty);
     }
 }
@@ -198,7 +221,8 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
 
     // get the map difficulty from the map instance to see if it is a heroic or normal set instance
     InstanceMap *instanceMap = creature->GetMap()->ToInstanceMap();
-    if (!instanceMap) {
+    if (!instanceMap)
+    {
         MpLog::Error(MpLog::Area::Scaling, "Invalid instance map ScaleCreature()");
         return;
     }
@@ -228,11 +252,13 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     creature->SetMaxPower(POWER_MANA, mana);
     creature->SetPower(POWER_MANA, mana);
 
-    if(cInfo->unit_class == CLASS_MAGE) {
+    if (cInfo->unit_class == CLASS_MAGE)
+    {
         creature->SetStatFlatModifier(UNIT_MOD_MANA, BASE_VALUE, (float)mana * 10.0f);
     }
 
-    if(cInfo->unit_class == CLASS_PALADIN) {
+    if (cInfo->unit_class == CLASS_PALADIN)
+    {
         creature->SetStatFlatModifier(UNIT_MOD_MANA, BASE_VALUE, (float)mana * 3.0f);
     }
 
@@ -245,7 +271,8 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     float meleeMultiplier = sMpRepo->GetMeleeScaleFactor(creature->GetMapId(), instanceDifficulty);
 
     // Since Heroic Scaling can get out of hand. Reduce the instance multiplier by way too much 10%
-    if(instanceMap->IsHeroic() || instanceMap->Is25ManRaid()) {
+    if (instanceMap->IsHeroic() || instanceMap->Is25ManRaid())
+    {
         // if the enemy is a boss reduce it by less
         meleeMultiplier *= 0.9f;
     }
@@ -255,7 +282,8 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     uint32 rangeAp = std::ceil(stats->RangedAttackPower * meleeMultiplier * 0.4f);
 
     // Additionally need to add in a decrease in attack power for normal non elite enemies
-    if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+    if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+    {
         // Reduced scaling for elite/boss spells to prevent them from hitting too hard
         ap *= sMpConfig->normalEnemyReducer;
         rangeAp *= sMpConfig->normalEnemyReducer;
@@ -289,7 +317,8 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     float updatedRangeAp = creature->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE);
 }
 
-int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel) {
+int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel)
+{
     float origHpPool = sMpRepo->GetPlayerHealthAvg(originalLevel);
     float targetHpPool = sMpRepo->GetPlayerHealthAvg(targetLevel);
 
@@ -297,7 +326,8 @@ int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int t
     float percentDamage = baseDamage / origHpPool;
 
     // If the percentage damage is less than 2% cap it at 2% to prevent spells from being too powerful
-    if(percentDamage < 0.02f) {
+    if (percentDamage < 0.02f)
+    {
         percentDamage = 0.02f;
     }
 
@@ -308,8 +338,10 @@ int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int t
     return scaledDamage;
 }
 
-int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealth, uint32 targetMaxHealth) {
-    if (originalTargetHealth == 0) {
+int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealth, uint32 targetMaxHealth)
+{
+    if (originalTargetHealth == 0)
+    {
         MpLog::Debug(MpLog::Area::Combat, "Original target health is 0, returning base heal: {}", baseHeal);
         return baseHeal;
     }
@@ -317,12 +349,14 @@ int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealt
     // Calculate the percentage of the original heal relative to original creature health
     float percentHeal = static_cast<float>(baseHeal) / static_cast<float>(originalTargetHealth);
 
-    if (percentHeal < 0.01f) {
+    if (percentHeal < 0.01f)
+    {
         percentHeal = 0.01f;
     }
 
     // Cap the percentage at 100% aka full heal of current max health of caster
-    if (percentHeal > 1.0f) {
+    if (percentHeal > 1.0f)
+    {
         percentHeal = 1.0f;
     }
 
@@ -338,14 +372,16 @@ int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealt
 int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCreatureData const* creatureData,
     Creature* creature, Unit* /* target */, float damageMultiplier)
 {
-    if (!spellInfo) {
+    if (!spellInfo)
+    {
         MpLog::Debug(MpLog::Area::Combat, "Invalid spell info ScaleDamageSpell()");
         return damage;
     }
 
     std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
         creature->GetInstanceId());
-    if (!instanceData) {
+    if (!instanceData)
+    {
         MpLog::Debug(MpLog::Area::Combat, "No instance data found for spell scaling, using original damage");
         return damage;
     }
@@ -358,7 +394,8 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     float totalModifier = damageMultiplier * scaleFactor;
 
     // If for some reason there is not a creature, just use the global modifier x instance modifier
-    if(!creature) {
+    if (!creature)
+    {
         MpLog::Debug(MpLog::Area::Combat, "Invalid creature ScaleDamageSpell()");
         return damage * totalModifier;
     }
@@ -367,33 +404,40 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     int32 newDamage = damage;
 
     // Handle Summoned unit modifiers as
-    if(!creatureData) {
-
+    if (!creatureData)
+    {
         // handle if bot pets if NPCBot is installed.
-        if (MpBots::IsNpcBotOrPet(creature)) {
+        if (MpBots::IsNpcBotOrPet(creature))
+        {
             return damage;
         }
 
         // Handle totems and summons - scale based on owner's details because they will not have creature data
-        if(creature->IsTotem() || creature->IsSummon()) {
-
+        if (creature->IsTotem() || creature->IsSummon())
+        {
             Unit* owner = creature->GetOwner();
-            if(owner && owner->IsCreature()) {
+            if (owner && owner->IsCreature())
+            {
                 Creature* ownerCreature = owner->ToCreature();
 
                 // Look up the owner creature's original level from the runtime state
                 std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
-                if (ownerCreatureData) {
+                if (ownerCreatureData)
+                {
                     MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original level {} owner level {}", creature->GetName(), ownerCreature->GetName(), ownerCreatureData->originalLevel, ownerCreature->GetLevel());
                     int32 ownerOriginalLevel = ownerCreatureData->originalLevel;
 
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
                     }
                     newDamage = CalculateSpellDamage(damage, ownerOriginalLevel, ownerCreature->GetLevel());
-                } else {
+                }
+                else
+                {
                     // Fallback if no creature data found - use current level
-                    if(ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
                     }
                     newDamage = CalculateSpellDamage(damage, ownerCreature->GetLevel(), ownerCreature->GetLevel());
@@ -401,13 +445,17 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
                 }
             }
         }
-        else {
+        else
+        {
             MpLog::Debug(MpLog::Area::Combat, "Invalid creature data ScaleDamageSpell()");
             return damage * totalModifier;
         }
-    } else {
+    }
+    else
+    {
         newDamage = CalculateSpellDamage(damage, creatureData->originalLevel, creature->GetLevel());
-        if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+        if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+        {
             // Reduced scaling for elite/boss spells to prevent them from hitting too hard
             totalModifier = totalModifier * 0.85f;
         }
@@ -425,7 +473,8 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
     float diminishingExponent = sMpConfig->diminishingExponent;
 
     // Apply diminishing returns only to the additional scaled damage if it exceeds threshold
-    if (static_cast<uint32>(scaledAdditionalDamage) > threshold) {
+    if (static_cast<uint32>(scaledAdditionalDamage) > threshold)
+    {
         // Calculate the diminished excess additional damage
         float excess = scaledAdditionalDamage - threshold;
         float diminishedExcess = pow(excess, diminishingExponent);
@@ -433,14 +482,17 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
 
         MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Above Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Diminished Additional: {}, Final: {}",
                        spellInfo->SpellName[0], damage, additionalDamage * totalModifier, scaledAdditionalDamage, damage + scaledAdditionalDamage);
-    } else {
+    }
+    else
+    {
         MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Below Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Final: {}",
                        spellInfo->SpellName[0], damage, scaledAdditionalDamage, damage + scaledAdditionalDamage);
     }
 
     // If this is a heroic instance the additional spell damage should be increased by 50%
     InstanceMap* instanceMap = creature->GetMap()->ToInstanceMap();
-    if (instanceMap && (instanceMap->IsHeroic() || instanceMap->Is25ManRaid())) {
+    if (instanceMap && (instanceMap->IsHeroic() || instanceMap->Is25ManRaid()))
+    {
         scaledAdditionalDamage = scaledAdditionalDamage * 1.5f;
     }
 
@@ -451,14 +503,16 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
 int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatureData const* creatureData,
     Creature* creature, Creature* target, float healMultiplier)
 {
-    if (!spellInfo) {
+    if (!spellInfo)
+    {
         MpLog::Debug(MpLog::Area::Combat, "Invalid spell info ScaleHealSpell()");
         return heal;
     }
 
     std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
         creature->GetInstanceId());
-    if (!instanceData) {
+    if (!instanceData)
+    {
         MpLog::Debug(MpLog::Area::Combat, "No instance data found for heal scaling, using original heal");
         return heal;
     }
@@ -471,7 +525,8 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     float totalModifier = healMultiplier * scaleFactor;
 
     // If for some reason there is not a creature, just use the global modifier x instance modifier
-    if(!creature) {
+    if (!creature)
+    {
         MpLog::Debug(MpLog::Area::Combat, "Invalid creature ScaleHealSpell()");
         return heal * totalModifier;
     }
@@ -480,44 +535,56 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     int32 newHeal = heal;
 
     // Handle Summoned unit modifiers
-    if(!creatureData) {
-
+    if (!creatureData)
+    {
         // handle if bot pets if NPCBot is installed.
-        if (MpBots::IsNpcBotOrPet(creature)) {
+        if (MpBots::IsNpcBotOrPet(creature))
+        {
             return heal;
         }
 
         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} with spell: {}", target->GetName(), spellInfo->SpellName[0]);
 
         // Handle totems and summons - scale based on owner's details because they will not have creature data
-        if(creature->IsTotem() || creature->IsSummon()) {
+        if (creature->IsTotem() || creature->IsSummon())
+        {
             Unit* owner = creature->GetOwner();
-            if(owner && owner->IsCreature()) {
+            if (owner && owner->IsCreature())
+            {
                 Creature* ownerCreature = owner->ToCreature();
 
                 // Look up the owner creature's original level from the runtime state
                 std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
-                if (ownerCreatureData) {
-                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+                if (ownerCreatureData)
+                {
+                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
-                    if (target) {
+                    if (target)
+                    {
                         std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                             MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
                         newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-                    } else {
+                    }
+                    else
+                    {
                         newHeal = heal;
                     }
-                } else {
+                }
+                else
+                {
                     // Fallback if no creature data found - use current level
-                    if(ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL) {
+                    if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
+                    {
                         totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
                     }
                     // Scale heal based on target's health, not caster's health
-                    if (target) {
+                    if (target)
+                    {
                         std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
                         uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                             targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
@@ -525,27 +592,35 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
                         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
 
                         newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-                    } else {
+                    }
+                    else
+                    {
                         newHeal = heal;
                     }
                     MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
                 }
             }
         }
-        else {
+        else
+        {
             MpLog::Debug(MpLog::Area::Combat, "Invalid creature data ScaleHealSpell()");
             return heal * totalModifier;
         }
-    } else {
+    }
+    else
+    {
         // Scale heal based on target's health, not caster's health
-        if (target) {
+        if (target)
+        {
             // Get target's original instance health for scaling comparison
             std::optional<MpCreatureData> targetCreatureData = sMpState->GetCreatureData(target);
             uint32 targetOriginalHealth = targetCreatureData && targetCreatureData->originalInstanceHealth > 0 ?
                 targetCreatureData->originalInstanceHealth : target->GetMaxHealth();
                 MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} Original Instance Health: {} New Health: {}", target->GetName(), targetOriginalHealth, target->GetMaxHealth());
             newHeal = CalculateHealScaling(heal, targetOriginalHealth, target->GetMaxHealth());
-        } else {
+        }
+        else
+        {
             // No target available, use original heal
             newHeal = heal;
         }
@@ -563,7 +638,8 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     float diminishingExponent = sMpConfig->diminishingExponent;
 
     // Apply diminishing returns only to the additional scaled heal if it exceeds threshold * 2 since enemies have much more health.
-    if (scaledAdditionalHeal > threshold * 2.0f) {
+    if (scaledAdditionalHeal > threshold * 2.0f)
+    {
         // Calculate the diminished excess additional heal
         float excess = scaledAdditionalHeal - threshold;
         float diminishedExcess = pow(excess, diminishingExponent * 0.95f); // slightly reduce the diminishing returns for heals
@@ -571,14 +647,17 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
 
         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Above Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Diminished Additional: {}, Final: {}",
                        spellInfo->SpellName[0], heal, additionalHeal * totalModifier, scaledAdditionalHeal, heal + scaledAdditionalHeal);
-    } else {
+    }
+    else
+    {
         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Below Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Final: {}",
                        spellInfo->SpellName[0], heal, scaledAdditionalHeal, heal + scaledAdditionalHeal);
     }
 
     // If this is a heroic instance the additional heal be only slightly increased
     InstanceMap* instanceMap = creature->GetMap()->ToInstanceMap();
-    if (instanceMap && (instanceMap->IsHeroic() || instanceMap->Is25ManRaid())) {
+    if (instanceMap && (instanceMap->IsHeroic() || instanceMap->Is25ManRaid()))
+    {
         scaledAdditionalHeal = scaledAdditionalHeal * 1.15f;
     }
 
@@ -586,7 +665,8 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     return heal + scaledAdditionalHeal;
 }
 
-bool MpScaler::IsFinalBoss(Creature* creature) {
+bool MpScaler::IsFinalBoss(Creature* creature)
+{
     std::array<uint32, 128> finalBosses = {
         // --- WoW Classic Dungeons ---
         11519,  /* Bazzalan Ragefire */
@@ -748,7 +828,8 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
 {
     //
     int32 rank = 0;
-    if(cInfo && cInfo->rank > 0) {
+    if (cInfo && cInfo->rank > 0)
+    {
         rank = cInfo->rank;
     }
 
@@ -762,15 +843,19 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
     int32 hpScaleFactor = sMpRepo->GetHealthScaleFactor(mapId, difficulty);
 
     // Add some variance to the healthpool so enemies are not all the same
-    if(creature->IsDungeonBoss() || creature->isWorldBoss() || creature->isElite() || cInfo->rank == CREATURE_ELITE_RARE) {
+    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->isElite() || cInfo->rank == CREATURE_ELITE_RARE)
+    {
         healthVariation = frand(1.0f, 1.15f);
-    } else {  // This addresses Normals and other trash from getting to big a HP bonus
+    }
+    else // This addresses Normals and other trash from getting to big a HP bonus
+    {
         healthVariation = frand(1.0f, 1.05f);
         hpScaleFactor *= 0.50;
     }
 
     // Add in special overrides here as necessary:
-    if(creature->GetEntry() == HEADLESS_HORSEMAN) {
+    if (creature->GetEntry() == HEADLESS_HORSEMAN)
+    {
         healthVariation = frand(1.0f, 1.1f);
     }
 
@@ -778,15 +863,19 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
     uint32 basehp;
 
     // Only apply unitTypeMod for non-normal enemies
-    if (rank != CREATURE_ELITE_NORMAL) {
+    if (rank != CREATURE_ELITE_NORMAL)
+    {
         basehp = uint32(std::ceil(origHealth * healthVariation * unitTypeMod));
-    } else {
+    }
+    else
+    {
         basehp = uint32(std::ceil(origHealth * healthVariation));
     }
 
     // if it is a heroic instance give the enemy an additional 20% boost
     InstanceMap* instanceMap = creature->GetMap()->ToInstanceMap();
-    if (instanceMap && instanceMap->IsRaidOrHeroicDungeon()) {
+    if (instanceMap && instanceMap->IsRaidOrHeroicDungeon())
+    {
         basehp *= 1.25f;
     }
 
@@ -800,10 +889,12 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
      *
      * confHPMod: is from the mythic settings directly.
      */
-    if(cInfo->ModHealth > 0.0f) {
+    if (cInfo->ModHealth > 0.0f)
+    {
         return uint32(basehp * (cInfo->ModHealth + hpScaleFactor) * confHPMod);
-
-    } else {
+    }
+    else
+    {
         return uint32(basehp * hpScaleFactor * confHPMod);
     }
 }
@@ -812,16 +903,23 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
 float MpScaler::CalculateScaling(int levelDifference, float scaleFactor, float constant, float /*growthFactor*/) {
     float levelMultiplier;
 
-    if (levelDifference <= 0) {
+    if (levelDifference <= 0)
+    {
         // High-level creatures need a minimum boost
         levelMultiplier = 1.5f; // Minimum 50% boost for near-level or higher creatures
-    } else if (levelDifference <= 10) {
+    }
+    else if (levelDifference <= 10)
+    {
         // Moderate scaling for small level differences
         levelMultiplier = 1.5f + (levelDifference * 0.2f); // 1.5x to 3.5x
-    } else if (levelDifference <= 30) {
+    }
+    else if (levelDifference <= 30)
+    {
         // Higher scaling for medium level differences
         levelMultiplier = 3.5f + ((levelDifference - 10) * 0.15f); // 3.5x to 6.5x
-    } else {
+    }
+    else
+    {
         // Cap extreme scaling for very low level creatures
         levelMultiplier = 6.5f + std::min((levelDifference - 30) * 0.05f, 3.5f); // Cap at 10x
     }

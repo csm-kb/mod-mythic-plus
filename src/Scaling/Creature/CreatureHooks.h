@@ -9,7 +9,8 @@
 #include "ObjectGuid.h"
 
 // Struct to store the state of which handlers have been fired for a creature
-struct CreatureEventState {
+struct CreatureEventState
+{
     bool onDeathEventFired = false;
     bool onSpawnEventFired = false;
     bool onAddedToInstanceEventFired = false;
@@ -30,7 +31,8 @@ using HandlerMap = std::unordered_map<uint32, HandlersList<Args...>>;
 
 using CreatureEventStateMap = std::map<ObjectGuid, CreatureEventState>;
 
-class CreatureHooks {
+class CreatureHooks
+{
 private:
 
     CreatureHooks():
@@ -44,7 +46,8 @@ private:
         _OnAddToInstanceHandlers->reserve(100);
     }
 
-    ~CreatureHooks() {
+    ~CreatureHooks()
+    {
         _OnSpawnHandlers->clear();
         _JustDiedHandlers->clear();
         _OnAddToInstanceHandlers->clear();
@@ -64,7 +67,8 @@ private:
     std::unique_ptr<CreatureEventStateMap> _eventStates;
 
 public:
-    static CreatureHooks* instance() {
+    static CreatureHooks* instance()
+    {
         static CreatureHooks instance;
 
         return &instance;
@@ -74,7 +78,6 @@ public:
     void RegisterJustDied(uint32 entry, CreatureHook<Creature*, Unit*> callback);
     void RegisterOnSpawn(uint32 entry, CreatureHook<Creature*> callback);
     void RegisterOnAddToInstance(uint32 entry, CreatureHook<Creature*> callback);
-
 
     // Event triggers
     void JustDied(Creature* creature, Unit* killer);

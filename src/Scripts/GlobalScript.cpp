@@ -16,58 +16,69 @@ public:
     // This adds the mythic+ item scaling to the loot table for enemies
     void OnBeforeDropAddItem(Player const* player, Loot& loot, bool /*canRate*/, uint16 /*lootMode*/, LootStoreItem* LootStoreItem, LootStore const& store) override {
 
-        if(LootStoreItem->itemid == 0) {
+        if (LootStoreItem->itemid == 0)
+        {
             return;
         }
 
         // Not playing on mythic+ difficulty skip doing loot
-        if(!sMpScaler->IsDifficultySet(player)) {
+        if (!sMpScaler->IsDifficultySet(player))
+        {
             return;
         }
 
         // Not on an eligible map skip doing loot
         Map* map = player->GetMap();
-        if (!sMpScaler->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map))
+        {
             return;
         }
 
         std::optional<MpInstanceData> mythicSettings = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
 
         // if there are not mythic settings set for this group and map skip
-        if (!mythicSettings) {
+        if (!mythicSettings)
+        {
             MpLog::Warn(MpLog::Area::Loot, "No mythic settings found for map {} instance {}", map->GetMapName(), map->GetInstanceId());
             return;
         }
 
         // if the item rewards are disabled skip
-        if (mythicSettings->itemRewards == false ) {
+        if (mythicSettings->itemRewards == false )
+        {
             return;
         }
 
         // get the item to scale up
         ItemTemplate const* origItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
-        if (!origItem) {
-
+        if (!origItem)
+        {
             // If there is not a scaled up item and the item is a below quality green then set an invalid item_id so it is not added to loot
             ItemTemplate const* nonMythicItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
-            if (nonMythicItem->Quality < 2) {
+            if (nonMythicItem->Quality < 2)
+            {
                 LootStoreItem->itemid = 0;
                 return;
             }
 
             // otherwise roll a chance to see a shadowy remains item is provided instead only if there is not already a shadowy remains item on the corpse
             bool hasShadowyRemains = false;
-            for (auto& item : loot.items) {
-                if(item.itemid == MpConstants::SHADOWY_REMAINS) {
+            for (auto& item : loot.items)
+            {
+                if (item.itemid == MpConstants::SHADOWY_REMAINS)
+                {
                     hasShadowyRemains = true;
                     break;
                 }
             }
 
-            if (!hasShadowyRemains) {
+            if (!hasShadowyRemains)
+            {
                 LootStoreItem->itemid = MpConstants::SHADOWY_REMAINS;
                 return;
-            } else {
+            }
+            else
+            {
                 LootStoreItem->itemid = 0;
                 return;
             }
@@ -76,7 +87,8 @@ public:
         uint32 newItemId = origItem->ItemId + mythicSettings->itemOffset;
         ItemTemplate const* newItemTempl = sObjectMgr->GetItemTemplate(newItemId);
 
-        if(!newItemTempl) {
+        if (!newItemTempl)
+        {
             MpLog::Warn(MpLog::Area::Loot, "New Loot Item not found for itemid {} original item: {} ({})", newItemId, origItem->Name1, origItem->ItemId);
             return;
         }
@@ -84,12 +96,12 @@ public:
         LootStoreItem->itemid = newItemId;
 
         // Revalidate the LootStoreItem to ensure consistency
-        if (!LootStoreItem->IsValid(store, newItemId)) {
+        if (!LootStoreItem->IsValid(store, newItemId))
+        {
             MpLog::Info(MpLog::Area::Loot, "LootStoreItem is not valid after updating itemid to {} in OnBeforeDropAddItem()", newItemId);
             return;
         }
     }
-
 };
 
 void Add_MP_GlobalScripts()

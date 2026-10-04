@@ -1,4 +1,3 @@
-
 #include "Chat.h"
 #include "AdvancementMgr.h"
 #include "MpScaler.h"
@@ -68,16 +67,15 @@ public:
 
     static bool HandleDebug(ChatHandler* handler)
     {
-
         Creature* target = handler->getSelectedCreature();
-        if(!target) {
+        if (!target)
+        {
             handler->PSendSysMessage("You must select a creature to debug.");
             return true;
         }
 
         CreatureTemplate const* creatureTemplate = target->GetCreatureTemplate();
         std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target);
-
 
         handler->PSendSysMessage(LANG_NPCINFO_LEVEL, target->GetLevel());
         handler->PSendSysMessage(LANG_NPCINFO_HEALTH, target->GetCreateHealth(), target->GetMaxHealth(), target->GetHealth());
@@ -98,12 +96,12 @@ public:
         handler->PSendSysMessage("Armor {}", target->GetArmor());
         handler->PSendSysMessage("Damage Modifier on template {}",creatureTemplate->DamageModifier);
 
-        if(creatureData) {
+        if (creatureData)
+        {
             handler->PSendSysMessage("CreatureData: {}", creatureData->ToString());
         }
 
         return true;
-
     }
 
     // sets the difficluty for the group
@@ -112,54 +110,63 @@ public:
         Player* player = handler->GetSession()->GetPlayer();
         Group* group = player->GetGroup();
 
-        if (!group) {
+        if (!group)
+        {
             MpLog::Debug(MpLog::Area::Instance, "HandleSetMythic() No Group for player: {}", player->GetName());
             handler->PSendSysMessage("|cFFFF0000 You must be in a group to be able to set a Mythic+ difficulty.");
             return true;
         }
 
-        if (args.empty()) {
+        if (args.empty())
+        {
             handler->PSendSysMessage("|cFFFF0000 You must specify a difficulty level. Expected values are 'mythic', 'legendary', or 'ascendant'.");
             return true;
         }
 
         std::string difficulty = args[0];
 
-        if (!group->IsLeader(player->GetGUID())) {
+        if (!group->IsLeader(player->GetGUID()))
+        {
             handler->PSendSysMessage("|cFFFF0000 You must be the group leader to set a Mythic+ difficulty.");
             return true;
         }
 
-        if (player->GetMap()->IsDungeon()) {
+        if (player->GetMap()->IsDungeon())
+        {
             player->ResetInstances(player->GetGUID(), INSTANCE_RESET_CHANGE_DIFFICULTY, false);
             player->SendResetInstanceSuccess(player->GetMap()->GetId());
             return true;
         }
 
-        if (difficulty == "mythic") {
+        if (difficulty == "mythic")
+        {
             sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_MYTHIC));
         }
-        else if (difficulty == "legendary") {
+        else if (difficulty == "legendary")
+        {
             sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_LEGENDARY));
         }
-        else if (difficulty == "ascendant") {
+        else if (difficulty == "ascendant")
+        {
             sMpState->SetGroupData(group, MpGroupData(group->GetGUID(), MP_DIFFICULTY_ASCENDANT));
         }
-        else if (difficulty == "heroic") {
+        else if (difficulty == "heroic")
+        {
             sMpState->RemoveGroupData(group->GetGUID());
             sMpRepo->DBRemoveGroupData(group->GetGUID());
             group->SetDungeonDifficulty(DUNGEON_DIFFICULTY_HEROIC);
         }
-        else if (difficulty == "normal") {
+        else if (difficulty == "normal")
+        {
             sMpState->RemoveGroupData(group->GetGUID());
             sMpRepo->DBRemoveGroupData(group->GetGUID());
             group->SetDungeonDifficulty(DUNGEON_DIFFICULTY_NORMAL);
         }
-        else {
+        else
+        {
             handler->PSendSysMessage("|cFFFF0000 Invalid difficulty level. Expected values are 'normal', 'heroic', 'mythic', 'legendary', or 'ascendant'.");
             return true;
         }
-
 
         handler->PSendSysMessage("Mythic+ difficulty set to: " + difficulty);
         return true;
@@ -193,13 +200,16 @@ public:
             std::string((sMpConfig->enableDeathLimits) ? "Yes" : "No")
         );
 
-        if (player->GetGroup()) {
+        if (player->GetGroup())
+        {
             ObjectGuid groupGuid = player->GetGroup()->GetGUID();
             std::optional<MpGroupData> groupData = sMpState->GetGroupData(groupGuid);
-            if (groupData) {
+            if (groupData)
+            {
                 MpScaleFactor scaleFactors;
 
-                if(map->IsDungeon()) {
+                if (map->IsDungeon())
+                {
                     scaleFactors = sMpRepo->GetScaleFactor(mapId, groupData->difficulty);
                 }
 
@@ -208,7 +218,9 @@ public:
                     sMpState->GetGroupDeaths(groupGuid, player->GetMapId(), player->GetInstanceId()),
                     scaleFactors.ToString()
                 );
-            } else {
+            }
+            else
+            {
                 status += "  Group Difficulty: Not Set\n";
             }
         }
@@ -220,26 +232,32 @@ public:
     static bool HandleReScale(ChatHandler* handler)
     {
         Creature* creature = handler->getSelectedCreature();
-        if(!creature) {
+        if (!creature)
+        {
             handler->PSendSysMessage("You must select a creature to rescale.");
             return true;
         }
 
-        if(!sMpState->GetCreatureData(creature)) {
+        if (!sMpState->GetCreatureData(creature))
+        {
             handler->PSendSysMessage("Creature is not eligible for rescaling.");
             return true;
         }
 
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
             creature->GetInstanceId());
-        if(!instanceData) {
+        if (!instanceData)
+        {
             handler->PSendSysMessage("No instance data found for this creature.");
             return true;
         }
 
-        if(creature->IsDungeonBoss() || creature->GetEntry() == 23682) {
+        if (creature->IsDungeonBoss() || creature->GetEntry() == 23682)
+        {
             sMpScaler->ScaleCreature(creature->GetLevel(), creature, &instanceData->boss, instanceData->difficulty);
-        } else {
+        }
+        else
+        {
             sMpScaler->ScaleCreature(creature->GetLevel(), creature, &instanceData->creature, instanceData->difficulty);
         }
 
@@ -251,13 +269,15 @@ public:
     static bool HandleReScaleAll(ChatHandler* handler)
     {
         Player* player = handler->GetPlayer();
-        if(!player) {
+        if (!player)
+        {
             handler->PSendSysMessage("You must be a player to rescale all creatures.");
             return true;
         }
 
         Map* map = player->GetMap();
-        if(!map) {
+        if (!map)
+        {
             handler->PSendSysMessage("You must be in a map to rescale all creatures.");
             return true;
         }
@@ -266,7 +286,8 @@ public:
         int32 instanceId = map->GetInstanceId();
 
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(mapId, instanceId);
-        if(!instanceData) {
+        if (!instanceData)
+        {
             handler->PSendSysMessage("No mythic instance data found for this map.");
             return true;
         }
@@ -295,22 +316,25 @@ public:
 
     static bool HandleChangeMelee(ChatHandler* handler,  const std::vector<std::string>& args)
     {
-        if (args.empty()) {
+        if (args.empty())
+        {
             handler->PSendSysMessage("|cFFFF0000 You must specify a value to set the melee scale factor.");
             return true;
         }
 
         Player* player = handler->GetSession()->GetPlayer();
-        if (!player) {
+        if (!player)
+        {
             handler->PSendSysMessage("|cFFFF0000 Invalid session or player.");
             return true;
         }
 
-
-        if (player->GetGroup()) {
+        if (player->GetGroup())
+        {
             std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
-            if(groupData) {
+            if (groupData)
+            {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
                 if (!parsed || *parsed <= 0.0f)
                 {
@@ -331,21 +355,25 @@ public:
 
     static bool HandleChangeSpell(ChatHandler* handler,  const std::vector<std::string>& args)
     {
-        if (args.empty()) {
+        if (args.empty())
+        {
             handler->PSendSysMessage("|cFFFF0000 You must specify a value to set the spell scale factor.");
             return true;
         }
 
         Player* player = handler->GetSession()->GetPlayer();
-        if (!player) {
+        if (!player)
+        {
             handler->PSendSysMessage("|cFFFF0000 Invalid session or player.");
             return true;
         }
 
-        if (player->GetGroup()) {
+        if (player->GetGroup())
+        {
             std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
-            if(groupData) {
+            if (groupData)
+            {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
                 if (!parsed || *parsed <= 0.0f)
                 {
@@ -367,21 +395,25 @@ public:
 
     static bool HandleChangeHealth(ChatHandler* handler,  const std::vector<std::string>& args)
     {
-        if (args.empty()) {
+        if (args.empty())
+        {
             handler->PSendSysMessage("|cFFFF0000 You must specify a value to set the health scale factor.");
             return true;
         }
 
         Player* player = handler->GetSession()->GetPlayer();
-        if (!player) {
+        if (!player)
+        {
             handler->PSendSysMessage("|cFFFF0000 Invalid session or player.");
             return true;
         }
 
-        if (player->GetGroup()) {
+        if (player->GetGroup())
+        {
             std::optional<MpGroupData> groupData = sMpState->GetGroupData(player->GetGroup()->GetGUID());
 
-            if(groupData) {
+            if (groupData)
+            {
                 Optional<float> parsed = Acore::StringTo<float>(args[0]);
                 if (!parsed || *parsed <= 0.0f)
                 {
@@ -406,16 +438,19 @@ public:
         Player* player = handler->GetSession()->GetPlayer();
         std::string message = "";
 
-        for(int i =0; i < MpAdvancements::MP_ADV_MAX; i++) {
+        for (int i =0; i < MpAdvancements::MP_ADV_MAX; i++)
+        {
             MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player, static_cast<MpAdvancements>(i));
-            if(!playerRank) {
+            if (!playerRank)
+            {
                 continue;
             }
 
             message += Acore::StringFormat("Your Advancement Bonuses: \n {}: {} bonus: {}", MpAdvancementsToString(static_cast<MpAdvancements>(i)), playerRank->rank, playerRank->bonus);
         }
 
-        if(message.empty()) {
+        if (message.empty())
+        {
             message = "You have no advancements.";
         }
 
@@ -423,7 +458,6 @@ public:
 
         return true;
     }
-
 };
 
 void Add_MP_CommandScripts()

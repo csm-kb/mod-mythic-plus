@@ -49,12 +49,14 @@ struct MpAdvancementRank
     std::pair<uint32 /*materialId*/, uint32 /*quantity*/> material3;
 
     // Used to validate this struct is set correctly
-    bool IsValid() {
+    bool IsValid()
+    {
         return (rank > 0 && advancementId >= 0 && advancementId < MP_ADV_MAX);
     }
 
     // Check if the map has an the item entry for the passed in material
-    bool HasMaterial(uint32 itemEntry) {
+    bool HasMaterial(uint32 itemEntry)
+    {
         return materialCost.contains(itemEntry);
     }
 };
@@ -80,7 +82,6 @@ struct MpPlayerRank
  */
 class AdvancementMgr
 {
-
 // Shared mutex for handling writes to shared player advancement data
 std::mutex _playerAdvancementMutex;
 
@@ -94,7 +95,8 @@ std::unordered_map<uint32 /*player_guid*/, std::unordered_map<MpAdvancements, Mp
 std::unordered_map<uint32 /*material_id*/, std::vector<uint32> /* item entries */> _materialTypes;
 
 public:
-    static AdvancementMgr* instance() {
+    static AdvancementMgr* instance()
+    {
         static AdvancementMgr instance;
         return &instance;
     }

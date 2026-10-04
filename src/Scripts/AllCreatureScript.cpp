@@ -25,11 +25,13 @@ public:
     void OnAllCreatureUpdate(Creature* creature, uint32 diff) override
     {
         // Skip any creatures not in an instance we are scaling first to avoid unnecessary work
-        if (!sMpScaler->IsMapEligible(creature->GetMap())) {
+        if (!sMpScaler->IsMapEligible(creature->GetMap()))
+        {
             return;
         }
 
-        if (!sMpScaler->IsCreatureEligible(creature)) {
+        if (!sMpScaler->IsCreatureEligible(creature))
+        {
             return;
         }
 
@@ -48,19 +50,22 @@ public:
             data.updateTimer = 0;
         });
 
-        if (throttled) {
+        if (throttled)
+        {
             return;
         }
 
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
             creature->GetInstanceId());
         // no instance data yet means dont scale.
-        if(!instanceData) {
+        if (!instanceData)
+        {
             return;
         }
 
         // this is a creature that was not scaled at instance load time, we need to scale it now.
-        if(!known) {
+        if (!known)
+        {
             MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}", creature->GetName());
             sMpScaler->AddScaledCreature(creature, *instanceData);
             return;
@@ -80,7 +85,8 @@ public:
             return;
         }
 
-        if(respawned) {
+        if (respawned)
+        {
             MpLog::Debug(MpLog::Area::Scaling,
                 "OnAllCreatureUpdate: Creature Death event scaling creature: {} level: {} guid: {} event: {}",
                 creature->GetName(), creature->GetLevel(), creature->GetGUID().ToString(), creature->getDeathState());
@@ -92,20 +98,25 @@ public:
     void OnCreatureAddWorld(Creature* creature) override
     {
         Map* map = creature->GetMap();
-        if (!sMpScaler->IsMapEligible(map)) {
+        if (!sMpScaler->IsMapEligible(map))
+        {
             return;
         }
 
-        if (!sMpScaler->IsCreatureEligible(creature)) {
+        if (!sMpScaler->IsCreatureEligible(creature))
+        {
             return;
         }
 
         // if we have instance data about zone then just scale the creature otherwise add to be scaled once we do.
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
 
-        if(instanceData) {
+        if (instanceData)
+        {
             sMpScaler->AddScaledCreature(creature, *instanceData);
-        } else {
+        }
+        else
+        {
             sMpScaler->AddCreatureForScaling(creature);
         }
     }
@@ -115,7 +126,6 @@ public:
     {
         sMpState->RemoveCreatureData(creature);
     }
-
 };
 
 void Add_MP_AllCreatureScripts()
