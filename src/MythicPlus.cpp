@@ -1,4 +1,5 @@
 #include "MythicPlus.h"
+#include "MpBots.h"
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "ObjectMgr.h"
@@ -54,16 +55,9 @@ bool MythicPlus::EligibleHealTarget(Unit* target)
         return false;
     }
 
-    #if defined(MOD_PRESENT_NPCBOTS)
-        if (target->IsNPCBot()) {
-            return false;
-        }
-
-        // Null check for GetOwner to avoid dereferencing a null pointer
-        if ((target->IsPet() || target->IsSummon() || target->IsHunterPet()) && target->GetOwner() && target->GetOwner()->IsNPCBot()) {
-            return false;
-        }
-    #endif
+    if (MpBots::IsNpcBotOrOwnedSummon(target)) {
+        return false;
+    }
 
     // Ensure target is a valid creature before checking eligibility
     Creature* creatureTarget = target->ToCreature();
@@ -84,15 +78,9 @@ bool MythicPlus::EligibleDamageTarget(Unit* target)
         return true;
     }
 
-    #if defined(MOD_PRESENT_NPCBOTS)
-        if (target->IsNPCBot()) {
-            return true;
-        }
-
-        if ((target->IsPet() || target->IsSummon() || target->IsHunterPet()) && target->GetOwner() && target->GetOwner()->IsNPCBot()) {
-            return true;
-        }
-    #endif
+    if (MpBots::IsNpcBotOrOwnedSummon(target)) {
+        return true;
+    }
 
     Creature* creature = target->ToCreature();
     if (creature && (creature->IsPet() || creature->IsSummon() || creature->IsHunterPet()) && creature->GetOwner() && creature->IsControlledByPlayer()) {
@@ -131,17 +119,14 @@ bool MythicPlus::IsCreatureEligible(Creature* creature)
         return false;
     }
 
-    #if defined(MOD_PRESENT_NPCBOTS)
-        // Safely check if the creature is an NPC Bot
-        if (creature->IsNPCBot()) {
-            return false;
-        }
+    // Safely check if the creature is an NPC Bot
+    if (MpBots::IsNpcBot(creature)) {
+        return false;
+    }
 
-        if(creature->GetBotOwner()) {
-            return false;
-        }
-
-    #endif
+    if (MpBots::GetNpcBotOwner(creature)) {
+        return false;
+    }
 
     // Check for NPC-related flags (vendor, gossip, quest giver, trainer, etc.)
     if ((creature->IsVendor() ||
@@ -411,11 +396,9 @@ int32 MythicPlus::ScaleDamageSpell(SpellInfo const * spellInfo, uint32 damage, M
     if(!creatureData) {
 
         // handle if bot pets if NPCBot is installed.
-        #ifdef NPCBOT
-            if(creature->IsNPCBotOrPet()) {
-                return damage;
-            }
-        #endif
+        if (MpBots::IsNpcBotOrPet(creature)) {
+            return damage;
+        }
 
         // Handle totems and summons - scale based on owner's details because they will not have creature data
         if(creature->IsTotem() || creature->IsSummon()) {
@@ -524,11 +507,9 @@ int32 MythicPlus::ScaleHealSpell(SpellInfo const * spellInfo, uint32 heal, MpCre
     if(!creatureData) {
 
         // handle if bot pets if NPCBot is installed.
-        #ifdef NPCBOT
-            if(creature->IsNPCBotOrPet()) {
-                return heal;
-            }
-        #endif
+        if (MpBots::IsNpcBotOrPet(creature)) {
+            return heal;
+        }
 
         MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} with spell: {}", target->GetName(), spellInfo->SpellName[0]);
 

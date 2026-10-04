@@ -1,3 +1,4 @@
+#include "MpBots.h"
 #include "MpConfig.h"
 #include "MpLog.h"
 #include "Player.h"
@@ -146,11 +147,9 @@ private:
             return HandleNonCreatureAttacker(target, attacker, damage, spellInfo, eventType);
         }
 
-    #if defined(MOD_PRESENT_NPCBOTS)
-        if (attacker && attacker->IsNPCBotOrPet()) {
+        if (MpBots::IsNpcBotOrPet(attacker)) {
             return;
         }
-    #endif
 
         Creature* creatureCaster = attacker->ToCreature();
         MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creatureCaster->GetGUID());
@@ -356,11 +355,9 @@ public:
             return damageOrHeal;
         }
 
-    #if defined(MOD_PRESENT_NPCBOTS)
-        if (attacker && attacker->IsNPCBotOrPet()) {
+        if (MpBots::IsNpcBotOrPet(attacker)) {
             return damageOrHeal;
         }
-    #endif
 
         Creature* creature = attacker ? attacker->ToCreature() : nullptr;
         if (!creature) {

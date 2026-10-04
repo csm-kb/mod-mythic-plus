@@ -1,3 +1,4 @@
+#include "MpBots.h"
 #include "MpLog.h"
 #include "MpDataStore.h"
 #include "MpScheduler.h"
@@ -108,11 +109,9 @@ public:
         Creature* creature = player->GetMap()->GetCreature(loot->sourceWorldObjectGUID);
         if (!creature) return;
 
-        #if defined(MOD_PRESENT_NPCBOTS)
-            if(creature->IsNPCBotOrPet()) {
-                return;
-            }
-        #endif
+        if (MpBots::IsNpcBotOrPet(creature)) {
+            return;
+        }
 
         // Check if this is a Mythic+ scaled creature
         MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
@@ -161,11 +160,9 @@ public:
         Creature* creature = victim->ToCreature();
         if (!creature) return;
 
-        #if defined(MOD_PRESENT_NPCBOTS)
-            if(creature->IsNPCBotOrPet()) {
-                return;
-            }
-        #endif
+        if (MpBots::IsNpcBotOrPet(creature)) {
+            return;
+        }
 
         // Check if this is a Mythic+ scaled creature
         MpCreatureData* creatureData = sMpDataStore->GetCreatureData(creature->GetGUID());
