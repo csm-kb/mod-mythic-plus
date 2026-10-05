@@ -223,10 +223,12 @@ Log lines are `event=<name> key=value ...`:
 | Did a reload change validity? | `config_reloaded config_warnings= [invalid_keys=]` | INFO/WARN |
 | Is a config value bad? | `config_invalid key= value= rule= default=` | WARN |
 | Did this run get a tier? | `instance_tier_applied map= instance= group= leader= tier=<name> base=normal\|heroic trash=hp:...,melee:...,spell:...,armor:...,lvl:... boss=... death_limit=` | INFO |
-| Why didn't this run scale? | `instance_untiered map= instance= group= leader= reason=no_group\|no_group_tier\|module_disabled` | INFO for humans, DEBUG for bots |
-| Why was a command rejected? | `command_failed cmd= reason= player=` | INFO |
-| Why did this creature (not) scale? | `creature_scaled ...` / `creature_skipped ... reason=` (on add-to-world, tiered instances only) | DEBUG |
-| Advancement or loot failure? | `<area>_failed reason= player=` | WARN |
+| Why didn't this run scale? | `instance_untiered map= instance= group= leader= player= guid= reason=no_group\|no_group_tier\|module_disabled` | INFO for humans, DEBUG for bots |
+| Why was a command rejected? | `command_failed cmd= reason= player= guid=` | INFO |
+| Why did this creature scale? | `creature_scaled map= instance= entry= level= hp=`, logged whenever a creature is scaled: on add-to-world, on respawn, when an unscaled creature is scaled late, when the instance gets its tier (`ScaleRemaining`), and on `.mp rescale` and `.mp rescale all` | DEBUG |
+| Why didn't this creature scale? | `creature_skipped map= instance= entry= reason=` (on add-to-world, tiered instances only) | DEBUG |
+| Advancement failure? | `advancement_failed reason=rank_not_found\|save_failed\|history_save_failed player= guid= ...` | ERROR |
+| Loot failure? | `loot_failed reason=no_instance_settings map= instance= player= guid=` / `loot_failed reason=offset_item_not_found new_item= original_item= name=` | WARN |
 
 Instance lines carry `map= instance= group=`; players are logged as `player=<name> guid=<guid>`.
 
