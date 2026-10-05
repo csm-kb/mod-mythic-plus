@@ -38,17 +38,7 @@ public:
         // throttle this check per creature to only run if more than 20ms has passed since last check. The timer
         // lives in the creature's record, so a creature without one is checked right away.
         bool throttled = false;
-        bool known = sMpState->UpdateCreatureData(creature, [diff, &throttled](MpCreatureData& data)
-        {
-            data.updateTimer += diff;
-            if (data.updateTimer < 20)
-            {
-                throttled = true;
-                return;
-            }
-
-            data.updateTimer = 0;
-        });
+        bool known = sMpState->AdvanceCreatureUpdateTimer(creature, diff, throttled);
 
         if (throttled)
         {
@@ -73,15 +63,8 @@ public:
         }
 
         // record the death of our scaled creature; a corpse that comes back alive was respawned and is rescaled
-        DeathState currentState = creature->getDeathState();
         bool respawned = false;
-        bool stillKnown = sMpState->UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
-        {
-            if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
-                data.lastDeathState = currentState;
-            else if (currentState == DeathState::Alive && data.lastDeathState == DeathState::Corpse)
-                respawned = true;
-        });
+        bool stillKnown = sMpState->TrackCreatureDeathState(creature, creature->getDeathState(), respawned);
 
         if (!stillKnown)
             return;

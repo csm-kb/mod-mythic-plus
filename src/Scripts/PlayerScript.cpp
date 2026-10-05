@@ -8,7 +8,6 @@
 #include "ScriptMgr.h"
 
 #include <optional>
-#include <utility>
 
 class MythicPlus_PlayerScript : public PlayerScript
 {
@@ -47,19 +46,13 @@ public:
             return;
         }
 
-        uint32 mapId = map->GetId();
-        uint32 instanceId = map->GetInstanceId();
-        uint32 playerDeaths = 0;
-        bool known = sMpState->UpdatePlayerData(player->GetGUID(), [mapId, instanceId, &playerDeaths](MpPlayerData& pd)
-        {
-            playerDeaths = pd.AddDeath(mapId, instanceId);
-        });
-
-        if (!known)
+        std::optional<uint32> playerDeaths = sMpState->AddPlayerDeath(player->GetGUID(), map->GetId(),
+            map->GetInstanceId());
+        if (!playerDeaths)
             return;
 
         MpLog::Info(MpLog::Area::Instance, "Player {} added death to instance data {}", player->GetName(),
-            playerDeaths);
+            *playerDeaths);
 
         if (killer)
         {
@@ -164,23 +157,12 @@ public:
 
         // Track the bound instance on the player data, setting the player data up if needed
         ObjectGuid playerGuid = player->GetGUID();
-        auto mapKey = std::make_pair(mapId, player->GetInstanceId());
-        auto bindInstance = [&mapKey](MpPlayerData& pd)
-        {
-            pd.instanceData.emplace(mapKey, MpPlayerInstanceData{ .deaths = 0 });
-        };
-
-        if (!sMpState->UpdatePlayerData(playerGuid, bindInstance))
-        {
-            MpPlayerData playerData(playerGuid, player->GetName(), data->difficulty, group->GetGUID().GetCounter());
-            bindInstance(playerData);
-            sMpState->SetPlayerData(playerGuid, std::move(playerData));
-        }
+        sMpState->BindPlayerInstance(playerGuid, player->GetName(), data->difficulty, group->GetGUID().GetCounter(),
+            mapId, player->GetInstanceId());
 
         // Add this player to the group data
         bool added = false;
-        auto addMember = [playerGuid, &added](MpGroupData& gd) { added = gd.AddMember(playerGuid); };
-        if (sMpState->UpdateGroupData(group->GetGUID(), addMember) && !added)
+        if (sMpState->AddGroupMember(group->GetGUID(), playerGuid, added) && !added)
         {
             MpLog::Warn(MpLog::Area::Instance, "PlayerData for player {} is already in the players vector",
                 player->GetName());

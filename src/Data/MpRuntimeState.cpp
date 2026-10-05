@@ -90,6 +90,50 @@ void MpRuntimeState::RemovePlayerData(ObjectGuid guid)
     MpLog::Debug(MpLog::Area::Instance, "RemovePlayerData for player {}", guid.ToString());
 }
 
+std::optional<uint32> MpRuntimeState::AddPlayerDeath(ObjectGuid guid, uint32 mapId, uint32 instanceId)
+{
+    uint32 playerDeaths = 0;
+    bool known = UpdatePlayerData(guid, [mapId, instanceId, &playerDeaths](MpPlayerData& pd)
+    {
+        playerDeaths = pd.AddDeath(mapId, instanceId);
+    });
+
+    if (!known)
+        return std::nullopt;
+
+    return playerDeaths;
+}
+
+// Get-or-create in two steps (update, else create), as the OnPlayerBindToInstance hook did.
+void MpRuntimeState::BindPlayerInstance(ObjectGuid guid, std::string const& name, MpDifficulty difficulty,
+    uint32 groupId, uint32 mapId, uint32 instanceId)
+{
+    auto mapKey = std::make_pair(mapId, instanceId);
+    auto bindInstance = [&mapKey](MpPlayerData& pd)
+    {
+        pd.instanceData.emplace(mapKey, MpPlayerInstanceData{ .deaths = 0 });
+    };
+
+    if (!UpdatePlayerData(guid, bindInstance))
+    {
+        MpPlayerData playerData(guid, name, difficulty, groupId);
+        bindInstance(playerData);
+        SetPlayerData(guid, std::move(playerData));
+    }
+}
+
+bool MpRuntimeState::SetPlayerGroup(ObjectGuid guid, uint32 groupId)
+{
+    return UpdatePlayerData(guid, [groupId](MpPlayerData& pd)
+    {
+        if (pd.groupId != groupId)
+        {
+            pd.groupId = groupId;
+            pd.ResetAllDeathCounts();
+        }
+    });
+}
+
 // ---- Groups ----
 
 std::optional<MpGroupData> MpRuntimeState::GetGroupData(ObjectGuid groupGuid) const
@@ -206,6 +250,12 @@ uint32 MpRuntimeState::GetGroupDeaths(ObjectGuid groupGuid, uint32 mapId, uint32
     return deaths;
 }
 
+bool MpRuntimeState::AddGroupMember(ObjectGuid groupGuid, ObjectGuid memberGuid, bool& added)
+{
+    added = false;
+    return UpdateGroupData(groupGuid, [memberGuid, &added](MpGroupData& gd) { added = gd.AddMember(memberGuid); });
+}
+
 // ---- Instances ----
 
 std::optional<MpInstanceData> MpRuntimeState::GetInstanceData(uint32 mapId, uint32 instanceId) const
@@ -278,6 +328,34 @@ void MpRuntimeState::RemoveCreatureData(Creature const* creature)
     instanceItr->second.erase(key.guid);
     if (instanceItr->second.empty())
         _creatures.erase(instanceItr);
+}
+
+bool MpRuntimeState::AdvanceCreatureUpdateTimer(Creature const* creature, uint32 diff, bool& throttled)
+{
+    throttled = false;
+    return UpdateCreatureData(creature, [diff, &throttled](MpCreatureData& data)
+    {
+        data.updateTimer += diff;
+        if (data.updateTimer < 20)
+        {
+            throttled = true;
+            return;
+        }
+
+        data.updateTimer = 0;
+    });
+}
+
+bool MpRuntimeState::TrackCreatureDeathState(Creature const* creature, DeathState currentState, bool& respawned)
+{
+    respawned = false;
+    return UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
+    {
+        if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
+            data.lastDeathState = currentState;
+        else if (currentState == DeathState::Alive && data.lastDeathState == DeathState::Corpse)
+            respawned = true;
+    });
 }
 
 std::vector<ObjectGuid> MpRuntimeState::GetInstanceCreatureGuids(uint32 mapId, uint32 instanceId,

@@ -31,14 +31,7 @@ class MythicPlus_GroupScript : public GroupScript
 
         // If the player is joining a new group then reset the death counters otherwise let them ride
         uint32 groupId = group->GetGUID().GetCounter();
-        bool known = sMpState->UpdatePlayerData(guid, [groupId](MpPlayerData& pd)
-        {
-            if (pd.groupId != groupId)
-            {
-                pd.groupId = groupId;
-                pd.ResetAllDeathCounts();
-            }
-        });
+        bool known = sMpState->SetPlayerGroup(guid, groupId);
 
         if (!known)
         {
@@ -47,8 +40,7 @@ class MythicPlus_GroupScript : public GroupScript
         }
 
         bool added = false;
-        auto addMember = [guid, &added](MpGroupData& gd) { added = gd.AddMember(guid); };
-        if (!sMpState->UpdateGroupData(group->GetGUID(), addMember))
+        if (!sMpState->AddGroupMember(group->GetGUID(), guid, added))
         {
             MpLog::Warn(MpLog::Area::Instance, "Group data not found for group {}", group->GetGUID().GetCounter());
             return;

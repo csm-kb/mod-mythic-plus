@@ -157,12 +157,21 @@ public:
     void SetPlayerData(ObjectGuid guid, MpPlayerData data);                  // create-if-absent
     template<typename Fn> bool UpdatePlayerData(ObjectGuid guid, Fn&& fn);   // fn(MpPlayerData&), exclusive lock
     void RemovePlayerData(ObjectGuid guid);
+    // Adds a death for {mapId, instanceId}; returns the new count, or nullopt when the player has no record
+    std::optional<uint32> AddPlayerDeath(ObjectGuid guid, uint32 mapId, uint32 instanceId);
+    // Records the {mapId, instanceId} bind on the player's record, creating the record first when there is none
+    void BindPlayerInstance(ObjectGuid guid, std::string const& name, MpDifficulty difficulty, uint32 groupId,
+        uint32 mapId, uint32 instanceId);
+    // Moves the record to groupId, resetting its death counts when the group changes. False: no record.
+    bool SetPlayerGroup(ObjectGuid guid, uint32 groupId);
 
     std::optional<MpGroupData> GetGroupData(ObjectGuid groupGuid) const;
     void SetGroupData(Group* group, MpGroupData data);                      // base AddGroupData merge semantics
     template<typename Fn> bool UpdateGroupData(ObjectGuid groupGuid, Fn&& fn);
     void RemoveGroupData(ObjectGuid groupGuid);
     uint32 GetGroupDeaths(ObjectGuid groupGuid, uint32 mapId, uint32 instanceId) const;
+    // Adds the member to the group's record; added is false when it was already there. False: no record.
+    bool AddGroupMember(ObjectGuid groupGuid, ObjectGuid memberGuid, bool& added);
 
     std::optional<MpInstanceData> GetInstanceData(uint32 mapId, uint32 instanceId) const;
     void SetInstanceData(uint32 mapId, uint32 instanceId, MpInstanceData data);
@@ -172,6 +181,11 @@ public:
     void SetCreatureData(Creature const* creature, MpCreatureData data);    // replaces an existing record
     template<typename Fn> bool UpdateCreatureData(Creature const* creature, Fn&& fn);
     void RemoveCreatureData(Creature const* creature);
+    // OnAllCreatureUpdate throttle: adds diff to the record's timer; throttled while it is under 20ms, otherwise the
+    // timer restarts. False: no record.
+    bool AdvanceCreatureUpdateTimer(Creature const* creature, uint32 diff, bool& throttled);
+    // Records when the creature becomes a corpse; respawned is set when that corpse is alive again. False: no record.
+    bool TrackCreatureDeathState(Creature const* creature, DeathState currentState, bool& respawned);
     std::vector<ObjectGuid> GetInstanceCreatureGuids(uint32 mapId, uint32 instanceId, bool unscaledOnly) const;
     MpCreatureCounts CountInstanceCreatures(uint32 mapId, uint32 instanceId) const;
 
