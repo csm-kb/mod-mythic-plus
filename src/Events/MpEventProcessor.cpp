@@ -73,7 +73,8 @@ void MpEventProcessor::RegisterHandler(MpEvent event, std::shared_ptr<MpEventInt
 // This fires the execution to the actual event.
 bool MpEventProcessor::Dispatch(MpEvent event, Player* player, std::vector<std::string>& args)
 {
-    if (!_eventHandlers.contains(event))
+    auto itr = _eventHandlers.find(event);
+    if (itr == _eventHandlers.end())
     {
         // Send a client message back also to the player
         std::vector<std::string> clientError = { "Error",
@@ -83,7 +84,7 @@ bool MpEventProcessor::Dispatch(MpEvent event, Player* player, std::vector<std::
         return false;
     }
 
-    return _eventHandlers[event]->Execute(player, args);
+    return itr->second->Execute(player, args);
 }
 
 // Find our eventId using the string name

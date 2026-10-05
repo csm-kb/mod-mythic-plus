@@ -218,11 +218,7 @@ int32 AdvancementMgr::LoadMaterialTypes()
             uint32 materialId = fields[0].Get<uint32>();
             uint32 entry = fields[1].Get<uint32>();
 
-            if (!_materialTypes.contains(materialId))
-            {
-                _materialTypes.emplace(materialId,std::vector<uint32>());
-            }
-            _materialTypes.at(materialId).push_back(entry);
+            _materialTypes[materialId].push_back(entry);
         } while (result->NextRow());
 
         return result->GetRowCount();
@@ -236,16 +232,12 @@ int32 AdvancementMgr::LoadMaterialTypes()
 
 MpAdvancementRank* AdvancementMgr::GetAdvancementRank(uint32 rank, MpAdvancements advancement)
 {
-    auto key = std::make_pair(rank, advancement);
-    if (_advancementRanks.contains(key))
-    {
-        return &_advancementRanks.at(key);
-    }
-    else
-    {
-        MpLog::Error(MpLog::Area::Advancement, "Advancement Id {} and rank {} could not be found", rank, advancement);
-        return nullptr;
-    }
+    auto itr = _advancementRanks.find(std::make_pair(rank, advancement));
+    if (itr != _advancementRanks.end())
+        return &itr->second;
+
+    MpLog::Error(MpLog::Area::Advancement, "Advancement Id {} and rank {} could not be found", rank, advancement);
+    return nullptr;
 }
 
 MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvancements advancement)
@@ -257,13 +249,12 @@ MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvance
         return nullptr;
     }
 
-    if (_playerAdvancements.contains(player->GetGUID().GetCounter())
-        && _playerAdvancements[player->GetGUID().GetCounter()].contains(advancement))
-    {
-        return &_playerAdvancements[player->GetGUID().GetCounter()][advancement];
-    }
+    auto playerItr = _playerAdvancements.find(player->GetGUID().GetCounter());
+    if (playerItr == _playerAdvancements.end())
+        return nullptr;
 
-    return nullptr;
+    auto rankItr = playerItr->second.find(advancement);
+    return rankItr != playerItr->second.end() ? &rankItr->second : nullptr;
 }
 
 uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advancement, uint32 diceCostLevel)

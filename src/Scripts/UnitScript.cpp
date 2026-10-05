@@ -268,6 +268,7 @@ public:
         healing = modifyIncomingDmgHeal(MpScaler::UNIT_EVENT_HEAL, target, healer, healing, spellInfo);
     }
 
+private:
     // Callers have already checked that target and attacker are set and that target's map is eligible.
     uint32 modifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
         uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr)
