@@ -330,10 +330,12 @@ void MpRuntimeState::RemoveCreatureData(Creature const* creature)
         _creatures.erase(instanceItr);
 }
 
-bool MpRuntimeState::AdvanceCreatureUpdateTimer(Creature const* creature, uint32 diff, bool& throttled)
+bool MpRuntimeState::AdvanceCreatureUpdate(Creature const* creature, uint32 diff, DeathState currentState,
+    bool& throttled, bool& respawned)
 {
     throttled = false;
-    return UpdateCreatureData(creature, [diff, &throttled](MpCreatureData& data)
+    respawned = false;
+    return UpdateCreatureData(creature, [diff, currentState, &throttled, &respawned](MpCreatureData& data)
     {
         data.updateTimer += diff;
         if (data.updateTimer < 20)
@@ -343,14 +345,7 @@ bool MpRuntimeState::AdvanceCreatureUpdateTimer(Creature const* creature, uint32
         }
 
         data.updateTimer = 0;
-    });
-}
 
-bool MpRuntimeState::TrackCreatureDeathState(Creature const* creature, DeathState currentState, bool& respawned)
-{
-    respawned = false;
-    return UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
-    {
         if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
             data.lastDeathState = currentState;
         else if (currentState == DeathState::Alive && data.lastDeathState == DeathState::Corpse)

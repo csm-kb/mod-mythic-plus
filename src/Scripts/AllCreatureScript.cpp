@@ -35,23 +35,21 @@ public:
             return;
         }
 
-        // throttle this check per creature to only run if more than 20ms has passed since last check. The timer
-        // lives in the creature's record, so a creature without one is checked right away.
-        bool throttled = false;
-        bool known = sMpState->AdvanceCreatureUpdateTimer(creature, diff, throttled);
-
-        if (throttled)
-        {
-            return;
-        }
-
+        // no instance data means an untiered instance: dont scale. Checked first, under the shared lock, so untiered
+        // instances never take the exclusive lock.
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(creature->GetMapId(),
             creature->GetInstanceId());
-        // no instance data yet means dont scale.
         if (!instanceData)
         {
             return;
         }
+
+        // throttle this check per creature to only run if more than 20ms has passed since last check, then record the
+        // death of our scaled creature; a corpse that comes back alive was respawned and is rescaled. The timer lives
+        // in the creature's record, so a creature without one is checked right away.
+        bool throttled = false;
+        bool respawned = false;
+        bool known = sMpState->AdvanceCreatureUpdate(creature, diff, creature->getDeathState(), throttled, respawned);
 
         // this is a creature that was not scaled at instance load time, we need to scale it now.
         if (!known)
@@ -62,12 +60,10 @@ public:
             return;
         }
 
-        // record the death of our scaled creature; a corpse that comes back alive was respawned and is rescaled
-        bool respawned = false;
-        bool stillKnown = sMpState->TrackCreatureDeathState(creature, creature->getDeathState(), respawned);
-
-        if (!stillKnown)
+        if (throttled)
+        {
             return;
+        }
 
         if (respawned)
         {

@@ -181,11 +181,11 @@ public:
     void SetCreatureData(Creature const* creature, MpCreatureData data);    // replaces an existing record
     template<typename Fn> bool UpdateCreatureData(Creature const* creature, Fn&& fn);
     void RemoveCreatureData(Creature const* creature);
-    // OnAllCreatureUpdate throttle: adds diff to the record's timer; throttled while it is under 20ms, otherwise the
-    // timer restarts. False: no record.
-    bool AdvanceCreatureUpdateTimer(Creature const* creature, uint32 diff, bool& throttled);
-    // Records when the creature becomes a corpse; respawned is set when that corpse is alive again. False: no record.
-    bool TrackCreatureDeathState(Creature const* creature, DeathState currentState, bool& respawned);
+    // OnAllCreatureUpdate tick, one exclusive lock. Throttle: adds diff to the record's timer; throttled while it is
+    // under 20ms (nothing else happens), otherwise the timer restarts and the death state is tracked: records when
+    // the creature becomes a corpse; respawned is set when that corpse is alive again. False: no record.
+    bool AdvanceCreatureUpdate(Creature const* creature, uint32 diff, DeathState currentState, bool& throttled,
+        bool& respawned);
     std::vector<ObjectGuid> GetInstanceCreatureGuids(uint32 mapId, uint32 instanceId, bool unscaledOnly) const;
     MpCreatureCounts CountInstanceCreatures(uint32 mapId, uint32 instanceId) const;
 
