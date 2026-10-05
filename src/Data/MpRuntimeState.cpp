@@ -154,7 +154,7 @@ static void ResetLeaderInstance(Map* map, InstanceMap* instance)
 
     instance->Reset(2); // 2 = reset all
 
-    Map::PlayerList const players = map->GetPlayers();
+    Map::PlayerList const& players = map->GetPlayers();
     for (auto itr = players.begin(); itr != players.end(); ++itr)
     {
         Player* player = itr->GetSource();
