@@ -250,8 +250,8 @@ from the real `ac-database`.
 
 | Script | Purpose | Expected time |
 |---|---|---|
-| `tools/mp-build.sh [default]` | `docker compose build ac-worldserver` (tag `mpcheck`), module warnings compared with the recorded baseline. `--full` adds `--no-cache`. | minutes with a warm ccache; about 35 minutes with `--full` |
-| `tools/mp-build.sh noproviders` | Flips `MP_NO_BOT_PROVIDERS` to ON in `mod-mythic-plus.cmake` for one build (tag `mpcheck-noprov`), restores the file, removes the image. | minutes (module TUs only) |
+| `tools/mp-build.sh [default]` | `docker compose build ac-worldserver` (tag `mpcheck`), module warnings compared with the recorded baseline. `--full` (= `--no-cache`) applies to `default` only. | minutes with a warm ccache; about 35 minutes with `--full` |
+| `tools/mp-build.sh noproviders` | Flips `MP_NO_BOT_PROVIDERS` to ON in `mod-mythic-plus.cmake` for one build (tag `mpcheck-noprov`), restores the file, removes the image. On a fully cached layer (no source change since the last run) it prints a NOTE and passes without re-verifying. If a killed run left the cmake file modified, the script refuses to start: run `git checkout -- mod-mythic-plus.cmake`. | minutes (module TUs only) |
 | `tools/mp-gate.sh` | `docker compose build ac-worldserver ac-db-import` under `mpcheck`. | minutes with a warm cache |
 | `tools/mp-db.sh up\|down\|status` | Throwaway `ac-mpcheck-db` MySQL holding copies of your acore databases. | `up`: several minutes |
 | `tools/mp-preflight.sh [--dbimport-only]` | db-import, then `worldserver --dry-run`, against `ac-mpcheck-db`. `MP_KEEP_DB=1` keeps the database. | minutes |

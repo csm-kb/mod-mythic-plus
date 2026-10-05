@@ -15,9 +15,10 @@
 #                to ON in mod-mythic-plus.cmake, runs one docker compose build of ac-worldserver under the tag
 #                mpcheck-noprov, and restores the file (trap; verified with git diff --quiet). There is no
 #                dev-server container. The warm ccache means only the module TUs recompile; the script requires
-#                src/Bots/ files among the "Building CXX object" lines (if the layer was fully cached it fails,
-#                since nothing was verified). Writes errors-/warnings-noproviders.txt like default, then removes
-#                the mpcheck-noprov image and the image ID it replaced (specific IDs only, never a prune).
+#                src/Bots/ files among the "Building CXX object" lines. If the layer was fully cached (rerun with no
+#                source change) nothing compiled: it prints a NOTE and exits PASS without claiming verification,
+#                like default's cached path (the earlier build already verified that source). Otherwise it writes
+#                errors-/warnings-noproviders.txt like default. Then it removes the mpcheck-noprov image and the image ID it replaced (specific IDs only, never a prune).
 #                Refuses to start when mod-mythic-plus.cmake already has uncommitted changes. --full is not
 #                accepted here.
 set -euo pipefail
@@ -27,7 +28,7 @@ for a in "$@"; do
   case "$a" in
     default|noproviders) VARIANT="$a" ;;
     --full) FULL=1 ;;
-    *) echo "usage: $0 [default|noproviders] [--full]" >&2; exit 2 ;;
+    *) echo "usage: $0 [default|noproviders] [--full]  (--full = --no-cache; default only)" >&2; exit 2 ;;
   esac
 done
 LOG="$MP_OUT/build-$VARIANT.log"
@@ -71,7 +72,7 @@ else
   CMAKE_FILE="$MP_MOD_DIR/mod-mythic-plus.cmake"
   [[ $FULL == 0 ]] || { echo "mp: --full is not supported with noproviders" >&2; exit 2; }
   git -C "$MP_MOD_DIR" diff --quiet -- mod-mythic-plus.cmake \
-    || { echo "mp: mod-mythic-plus.cmake has uncommitted changes; commit or revert them first" >&2; exit 2; }
+    || { echo "mp: mod-mythic-plus.cmake has uncommitted changes; recover with: git checkout -- mod-mythic-plus.cmake (run in the module dir)" >&2; exit 2; }
   grep -qE '^option\(MP_NO_BOT_PROVIDERS .* OFF\)' "$CMAKE_FILE" \
     || { echo "mp: option(MP_NO_BOT_PROVIDERS ... OFF) not found in mod-mythic-plus.cmake" >&2; exit 2; }
   export DOCKER_IMAGE_TAG="mpcheck-noprov"
@@ -105,16 +106,21 @@ else
          mp_extract_warnings "$LOG" "$MP_OUT/warnings-$VARIANT.txt"
          mp_fail "build ($VARIANT)" "$rc" "$LOG"; }
   grep -nE "$ERR_RE" "$LOG" > "$MP_OUT/errors-$VARIANT.txt" || true
+  NOPROV_CACHED=0
   if ! grep -qE "Building CXX object .*mod-mythic-plus/src/Bots/" "$LOG"; then
-    mp_fail "noproviders: no src/Bots TUs compiled (layer cached?); nothing verified" 1 "$LOG"
+    NOPROV_CACHED=1
+    mp_say "NOTE â€” build layer cached; no compile signal (noproviders unchanged since last verified build; change module source or rerun after a source edit)"
+  else
+    mp_say "src/Bots TUs compiled: $(grep -cE 'Building CXX object .*mod-mythic-plus/src/Bots/' "$LOG")"
   fi
-  mp_say "src/Bots TUs compiled: $(grep -cE 'Building CXX object .*mod-mythic-plus/src/Bots/' "$LOG")"
 fi
 mp_check_drift "$LOG"
 WARN_FILE="$MP_OUT/warnings-$VARIANT.txt"
 if [[ "$VARIANT" == default && "$(grep -cE "$COMPILE_RE" "$LOG" || true)" == 0 ]]; then
   rm -f "$WARN_FILE" "$MP_OUT/warnings-new-$VARIANT.txt"
-  mp_say "NOTE — build layer cached; no warning signal (rerun with --full)"
+  mp_say "NOTE â€” build layer cached; no warning signal (rerun with --full)"
+elif [[ "$VARIANT" == noproviders && "${NOPROV_CACHED:-0}" == 1 ]]; then
+  rm -f "$WARN_FILE" "$MP_OUT/warnings-new-$VARIANT.txt"
 else
   mp_extract_warnings "$LOG" "$WARN_FILE"
   mp_say "module warnings: $(wc -l < "$WARN_FILE")"
@@ -122,4 +128,4 @@ else
     mp_compare_baseline "$WARN_FILE" "$WARN_BASE" "$MP_OUT/warnings-new-$VARIANT.txt"
   fi
 fi
-mp_say "PASS build ($VARIANT) — log: $LOG"
+mp_say "PASS build ($VARIANT) â€” log: $LOG"
