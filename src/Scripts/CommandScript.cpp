@@ -310,7 +310,7 @@ public:
             std::optional<MpGroupData> groupData = sMpState->GetGroupData(groupGuid);
             if (groupData)
             {
-                MpScaleFactor scaleFactors;
+                MpScaleFactor scaleFactors{};
 
                 if (map->IsDungeon())
                 {
