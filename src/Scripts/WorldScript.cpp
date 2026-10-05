@@ -1,3 +1,4 @@
+#include "MpBots.h"
 #include "MpConfig.h"
 #include "MpRepository.h"
 #include "AdvancementMgr.h"
@@ -28,21 +29,29 @@ public:
 
     void OnStartup() override
     {
-        int32 size = sMpRepo->LoadScaleFactors();
-        MpLog::Info(MpLog::Area::Config, "Loaded {} Mythic+ Scaling Factors from database...", size);
-
-        size = sAdvancementMgr->LoadAdvancementRanks();
-        MpLog::Info(MpLog::Area::Config, "Loaded {} advancement ranks...", size);
-
-        size = sAdvancementMgr->LoadMaterialTypes();
-        MpLog::Info(MpLog::Area::Config, "Loaded {} material types...", size);
-
-        sMpRepo->LoadPlayerHealthAvg();
-        MpLog::Info(MpLog::Area::Config, "Loaded player health averages used for scaling calculations...");
-
         // Registering event handlers for the Mythic+ events from client
         MP_Register_EventHandlers();
         MpLog::Info(MpLog::Area::Config, "Registered Mythic+ Event Handlers...");
+    }
+
+    // Runs before the world's --dry-run exit, so a dry run exercises the table loads
+    void OnBeforeWorldInitialized() override
+    {
+        int32 scaleFactors = sMpRepo->LoadScaleFactors();
+        int32 ranks = sAdvancementMgr->LoadAdvancementRanks();
+        int32 materials = sAdvancementMgr->LoadMaterialTypes();
+        sMpRepo->LoadPlayerHealthAvg();
+
+        uint32 warnings = sMpConfig->GetWarningCount();
+        if (warnings)
+            MpLog::Warn(MpLog::Area::Config,
+                "event=module_loaded enabled={} bots={} scale_factors={} advancement_ranks={} material_types={} "
+                "config_warnings={} invalid_keys={}", sMpConfig->enabled, MpBots::ProvidersString(),
+                scaleFactors, ranks, materials, warnings, sMpConfig->GetInvalidKeys());
+        else
+            MpLog::Info(MpLog::Area::Config,
+                "event=module_loaded enabled={} bots={} scale_factors={} advancement_ranks={} material_types={} "
+                "config_warnings=0", sMpConfig->enabled, MpBots::ProvidersString(), scaleFactors, ranks, materials);
     }
 };
 
