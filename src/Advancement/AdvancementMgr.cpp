@@ -240,16 +240,9 @@ MpAdvancementRank* AdvancementMgr::GetAdvancementRank(uint32 rank, MpAdvancement
     return nullptr;
 }
 
-MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvancements advancement)
+MpPlayerRank* AdvancementMgr::_FindPlayerRank(uint32 playerGuid, MpAdvancements advancement)
 {
-    if (!player)
-    {
-        MpLog::Error(MpLog::Area::Advancement, "Could not retrieve player advancement for null player {}",
-            player->GetName());
-        return nullptr;
-    }
-
-    auto playerItr = _playerAdvancements.find(player->GetGUID().GetCounter());
+    auto playerItr = _playerAdvancements.find(playerGuid);
     if (playerItr == _playerAdvancements.end())
         return nullptr;
 
@@ -257,10 +250,52 @@ MpPlayerRank* AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvance
     return rankItr != playerItr->second.end() ? &rankItr->second : nullptr;
 }
 
+// Aura scripts (map threads) and commands read while UpgradeAdvancement / LoadPlayerAdvancements write, so the
+// record is copied under the mutex. No logging or other outside call happens while it is held.
+std::optional<MpPlayerRank> AdvancementMgr::GetPlayerAdvancementRank(Player* player, MpAdvancements advancement)
+{
+    if (!player)
+    {
+        MpLog::Error(MpLog::Area::Advancement, "Could not retrieve player advancement for null player");
+        return std::nullopt;
+    }
+
+    uint32 playerGuid = player->GetGUID().GetCounter();
+
+    std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
+    if (MpPlayerRank const* rank = _FindPlayerRank(playerGuid, advancement))
+        return *rank;
+
+    return std::nullopt;
+}
+
 uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advancement, uint32 diceCostLevel)
 {
-    std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
+    float roll = 0.0f;
+    {
+        std::lock_guard<std::mutex> lock(_playerAdvancementMutex);
+        if (!_ApplyUpgrade(player, advancement, diceCostLevel, roll))
+            return 0;
+    }
 
+    // Remove and reapply the aura to refresh the spell with the latest bonuses. This runs after the mutex is
+    // released: applying the aura recalculates its amount through GetPlayerAdvancementRank, which takes it.
+    uint32 spellId = MpConstants::GetAdvancementAura(advancement);
+    if (spellId > 0)
+    {
+        MpLog::Info(MpLog::Area::Advancement, "Refreshing advancement aura {} for player {}", spellId,
+            player->GetName());
+
+        // First remove the aura completely
+        player->RemoveAura(spellId);
+        player->AddAura(spellId, player);
+    }
+
+    return roll;
+}
+
+bool AdvancementMgr::_ApplyUpgrade(Player* player, MpAdvancements advancement, uint32 diceCostLevel, float& roll)
+{
     // Validators to make sure inputs are correct to perform the upgrade
     if (!player)
     {
@@ -273,7 +308,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
             "Invalid dice cost level valid vales (1,2,3) received {} for player {}", diceCostLevel, player->GetName()));
     }
 
-    MpPlayerRank* playerRank = GetPlayerAdvancementRank(player, advancement);
+    MpPlayerRank* playerRank = _FindPlayerRank(player->GetGUID().GetCounter(), advancement);
 
     // IF there is not create the base struct and add to the player map for this advancement
     if (!playerRank)
@@ -290,7 +325,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     {
         MpLog::Debug(MpLog::Area::Advancement, "Player {} has reached the maximum rank for advancement {}",
             player->GetName(), advancement);
-        return 0;
+        return false;
     }
 
     uint32 newRank = playerRank->rank + 1;
@@ -299,7 +334,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     {
         MpLog::Error(MpLog::Area::Advancement, "Advancement rank could not be found. Rank: {} Advancement: {}", newRank,
             static_cast<int>(advancement));
-        return 0;
+        return false;
     }
 
     // Get the items needed to upgrade this advancement
@@ -313,7 +348,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     {
         MpLog::Debug(MpLog::Area::Advancement, "Player {} does not have the required items to upgrade advancement {}",
             player->GetName(), advancement);
-        return 0;
+        return false;
     }
 
     // Charge the player the cost of the upgrade
@@ -323,7 +358,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
         advancement, newRank);
 
     // Finally get the bonus to apply for the player
-    float roll = round(_RollAdvancement(advancementRank, diceCostLevel));
+    roll = round(_RollAdvancement(advancementRank, diceCostLevel));
 
     // Update the player advancement rank in memory and database
     playerRank->rank = newRank;
@@ -340,19 +375,7 @@ uint32 AdvancementMgr::UpgradeAdvancement(Player* player, MpAdvancements advance
     _SaveAdvancement(player, advancementRank, playerRank, advancementRank->rollCost[diceCostLevel-1], roll, itemEntry1,
         itemEntry2, itemEntry3);
 
-    // Remove and reapply the aura to refresh the spell with the latest bonuses
-    uint32 spellId = MpConstants::GetAdvancementAura(advancement);
-    if (spellId > 0)
-    {
-        MpLog::Info(MpLog::Area::Advancement, "Refreshing advancement aura {} for player {}", spellId,
-            player->GetName());
-
-        // First remove the aura completely
-        player->RemoveAura(spellId);
-        player->AddAura(spellId, player);
-    }
-
-    return roll;
+    return true;
 }
 
 // Roll them stats DnD style.

@@ -142,7 +142,7 @@ class UpgradeAdvancements : public MpEventInterface
             }
 
             // Only proceed to here if no errors occurred
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+            std::optional<MpPlayerRank> playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
                 static_cast<MpAdvancements>(advancementId));
             if (!playerRank)
             {
@@ -218,7 +218,7 @@ class GetPlayerRank : public MpEventInterface
                     " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
             }
 
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+            std::optional<MpPlayerRank> playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
                 static_cast<MpAdvancements>(advancementId));
             if (!playerRank)
             {

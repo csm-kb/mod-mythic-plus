@@ -430,7 +430,7 @@ public:
 
         for (int i =0; i < MpAdvancements::MP_ADV_MAX; i++)
         {
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+            std::optional<MpPlayerRank> playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
                 static_cast<MpAdvancements>(i));
             if (!playerRank)
             {

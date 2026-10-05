@@ -7,6 +7,7 @@
 #include <array>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -103,8 +104,9 @@ public:
     // Methods for looking up advancement rank data
     MpAdvancementRank* GetAdvancementRank(uint32 rank, MpAdvancements advancement);
 
-    // Methods for updating and setting data related to current player advancements
-    MpPlayerRank* GetPlayerAdvancementRank(Player* player, MpAdvancements advancement);
+    // A copy of the player's rank for the advancement, read under _playerAdvancementMutex; nullopt if none.
+    // Must not be called with the mutex held (it is not recursive).
+    std::optional<MpPlayerRank> GetPlayerAdvancementRank(Player* player, MpAdvancements advancement);
 
     /**
      * This upgrades a player Advancement on the server side, which will handle the following actions:
@@ -124,6 +126,12 @@ public:
 private:
     AdvancementMgr() {}
     ~AdvancementMgr() {}
+
+    // The stored rank, or nullptr. Caller holds _playerAdvancementMutex.
+    MpPlayerRank* _FindPlayerRank(uint32 playerGuid, MpAdvancements advancement);
+
+    // UpgradeAdvancement's work under _playerAdvancementMutex; false when nothing was upgraded.
+    bool _ApplyUpgrade(Player* player, MpAdvancements advancement, uint32 diceCostLevel, float& roll);
 
     // Rolls the dice to see how much a bonus is given based on the dice spend level
     float _RollAdvancement(MpAdvancementRank* advancementRank, uint32 diceCostLevel);
