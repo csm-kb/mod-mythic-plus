@@ -101,6 +101,10 @@ public:
     int32 LoadMaterialTypes();
     void LoadPlayerAdvancements(Player* player);
 
+    // Adds the ten advancement auras (80000001..80000010) to the player. Takes no lock: each aura's amount
+    // calculation calls GetPlayerAdvancementRank, which locks _playerAdvancementMutex.
+    void ApplyAdvancementAuras(Player* player);
+
     // Methods for looking up advancement rank data
     MpAdvancementRank* GetAdvancementRank(uint32 rank, MpAdvancements advancement);
 

@@ -199,6 +199,16 @@ void AdvancementMgr::LoadPlayerAdvancements(Player* player)
     MpLog::Info(MpLog::Area::Advancement, "Loaded {} advancements for player {}", count, player->GetName());
 }
 
+void AdvancementMgr::ApplyAdvancementAuras(Player* player)
+{
+    for (uint32 i = 1; i <= 10; ++i)
+    {
+        uint32 spellId = 80000000 + i;
+        MpLog::Info(MpLog::Area::Instance, "Casting spell {} to player {}", spellId, player->GetName());
+        player->AddAura(spellId, player);
+    }
+}
+
 /**
  * Load Material Types from the database into memory
  */
