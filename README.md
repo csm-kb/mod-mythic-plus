@@ -88,17 +88,19 @@ time from the macros the core defines (`MOD_PLAYERBOTS`, `MOD_PRESENT_NPCBOTS`).
 
 `data/sql/optional/araxia-custom-dbc/11_custom_npc_models.sql` holds the `creature_template_model` and
 `creature_model_info` rows for the custom display IDs 9500561-9500568. It is **not** applied by dbimport: those
-display IDs exist only in Araxia's client patch (custom DBC). Without them, NPCs 9500562-9500568 are invisible on a
-stock 3.3.5a client. Apply the file by hand only if your clients carry that patch. It keeps a hard-coded
+display IDs exist only in Araxia's client patch (custom DBC). By default,
+`db-world/updates/2026-10-05-stock-npc-models.sql` gives NPCs 9500562-9500568 stock 3.3.5a stand-in models
+(borrowed from existing stock creatures). Apply the Araxia file by hand only if your clients carry that patch; it
+replaces the stand-ins with the original models. It keeps a hard-coded
 `acore_world.` schema prefix on its last statement, so edit that if your world database has another name.
 
 If your database already imported an earlier version of `db-world/base/11_custom_npcs.sql`, it contains
 `creature_model_info` rows for DisplayID 9500561-9500568 that a stock client cannot resolve, and the worldserver
-segfaults while loading them. Remove them manually (and the matching model rows) before starting:
+segfaults while loading them. Remove them manually (and the model rows that point at them) before starting:
 
 ```sql
 DELETE FROM creature_model_info WHERE DisplayID BETWEEN 9500561 AND 9500568;
-DELETE FROM creature_template_model WHERE CreatureID BETWEEN 9500562 AND 9500568;
+DELETE FROM creature_template_model WHERE CreatureDisplayID BETWEEN 9500561 AND 9500568;
 ```
 
 ## Commands
