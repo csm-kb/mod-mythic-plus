@@ -51,7 +51,8 @@ public:
     {
         std::string helpText = "Mythic+ Commands:\n"
             "  .mp status - show current global settings of Mythic+ mod\n"
-            "  .mp set [normal, heroic, mythic,legendary,ascendant] - Set Mythic+ difficulty in current beta only supports mythic.\n"
+            "  .mp set [normal, heroic, mythic,legendary,ascendant] - Set Mythic+ difficulty in current beta only "
+                "supports mythic.\n"
             "  .mp [enable,disable] - enable or disable this mod\n"
             "  .mp - Show this help message\n";
         handler->PSendSysMessage(helpText);
@@ -79,7 +80,8 @@ public:
         std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target);
 
         handler->PSendSysMessage(LANG_NPCINFO_LEVEL, target->GetLevel());
-        handler->PSendSysMessage(LANG_NPCINFO_HEALTH, target->GetCreateHealth(), target->GetMaxHealth(), target->GetHealth());
+        handler->PSendSysMessage(LANG_NPCINFO_HEALTH, target->GetCreateHealth(), target->GetMaxHealth(),
+            target->GetHealth());
         handler->PSendSysMessage("WeaponDmg Main {} - {}",
             target->GetWeaponDamageRange(BASE_ATTACK, MINDAMAGE),
             target->GetWeaponDamageRange(BASE_ATTACK, MAXDAMAGE)
@@ -92,8 +94,10 @@ public:
             target->GetWeaponDamageRange(OFF_ATTACK, MINDAMAGE),
             target->GetWeaponDamageRange(OFF_ATTACK, MAXDAMAGE)
         );
-        handler->PSendSysMessage("Attack Power Main {}", target->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE));
-        handler->PSendSysMessage("Attack Power Ranged {}", target->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE));
+        handler->PSendSysMessage("Attack Power Main {}",
+            target->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE));
+        handler->PSendSysMessage("Attack Power Ranged {}",
+            target->GetFlatModifierValue(UNIT_MOD_ATTACK_POWER_RANGED, BASE_VALUE));
         handler->PSendSysMessage("Armor {}", target->GetArmor());
         handler->PSendSysMessage("Damage Modifier on template {}",creatureTemplate->DamageModifier);
 
@@ -120,7 +124,9 @@ public:
 
         if (args.empty())
         {
-            handler->PSendSysMessage("|cFFFF0000 You must specify a difficulty level. Expected values are 'mythic', 'legendary', or 'ascendant'.");
+            handler->PSendSysMessage(
+                "|cFFFF0000 You must specify a difficulty level. Expected values are 'mythic', 'legendary', or "
+                "'ascendant'.");
             return true;
         }
 
@@ -165,7 +171,9 @@ public:
         }
         else
         {
-            handler->PSendSysMessage("|cFFFF0000 Invalid difficulty level. Expected values are 'normal', 'heroic', 'mythic', 'legendary', or 'ascendant'.");
+            handler->PSendSysMessage(
+                "|cFFFF0000 Invalid difficulty level. Expected values are 'normal', 'heroic', 'mythic', 'legendary', "
+                "or 'ascendant'.");
             return true;
         }
 
@@ -180,7 +188,8 @@ public:
         Map* map = player->GetMap();
         uint32 mapId = player->GetMapId();
 
-        std::string status = Acore::StringFormat("Mythic+ Status:\n Mythic+ Enabled: {}\n Mythic+ Item Rewards: {}\n Mythic+ DeathLimits: {}\n",
+        std::string status = Acore::StringFormat(
+            "Mythic+ Status:\n Mythic+ Enabled: {}\n Mythic+ Item Rewards: {}\n Mythic+ DeathLimits: {}\n",
             std::string((sMpConfig->enabled) ? "Yes" : "No"),
             std::string((sMpConfig->enableItemRewards) ? "Yes" : "No"),
             std::string((sMpConfig->enableDeathLimits) ? "Yes" : "No")
@@ -421,13 +430,15 @@ public:
 
         for (int i =0; i < MpAdvancements::MP_ADV_MAX; i++)
         {
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player, static_cast<MpAdvancements>(i));
+            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+                static_cast<MpAdvancements>(i));
             if (!playerRank)
             {
                 continue;
             }
 
-            message += Acore::StringFormat("Your Advancement Bonuses: \n {}: {} bonus: {}", MpAdvancementsToString(static_cast<MpAdvancements>(i)), playerRank->rank, playerRank->bonus);
+            message += Acore::StringFormat("Your Advancement Bonuses: \n {}: {} bonus: {}",
+                MpAdvancementsToString(static_cast<MpAdvancements>(i)), playerRank->rank, playerRank->bonus);
         }
 
         if (message.empty())

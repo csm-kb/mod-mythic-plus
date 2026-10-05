@@ -70,7 +70,8 @@ bool MpScaler::EligibleDamageTarget(Unit* target)
     }
 
     Creature* creature = target->ToCreature();
-    if (creature && (creature->IsPet() || creature->IsSummon() || creature->IsHunterPet()) && creature->GetOwner() && creature->IsControlledByPlayer())
+    if (creature && (creature->IsPet() || creature->IsSummon() || creature->IsHunterPet()) && creature->GetOwner()
+        && creature->IsControlledByPlayer())
     {
         return true;
     }
@@ -282,10 +283,13 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
 
     // set the base weapon damage
     creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING], 0);
-    creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 1.5f, 0);
+    creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE,
+        stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 1.5f, 0);
 
-    creature->SetBaseWeaponDamage(RANGED_ATTACK, MINDAMAGE, stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 0.5f, 0);
-    creature->SetBaseWeaponDamage(RANGED_ATTACK, MAXDAMAGE, stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 0.8f, 0);
+    creature->SetBaseWeaponDamage(RANGED_ATTACK, MINDAMAGE,
+        stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 0.5f, 0);
+    creature->SetBaseWeaponDamage(RANGED_ATTACK, MAXDAMAGE,
+        stats->BaseDamage[EXPANSION_WRATH_OF_THE_LICH_KING] * 0.8f, 0);
 
     // Update all stats to apply the new damage values
     creature->UpdateAllStats();
@@ -300,7 +304,8 @@ int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int t
     float origHpPool = sMpRepo->GetPlayerHealthAvg(originalLevel);
     float targetHpPool = sMpRepo->GetPlayerHealthAvg(targetLevel);
 
-    // Using a % of expected damage of the average player pool creates a better consistent experience when scaling spells
+    // Using a % of expected damage of the average player pool creates a better consistent experience when scaling
+    // spells
     float percentDamage = baseDamage / origHpPool;
 
     // If the percentage damage is less than 2% cap it at 2% to prevent spells from being too powerful
@@ -311,7 +316,8 @@ int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int t
 
     int32 scaledDamage = static_cast<int32>(std::ceil(percentDamage * targetHpPool));
 
-    MpLog::Debug(MpLog::Area::Combat, "OrigHpPool: {} TargetHpPool: {} Percent Damage: {}", origHpPool, targetHpPool, percentDamage);
+    MpLog::Debug(MpLog::Area::Combat, "OrigHpPool: {} TargetHpPool: {} Percent Damage: {}", origHpPool, targetHpPool,
+        percentDamage);
     MpLog::Debug(MpLog::Area::Combat, "Original Damage: {} Scaled Damage: {}", baseDamage, scaledDamage);
 
     return scaledDamage;
@@ -342,7 +348,8 @@ int32 MpScaler::CalculateHealScaling(uint32 baseHeal, uint32 originalTargetHealt
     // Scale the heal based on the current creature's max health
     int32 scaledHeal = static_cast<int32>(std::ceil(percentHeal * targetMaxHealth));
 
-    MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> OrigHealth: {} CurrentMaxHealth: {} Percent Heal: {} Original Heal: {} Scaled Heal: {}",
+    MpLog::Debug(MpLog::Area::Combat,
+        "HEALING: >>> OrigHealth: {} CurrentMaxHealth: {} Percent Heal: {} Original Heal: {} Scaled Heal: {}",
                    originalTargetHealth, targetMaxHealth, percentHeal, baseHeal, scaledHeal);
 
     return scaledHeal;
@@ -367,7 +374,8 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
 
     float scaleFactor = sMpRepo->GetSpellScaleFactor(creature->GetMapId(), instanceData->difficulty);
 
-    MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> ScaleFactor: {} DamageMultiplier: {}", scaleFactor, damageMultiplier);
+    MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> ScaleFactor: {} DamageMultiplier: {}", scaleFactor,
+        damageMultiplier);
 
     // calculate the global modifier x instance modifier
     float totalModifier = damageMultiplier * scaleFactor;
@@ -397,14 +405,20 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
                 std::optional<MpCreatureData> ownerCreatureData = sMpState->GetCreatureData(ownerCreature);
                 if (ownerCreatureData)
                 {
-                    MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original level {} owner level {}", creature->GetName(), ownerCreature->GetName(), ownerCreatureData->originalLevel, ownerCreature->GetLevel());
-                    newDamage = CalculateSpellDamage(damage, ownerCreatureData->originalLevel, ownerCreature->GetLevel());
+                    MpLog::Debug(MpLog::Area::Combat,
+                        "DAMAGE SPELL: >> Creature is a totem or summon Creature Name {} and owner {} owner original "
+                        "level {} owner level {}", creature->GetName(), ownerCreature->GetName(),
+                        ownerCreatureData->originalLevel, ownerCreature->GetLevel());
+                    newDamage = CalculateSpellDamage(damage, ownerCreatureData->originalLevel,
+                        ownerCreature->GetLevel());
                 }
                 else
                 {
                     // Fallback if no creature data found - use current level
                     newDamage = CalculateSpellDamage(damage, ownerCreature->GetLevel(), ownerCreature->GetLevel());
-                    MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
+                    MpLog::Debug(MpLog::Area::Combat,
+                        "No creature data found for owner {}, using current level for scaling",
+                        ownerCreature->GetGUID().ToString());
                 }
             }
         }
@@ -443,12 +457,16 @@ int32 MpScaler::ScaleDamageSpell(SpellInfo const* spellInfo, uint32 damage, MpCr
         float diminishedExcess = pow(excess, diminishingExponent);
         scaledAdditionalDamage = threshold + diminishedExcess;
 
-        MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Above Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Diminished Additional: {}, Final: {}",
-                       spellInfo->SpellName[0], damage, additionalDamage * totalModifier, scaledAdditionalDamage, damage + scaledAdditionalDamage);
+        MpLog::Debug(MpLog::Area::Combat,
+            "DAMAGE SPELL: >> Above Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Diminished "
+            "Additional: {}, Final: {}",
+                       spellInfo->SpellName[0], damage, additionalDamage * totalModifier, scaledAdditionalDamage,
+                           damage + scaledAdditionalDamage);
     }
     else
     {
-        MpLog::Debug(MpLog::Area::Combat, "DAMAGE SPELL: >> Below Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Final: {}",
+        MpLog::Debug(MpLog::Area::Combat,
+            "DAMAGE SPELL: >> Below Diminishing Threshold for Spell {} - Original: {}, Additional: {}, Final: {}",
                        spellInfo->SpellName[0], damage, scaledAdditionalDamage, damage + scaledAdditionalDamage);
     }
 
@@ -501,7 +519,8 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
 
     float scaleFactor = sMpRepo->GetHealScaleFactor(creature->GetMapId(), instanceData->difficulty);
 
-    MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> HealScaleFactor: {} HealMultiplier: {}", scaleFactor, healMultiplier);
+    MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> HealScaleFactor: {} HealMultiplier: {}", scaleFactor,
+        healMultiplier);
 
     // calculate the global modifier x instance modifier
     float totalModifier = healMultiplier * scaleFactor;
@@ -516,7 +535,8 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
         if (MpBots::IsNpcBotOrPet(creature))
             return heal;
 
-        MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} with spell: {}", target->GetName(), spellInfo->SpellName[0]);
+        MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Scaling heal to target: {} with spell: {}", target->GetName(),
+            spellInfo->SpellName[0]);
 
         // Handle totems and summons - scale based on owner's details because they will not have creature data
         if (creature->IsTotem() || creature->IsSummon())
@@ -530,12 +550,15 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
                 bool ownerKnown = sMpState->GetCreatureData(ownerCreature).has_value();
 
                 if (ownerCreature->GetCreatureTemplate()->rank == CREATURE_ELITE_NORMAL)
-                    totalModifier = totalModifier * sMpConfig->normalEnemyReducer; // Less reduction for heals than damage
+                    // Less reduction for heals than damage
+                    totalModifier = totalModifier * sMpConfig->normalEnemyReducer;
 
                 newHeal = ScaleHealToTarget(heal, target);
 
                 if (!ownerKnown)
-                    MpLog::Debug(MpLog::Area::Combat, "No creature data found for owner {}, using current level for scaling", ownerCreature->GetGUID().ToString());
+                    MpLog::Debug(MpLog::Area::Combat,
+                        "No creature data found for owner {}, using current level for scaling",
+                        ownerCreature->GetGUID().ToString());
             }
         }
         else
@@ -558,20 +581,26 @@ int32 MpScaler::ScaleHealSpell(SpellInfo const* spellInfo, uint32 heal, MpCreatu
     uint32 threshold = tier ? tier->diminishingThreshold : 0;
     float diminishingExponent = sMpConfig->diminishingExponent;
 
-    // Apply diminishing returns only to the additional scaled heal if it exceeds threshold * 2 since enemies have much more health.
+    // Apply diminishing returns only to the additional scaled heal if it exceeds threshold * 2 since enemies have much
+    // more health.
     if (scaledAdditionalHeal > threshold * 2.0f)
     {
         // Calculate the diminished excess additional heal
         float excess = scaledAdditionalHeal - threshold;
-        float diminishedExcess = pow(excess, diminishingExponent * 0.95f); // slightly reduce the diminishing returns for heals
+        // slightly reduce the diminishing returns for heals
+        float diminishedExcess = pow(excess, diminishingExponent * 0.95f);
         scaledAdditionalHeal = threshold + diminishedExcess;
 
-        MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Above Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Diminished Additional: {}, Final: {}",
-                       spellInfo->SpellName[0], heal, additionalHeal * totalModifier, scaledAdditionalHeal, heal + scaledAdditionalHeal);
+        MpLog::Debug(MpLog::Area::Combat,
+            "HEALING: >>> Above Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Diminished "
+            "Additional: {}, Final: {}",
+                       spellInfo->SpellName[0], heal, additionalHeal * totalModifier, scaledAdditionalHeal,
+                           heal + scaledAdditionalHeal);
     }
     else
     {
-        MpLog::Debug(MpLog::Area::Combat, "HEALING: >>> Below Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Final: {}",
+        MpLog::Debug(MpLog::Area::Combat,
+            "HEALING: >>> Below Diminishing Threshold for Heal Spell {} - Original: {}, Additional: {}, Final: {}",
                        spellInfo->SpellName[0], heal, scaledAdditionalHeal, heal + scaledAdditionalHeal);
     }
 
@@ -744,8 +773,10 @@ float MpScaler::GetTypeHealthModifier(int32 Rank)
     }
 }
 
-// This takes the orignal health and scales flat based on the factor then applies the configuration modifier from the conf file
-uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId, MpDifficulty difficulty, uint32 origHealth, float confHPMod)
+// This takes the orignal health and scales flat based on the factor then applies the configuration modifier from the
+// conf file
+uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* cInfo, uint32 mapId,
+    MpDifficulty difficulty, uint32 origHealth, float confHPMod)
 {
     int32 rank = 0;
     if (cInfo && cInfo->rank > 0)
@@ -763,7 +794,8 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
     int32 hpScaleFactor = sMpRepo->GetHealthScaleFactor(mapId, difficulty);
 
     // Add some variance to the healthpool so enemies are not all the same
-    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->isElite() || cInfo->rank == CREATURE_ELITE_RARE)
+    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->isElite()
+        || cInfo->rank == CREATURE_ELITE_RARE)
     {
         healthVariation = frand(1.0f, 1.15f);
     }
@@ -801,7 +833,8 @@ uint32 MpScaler::CalculateNewHealth(Creature* creature, CreatureTemplate const* 
 
     /**
      * @brief Calculating the final creature health encompasses all the potential modifiers
-     * CreatureTemplate.HealthModifier (ModHealth) - Creatures that are capable of being in a Heroic instance get a boost here
+     * CreatureTemplate.HealthModifier (ModHealth) - Creatures that are capable of being in a Heroic instance get a
+     * boost here
      * even though they are the same.  In this case we allow
      *
      * hpScaleFactor:  allows to tweak the bonus modifier more directly at a creature or instance level, since

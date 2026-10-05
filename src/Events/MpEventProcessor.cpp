@@ -19,7 +19,8 @@ bool MpEventProcessor::ProcessMessage(Player* player, std::string const& msg)
     // check prefix of message channel is formatted correctly
     if (! msg.starts_with(MP_DATA_CHAT_CHANNEL))
     {
-        MpLog::Error(MpLog::Area::Events, "Invalid message format received from player {} message: {}", player->GetName(), msg);
+        MpLog::Error(MpLog::Area::Events, "Invalid message format received from player {} message: {}",
+            player->GetName(), msg);
         return false;
     }
 
@@ -41,14 +42,16 @@ bool MpEventProcessor::ProcessMessage(Player* player, std::string const& msg)
     // If th message was not able to be parsed it is a failure
     if (event == MpEvent::Invalid)
     {
-        MpLog::Warn(MpLog::Area::Events, "Invalid event, could not be parsed for player {} message: {}", player->GetName(), message);
+        MpLog::Warn(MpLog::Area::Events, "Invalid event, could not be parsed for player {} message: {}",
+            player->GetName(), message);
         return false;
     }
 
     // if the message is not from the same player who called it ignore it as it is attempt to hack the system
     if (player->GetGUID().GetCounter() != guid)
     {
-        MpLog::Warn(MpLog::Area::Events, "Player {} sent a message {} for eventId: {} player guid does not match", player->GetName(), message, event);
+        MpLog::Warn(MpLog::Area::Events, "Player {} sent a message {} for eventId: {} player guid does not match",
+            player->GetName(), message, event);
         return false;
     }
 
@@ -73,7 +76,8 @@ bool MpEventProcessor::Dispatch(MpEvent event, Player* player, std::vector<std::
     if (!_eventHandlers.contains(event))
     {
         // Send a client message back also to the player
-        std::vector<std::string> clientError = { "Error", "No handler registered for event: " + std::to_string(static_cast<int>(event)) };
+        std::vector<std::string> clientError = { "Error",
+            "No handler registered for event: " + std::to_string(static_cast<int>(event)) };
         sMpClientDispatcher->Dispatch(MpClientEvent::Error, player, clientError);
         MpLog::Warn(MpLog::Area::Events, "No handler registered for event: {}", event);
         return false;
@@ -96,7 +100,8 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, std::string
 {
     if (msg[0] != 'p')
     {
-        MpLog::Warn(MpLog::Area::Events, "Invalid player message format received from player {} message: {}", player->GetName(), msg);
+        MpLog::Warn(MpLog::Area::Events, "Invalid player message format received from player {} message: {}",
+            player->GetName(), msg);
         return EventParseRslt{MpEvent::Invalid, 0, {}};
     }
 
@@ -108,7 +113,8 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, std::string
 
     if (parts.size() < 3)
     {
-        MpLog::Warn(MpLog::Area::Events, "Malformed player message received from player {}: {}", player->GetName(), msg);
+        MpLog::Warn(MpLog::Area::Events, "Malformed player message received from player {}: {}", player->GetName(),
+            msg);
         return EventParseRslt{MpEvent::Invalid, 0, {}};
     }
 
@@ -116,7 +122,8 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, std::string
 
     handlerArgs.assign(parts.begin() + 3, parts.end());
 
-    MpLog::Info(MpLog::Area::Events, "Player {} sent a client event message {} for event: {} eventId: {} ", player->GetName(), msg, MP_DATA_CHAT_CHANNEL, parts[2], event);
+    MpLog::Info(MpLog::Area::Events, "Player {} sent a client event message {} for event: {} eventId: {} ",
+        player->GetName(), msg, MP_DATA_CHAT_CHANNEL, parts[2], event);
     return EventParseRslt{event, player->GetGUID().GetCounter(), std::move(handlerArgs)};
 }
 

@@ -36,7 +36,8 @@ public:
         Group* group = player->GetGroup();
         if (group)
         {
-            MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(), map->GetMapName(), group->GetLeaderName());
+            MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(),
+                map->GetMapName(), group->GetLeaderName());
         }
         else
         {
@@ -55,7 +56,8 @@ public:
         {
             if (player->GetName() == group->GetLeaderName())
             {
-                MpLog::Debug(MpLog::Area::Instance, "Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
+                MpLog::Debug(MpLog::Area::Instance,
+                    "Instance data already set for Map: {} InstanceId: {} for GroupLeader: {} ",
                     map->GetMapName(),
                     map->GetInstanceId(),
                     group->GetLeaderName()
@@ -82,7 +84,8 @@ public:
         // Make sure the map resolves to an InstanceMap; the record keeps only {mapId, instanceId}
         if (!dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId())))
         {
-            MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.", map->GetId(), map->GetInstanceId());
+            MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.",
+                map->GetId(), map->GetInstanceId());
             return;
         }
 

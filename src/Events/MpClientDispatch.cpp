@@ -32,7 +32,8 @@ bool MpClientDispatcher::Dispatch(MpClientEvent event, Player* player, std::vect
     std::string prefix = std::string(MP_DATA_CHAT_CHANNEL);
     std::string fullmsg = prefix + "\t" + message;
 
-    MpLog::Debug(MpLog::Area::Events, "Dispatching client event: {} length {} for event {}", fullmsg, fullmsg.length(), std::string(eventName));
+    MpLog::Debug(MpLog::Area::Events, "Dispatching client event: {} length {} for event {}", fullmsg, fullmsg.length(),
+        std::string(eventName));
 
     WorldPacket data(SMSG_MESSAGECHAT, 100);
     data << uint8(ChatMsg::CHAT_MSG_WHISPER);

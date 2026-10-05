@@ -86,7 +86,8 @@ class UpgradeAdvancements : public MpEventInterface
             // Validate the message is in the right format
             if (args.size() != 2)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT_SIZE, "Invalid number of arguments expected 2, found " + std::to_string(args.size()));
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT_SIZE,
+                    "Invalid number of arguments expected 2, found " + std::to_string(args.size()));
             }
 
             uint32 advancementId, diceLevel;
@@ -96,12 +97,15 @@ class UpgradeAdvancements : public MpEventInterface
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id format: " + args[0]);
             }
 
             if (advancementId >= MpAdvancements::MP_ADV_MAX)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id " + args[0] + " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id " + args[0] +
+                    " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
             }
 
             try
@@ -110,33 +114,40 @@ class UpgradeAdvancements : public MpEventInterface
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid dice level format: " + args[1]);
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid dice level format: " + args[1]);
             }
 
             if (diceLevel < 1 || diceLevel > 3)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid dice level " + args[1] + " valid values are 1,2,3");
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid dice level " + args[1] + " valid values are 1,2,3");
             }
 
             uint32 increase;
             try
             {
-                increase = sAdvancementMgr->UpgradeAdvancement(player, static_cast<MpAdvancements>(advancementId), diceLevel);
+                increase = sAdvancementMgr->UpgradeAdvancement(player, static_cast<MpAdvancements>(advancementId),
+                    diceLevel);
                 if (increase == 0)
                 {
-                    return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Failed to upgrade advancement invalid request see error logs for player " + player->GetName());
+                    return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                        "Failed to upgrade advancement invalid request see error logs for player " + player->GetName());
                 }
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::FAILED_UPGRADE_ADV, "Failed to upgrade: " + std::string(e.what()) + " for player " + player->GetName());
+                return SendEventError(player, EventName(), MP_EVENT_CODE::FAILED_UPGRADE_ADV,
+                    "Failed to upgrade: " + std::string(e.what()) + " for player " + player->GetName());
             }
 
             // Only proceed to here if no errors occurred
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player, static_cast<MpAdvancements>(advancementId));
+            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+                static_cast<MpAdvancements>(advancementId));
             if (!playerRank)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Failed to get advancement rank for player " + player->GetName());
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Failed to get advancement rank for player " + player->GetName());
             }
 
             // Format the success event data for client increase|newrank|bonus
@@ -185,7 +196,8 @@ class GetPlayerRank : public MpEventInterface
             // Validate the message is int he right format
             if (args.size() != 1)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT_SIZE, "Invalid number of arguments expected 1, found " + std::to_string(args.size()));
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT_SIZE,
+                    "Invalid number of arguments expected 1, found " + std::to_string(args.size()));
             }
 
             uint32 advancementId;
@@ -195,18 +207,23 @@ class GetPlayerRank : public MpEventInterface
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id format: " + args[0]);
             }
 
             if (advancementId >= MpAdvancements::MP_ADV_MAX)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id " + args[0] + " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id " + args[0] +
+                    " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
             }
 
-            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player, static_cast<MpAdvancements>(advancementId));
+            MpPlayerRank* playerRank = sAdvancementMgr->GetPlayerAdvancementRank(player,
+                static_cast<MpAdvancements>(advancementId));
             if (!playerRank)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT, "Failed to get advancement rank for player " + player->GetName());
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Failed to get advancement rank for player " + player->GetName());
             }
 
             eventData = {
@@ -230,7 +247,8 @@ class GetPlayerRank : public MpEventInterface
  * p|playerGuid|GetAdvancmentRank|advancementId|rank
  *
  * Returns:
- * p|playerGuid|GetAdvancementRank|advancementId|rank|min1|max1|min2|max2|min3|max3|itemEntry1|itemEntryCost1|itemEntry2|itemEntryCost2|itemEntry3|itemEntryCost3
+ * p|playerGuid|GetAdvancementRank|advancementId|rank|min1|max1|min2|max2|min3|max3|
+ *     itemEntry1|itemEntryCost1|itemEntry2|itemEntryCost2|itemEntry3|itemEntryCost3
  */
 class GetAdvancementRank : public MpEventInterface
 {
@@ -244,7 +262,8 @@ class GetAdvancementRank : public MpEventInterface
         {
             if (args.size() != 2)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT_SIZE, "Invalid number of arguments expected 2, found " + std::to_string(args.size()));
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT_SIZE,
+                    "Invalid number of arguments expected 2, found " + std::to_string(args.size()));
             }
 
             uint32 advancementId, rank;
@@ -254,12 +273,15 @@ class GetAdvancementRank : public MpEventInterface
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id format: " + args[0]);
             }
 
             if (advancementId >= MpAdvancements::MP_ADV_MAX)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id " + args[0] + " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid advancement id " + args[0] +
+                    " max valid id is " + std::to_string(MpAdvancements::MP_ADV_MAX - 1));
             }
 
             try
@@ -268,18 +290,22 @@ class GetAdvancementRank : public MpEventInterface
             }
             catch (std::exception const& e)
             {
-                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid rank format: " + args[1]);
+                return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid rank format: " + args[1]);
             }
 
             if (rank == 0)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid rank " + args[1] + " can not be empty");
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Invalid rank " + args[1] + " can not be empty");
             }
 
-            MpAdvancementRank* advRank = sAdvancementMgr->GetAdvancementRank(rank, static_cast<MpAdvancements>(advancementId));
+            MpAdvancementRank* advRank = sAdvancementMgr->GetAdvancementRank(rank,
+                static_cast<MpAdvancements>(advancementId));
             if (!advRank)
             {
-                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT, "Failed to get advancement rank for player " + player->GetName());
+                return SendEventError(player, EventName(),MP_EVENT_CODE::INVALID_ARGUMENT,
+                    "Failed to get advancement rank for player " + player->GetName());
             }
 
             std::vector<std::string> eventData = {

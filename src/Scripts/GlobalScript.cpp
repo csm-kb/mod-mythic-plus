@@ -14,7 +14,8 @@ public:
     MythicPlus_GlobalScript() : GlobalScript("MythicPlus_GlobalScript") { }
 
     // This adds the mythic+ item scaling to the loot table for enemies
-    void OnBeforeDropAddItem(Player const* player, Loot& loot, bool /*canRate*/, uint16 /*lootMode*/, LootStoreItem* LootStoreItem, LootStore const& store) override {
+    void OnBeforeDropAddItem(Player const* player, Loot& loot, bool /*canRate*/, uint16 /*lootMode*/,
+        LootStoreItem* LootStoreItem, LootStore const& store) override {
 
         if (LootStoreItem->itemid == 0)
         {
@@ -39,7 +40,8 @@ public:
         // if there are not mythic settings set for this group and map skip
         if (!mythicSettings)
         {
-            MpLog::Warn(MpLog::Area::Loot, "No mythic settings found for map {} instance {}", map->GetMapName(), map->GetInstanceId());
+            MpLog::Warn(MpLog::Area::Loot, "No mythic settings found for map {} instance {}", map->GetMapName(),
+                map->GetInstanceId());
             return;
         }
 
@@ -53,7 +55,8 @@ public:
         ItemTemplate const* origItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
         if (!origItem)
         {
-            // If there is not a scaled up item and the item is a below quality green then set an invalid item_id so it is not added to loot
+            // If there is not a scaled up item and the item is a below quality green then set an invalid item_id so it
+            // is not added to loot
             ItemTemplate const* nonMythicItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
             if (nonMythicItem->Quality < 2)
             {
@@ -61,7 +64,8 @@ public:
                 return;
             }
 
-            // otherwise roll a chance to see a shadowy remains item is provided instead only if there is not already a shadowy remains item on the corpse
+            // otherwise roll a chance to see a shadowy remains item is provided instead only if there is not already a
+            // shadowy remains item on the corpse
             bool hasShadowyRemains = false;
             for (auto& item : loot.items)
             {
@@ -89,7 +93,8 @@ public:
 
         if (!newItemTempl)
         {
-            MpLog::Warn(MpLog::Area::Loot, "New Loot Item not found for itemid {} original item: {} ({})", newItemId, origItem->Name1, origItem->ItemId);
+            MpLog::Warn(MpLog::Area::Loot, "New Loot Item not found for itemid {} original item: {} ({})", newItemId,
+                origItem->Name1, origItem->ItemId);
             return;
         }
 
@@ -98,7 +103,8 @@ public:
         // Revalidate the LootStoreItem to ensure consistency
         if (!LootStoreItem->IsValid(store, newItemId))
         {
-            MpLog::Info(MpLog::Area::Loot, "LootStoreItem is not valid after updating itemid to {} in OnBeforeDropAddItem()", newItemId);
+            MpLog::Info(MpLog::Area::Loot,
+                "LootStoreItem is not valid after updating itemid to {} in OnBeforeDropAddItem()", newItemId);
             return;
         }
     }

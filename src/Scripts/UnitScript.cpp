@@ -52,7 +52,8 @@ private:
         // Otherwise (or with no attackers at all) fall back to instance-based scaling
         Map* map = target->GetMap();
         if (std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId()))
-            damage = static_cast<DamageType>(damage * instanceData->creature.spell * sMpConfig->nonCreatureSpellReducer);
+            damage = static_cast<DamageType>(damage * instanceData->creature.spell *
+                sMpConfig->nonCreatureSpellReducer);
     }
 
     // Helper function to determine if a spell scales with Attack Power
@@ -195,7 +196,8 @@ private:
 
 public:
 
-    void ModifyPeriodicDamageAurasTick(Unit* target, Unit* attacker, uint32& damage, SpellInfo const* spellInfo) override
+    void ModifyPeriodicDamageAurasTick(Unit* target, Unit* attacker, uint32& damage,
+        SpellInfo const* spellInfo) override
     {
         if (!target || !attacker)
             return;
@@ -297,7 +299,8 @@ public:
 
         MpCreatureData const* attackerDataPtr = attackerData ? &*attackerData : nullptr;
 
-        // If the target is the enemy then increase the amount of healing by the instance data modifier for spell output.
+        // If the target is the enemy then increase the amount of healing by the instance data modifier for spell
+        // output.
         if (sMpScaler->EligibleDamageTarget(target))
         {
             /**
@@ -308,13 +311,16 @@ public:
             {
                 case MpScaler::UNIT_EVENT_MELEE:
 
-                    // Damage that is not mitigated by armor needs to be debuffed as it hits too hard and without resists
+                    // Damage that is not mitigated by armor needs to be debuffed as it hits too hard and without
+                    // resists
                     // it hits too hard give everyone a benefit of 30% armor reduction
-                    if (creature->GetMeleeDamageSchoolMask() != SPELL_SCHOOL_MASK_NORMAL && creature->GetMeleeDamageSchoolMask() != SPELL_SCHOOL_MASK_NONE)
+                    if (creature->GetMeleeDamageSchoolMask() != SPELL_SCHOOL_MASK_NORMAL
+                        && creature->GetMeleeDamageSchoolMask() != SPELL_SCHOOL_MASK_NONE)
                     {
                         damageOrHeal = static_cast<uint32>(damageOrHeal * 0.50f);
                     }
-                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
+                    if (creature->IsDungeonBoss() || creature->isWorldBoss()
+                        || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
                     {
                         alteredDmgHeal = damageOrHeal * instanceData->boss.melee;
                     }
@@ -327,15 +333,19 @@ public:
                     // Same comparison as before: the int32 operand is converted to uint32 either way.
                     if (static_cast<uint32>(alteredDmgHeal) != damageOrHeal)
                     {
-                        std::string damageType = (creature->GetMeleeDamageSchoolMask() == SPELL_SCHOOL_MASK_NORMAL) ? "Melee Damage" : "Elemental Damage";
-                        MpLog::Debug(MpLog::Area::Combat, ">>> Modify {}: Creature Name: {} originalDmg: {} alteredDmg: {} School Mask: {}",
-                            damageType, creature->GetName(), damageOrHeal, alteredDmgHeal, creature->GetMeleeDamageSchoolMask());
+                        std::string damageType = (creature->GetMeleeDamageSchoolMask() == SPELL_SCHOOL_MASK_NORMAL) ?
+                            "Melee Damage" : "Elemental Damage";
+                        MpLog::Debug(MpLog::Area::Combat,
+                            ">>> Modify {}: Creature Name: {} originalDmg: {} alteredDmg: {} School Mask: {}",
+                            damageType, creature->GetName(), damageOrHeal, alteredDmgHeal,
+                                creature->GetMeleeDamageSchoolMask());
                     }
 
                     break;
                 case MpScaler::UNIT_EVENT_DOT:
                 case MpScaler::UNIT_EVENT_SPELL:
-                    if (creature->IsDungeonBoss() || creature->isWorldBoss() || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
+                    if (creature->IsDungeonBoss() || creature->isWorldBoss()
+                        || creature->GetEntry() == MpConstants::HEADLESS_HORSEMAN)
                     {
                         if (spellInfo)
                         {
@@ -370,7 +380,8 @@ public:
         /**
          * @TODO: Add more granular control over the scaling of healing spells
          */
-        if (sMpScaler->EligibleHealTarget(target) && (eventType == MpScaler::UNIT_EVENT_HEAL || eventType == MpScaler::UNIT_EVENT_HOT))
+        if (sMpScaler->EligibleHealTarget(target) && (eventType == MpScaler::UNIT_EVENT_HEAL
+            || eventType == MpScaler::UNIT_EVENT_HOT))
         {
             // ScaleHealSpell's target is the healing creature itself (as before; see DESIGN §9)
             if (creature->IsDungeonBoss())

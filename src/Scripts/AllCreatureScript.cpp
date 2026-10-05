@@ -14,8 +14,10 @@ public:
      * We only need to concern ourselves with creatures in the scope of our mythic+ instances.
      * Need to detect the following changes:
      *  - Creature Death State - to trigger respawn scaling.
-     *  - Other events where a creature enters the instance that is not scaled, then should be scaled up. Some special events normal enemies will be scripted
-     *    to show up in encounters these will not trigger the OnCreatureAddWorld, because they were not during the initial load of the instance. (Though sometimes summons do trigger this?)
+     * - Other events where a creature enters the instance that is not scaled, then should be scaled up. Some special
+     * events normal enemies will be scripted
+     * to show up in encounters these will not trigger the OnCreatureAddWorld, because they were not during the initial
+     * load of the instance. (Though sometimes summons do trigger this?)
      *
      * @param creature
      * @param diff
@@ -64,7 +66,8 @@ public:
         // this is a creature that was not scaled at instance load time, we need to scale it now.
         if (!known)
         {
-            MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}", creature->GetName());
+            MpLog::Debug(MpLog::Area::Scaling, "OnAllCreatureUpdate: Unknown Creature Add event scaling creature: {}",
+                creature->GetName());
             sMpScaler->AddScaledCreature(creature, *instanceData);
             return;
         }
