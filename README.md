@@ -113,7 +113,7 @@ only (there is no `.mythicplus debug`).
 | `.mp rescale` | game master | no | Rescales the selected creature. |
 | `.mp rescale all` | game master | no | Rescales every tracked creature on your map. |
 | `.mp enable` / `.mp disable` | administrator | yes | Turns the module on or off at runtime. |
-| `.mp change melee\|spell\|health <value>` | administrator | yes | Sets a scale factor for your current Mythic+ instance. A non-number is rejected. |
+| `.mp change melee\|spell\|health <value>` | administrator | no | Sets a scale factor for your current Mythic+ instance. A non-number is rejected. |
 | `.advancement` | player | no | Lists your advancement ranks and bonuses. |
 
 There are no token, material or achievement commands.

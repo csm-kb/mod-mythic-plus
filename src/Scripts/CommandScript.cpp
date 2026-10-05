@@ -41,9 +41,9 @@ public:
             {"enable", HandleEnable, SEC_ADMINISTRATOR, Console::Yes},
             {"rescale", HandleReScale, SEC_GAMEMASTER, Console::No},
             {"rescale all", HandleReScaleAll, SEC_GAMEMASTER, Console::No},
-            {"change melee", HandleChangeMelee, SEC_ADMINISTRATOR, Console::Yes},
-            {"change spell", HandleChangeSpell, SEC_ADMINISTRATOR, Console::Yes},
-            {"change health", HandleChangeHealth, SEC_ADMINISTRATOR, Console::Yes}
+            {"change melee", HandleChangeMelee, SEC_ADMINISTRATOR, Console::No},
+            {"change spell", HandleChangeSpell, SEC_ADMINISTRATOR, Console::No},
+            {"change health", HandleChangeHealth, SEC_ADMINISTRATOR, Console::No}
         };
 
         static ChatCommandTable commandTable =
