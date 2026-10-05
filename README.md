@@ -68,9 +68,11 @@ database the first time `ac-db-import` runs with the module in the image.
    before the worldserver starts.
 4. Optionally copy `conf/mod-mythic-plus.conf.dist` to `env/dist/etc/modules/mod-mythic-plus.conf` and edit it.
 
-dbimport records every applied SQL file by content hash. Never re-save a module SQL file with different line
-endings or whitespace: it would be applied again, and `01_mp_schema.sql` starts with
-`DROP TABLE IF EXISTS mp_player_advancements`, which wipes player data. `.gitattributes` only normalizes `*.sh`.
+dbimport records every applied SQL file by content hash; a file whose bytes change is applied again. Never edit an
+applied `base/` file at all: `01_mp_schema.sql` drops all seven `mp_*` tables (`DROP TABLE IF EXISTS mp_group_data`
+first, then the player, run, stats and advancement tables), so re-running it wipes player data. New SQL goes in a
+new file under `data/sql/db-*/updates/`. `.gitattributes` pins `*.sql` to the stored LF bytes (`-text`), so do not
+hand-edit or convert SQL line endings.
 
 For a non-docker build, clone the module into `modules/`, rebuild the core, and let the normal `dbimport` apply the
 SQL.
