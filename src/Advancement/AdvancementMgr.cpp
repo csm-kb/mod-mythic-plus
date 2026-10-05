@@ -9,6 +9,7 @@
 #include <tuple>
 #include <mutex>
 #include <exception>
+#include <stdexcept>
 
 std::string MpAdvancementsToString(MpAdvancements advancement)
 {
@@ -300,11 +301,11 @@ bool AdvancementMgr::_ApplyUpgrade(Player* player, MpAdvancements advancement, u
     if (!player)
     {
         MpLog::Error(MpLog::Area::Advancement, "Could not upgrade advancement for player, player was nullpointer");
-        throw new std::runtime_error("Could not upgrade advancement for player, player was nullpointer");
+        throw std::runtime_error("Could not upgrade advancement for player, player was nullpointer");
     }
     if (diceCostLevel < 1 || diceCostLevel > 3)
     {
-        throw new std::runtime_error(Acore::StringFormat(
+        throw std::runtime_error(Acore::StringFormat(
             "Invalid dice cost level valid vales (1,2,3) received {} for player {}", diceCostLevel, player->GetName()));
     }
 
