@@ -60,6 +60,7 @@ Mythic, Legendary and Ascendant share the base dungeon difficulty's lockout. A g
 
 Back up your databases first: the module's world SQL (items, stat overrides, NPCs) is applied to your real world
 database the first time `ac-db-import` runs with the module in the image.
+`04_creature_classlevelstats.sql` sets creature stats for levels 84+ only; stock rows for levels 81-83 are untouched.
 
 1. Put the module in `modules/mod-mythic-plus`.
 2. `docker compose build ac-worldserver ac-db-import` (the module is compiled into the worldserver image).
