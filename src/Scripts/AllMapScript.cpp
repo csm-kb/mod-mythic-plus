@@ -51,7 +51,7 @@ public:
 
         if (!sMpConfig->enabled)
         {
-            LogUntiered(map, player, nullptr, "module_disabled");
+            LogUntiered(map, player, player->GetGroup(), "module_disabled");
             return;
         }
 
