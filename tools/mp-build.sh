@@ -18,7 +18,8 @@
 #                src/Bots/ files among the "Building CXX object" lines. If the layer was fully cached (rerun with no
 #                source change) nothing compiled: it prints a NOTE and exits PASS without claiming verification,
 #                like default's cached path (the earlier build already verified that source). Otherwise it writes
-#                errors-/warnings-noproviders.txt like default. Then it removes the mpcheck-noprov image and the image ID it replaced (specific IDs only, never a prune).
+#                errors-/warnings-noproviders.txt like default. Then it removes the mpcheck-noprov image and the
+#                image ID it replaced (specific IDs only, never a prune).
 #                Refuses to start when mod-mythic-plus.cmake already has uncommitted changes. --full is not
 #                accepted here.
 set -euo pipefail
@@ -72,7 +73,8 @@ else
   CMAKE_FILE="$MP_MOD_DIR/mod-mythic-plus.cmake"
   [[ $FULL == 0 ]] || { echo "mp: --full is not supported with noproviders" >&2; exit 2; }
   git -C "$MP_MOD_DIR" diff --quiet -- mod-mythic-plus.cmake \
-    || { echo "mp: mod-mythic-plus.cmake has uncommitted changes; recover with: git checkout -- mod-mythic-plus.cmake (run in the module dir)" >&2; exit 2; }
+    || { echo "mp: mod-mythic-plus.cmake has uncommitted changes; recover with:" \
+         "git checkout -- mod-mythic-plus.cmake (run in the module dir)" >&2; exit 2; }
   grep -qE '^option\(MP_NO_BOT_PROVIDERS .* OFF\)' "$CMAKE_FILE" \
     || { echo "mp: option(MP_NO_BOT_PROVIDERS ... OFF) not found in mod-mythic-plus.cmake" >&2; exit 2; }
   export DOCKER_IMAGE_TAG="mpcheck-noprov"
@@ -109,7 +111,8 @@ else
   NOPROV_CACHED=0
   if ! grep -qE "Building CXX object .*mod-mythic-plus/src/Bots/" "$LOG"; then
     NOPROV_CACHED=1
-    mp_say "NOTE — build layer cached; no compile signal (noproviders unchanged since last verified build; change module source or rerun after a source edit)"
+    mp_say "NOTE — build layer cached; no compile signal (noproviders unchanged since last verified build;" \
+      "change module source or rerun after a source edit)"
   else
     mp_say "src/Bots TUs compiled: $(grep -cE 'Building CXX object .*mod-mythic-plus/src/Bots/' "$LOG")"
   fi

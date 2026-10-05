@@ -145,7 +145,8 @@ MythicPlus.Ascendant.ItemOffset = 22000000
 # Diminishing Returns
 #   - These values are used to set the diminishing returns for the different difficulties.
 #   - The diminishing returns are used to limit the amount of damage that can be done to a target.
-#   - The diminishing returns are based on the difficulty of the dungeon and the amount of damage that has been done to the target.
+#   - The diminishing returns are based on the difficulty of the dungeon and the amount of damage that has been
+#     done to the target.
 ##########################################################
 
 # > 0.  Env: AC_MYTHIC_PLUS_DIMINISHING_EXPONENT
