@@ -299,7 +299,10 @@ bool MpScaler::InitInstance(Map* map, Player* player, Group const* group, MpDiff
     }
 
     // Once we have instance data set we can scale the remaining characters in our instance
-    ScaleRemaining(player, *instanceData);
+    if (player)
+    {
+        ScaleRemaining(player, *instanceData);
+    }
     return true;
 }
 
