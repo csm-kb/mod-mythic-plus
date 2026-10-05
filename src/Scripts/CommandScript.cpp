@@ -261,12 +261,7 @@ public:
             return true;
         }
 
-        Map* map = player->GetMap();
-        if (!map)
-        {
-            handler->PSendSysMessage("You must be in a map to rescale all creatures.");
-            return true;
-        }
+        Map* map = player->GetMap(); // never null: GetMap() asserts
 
         int32 mapId = map->GetId();
         int32 instanceId = map->GetInstanceId();

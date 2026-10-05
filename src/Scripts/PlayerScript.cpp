@@ -50,13 +50,13 @@ public:
         uint32 mapId = map->GetId();
         uint32 instanceId = map->GetInstanceId();
         uint32 playerDeaths = 0;
-        if (!sMpState->UpdatePlayerData(player->GetGUID(), [mapId, instanceId, &playerDeaths](MpPlayerData& pd)
-            {
-                playerDeaths = pd.AddDeath(mapId, instanceId);
-            }))
+        bool known = sMpState->UpdatePlayerData(player->GetGUID(), [mapId, instanceId, &playerDeaths](MpPlayerData& pd)
         {
+            playerDeaths = pd.AddDeath(mapId, instanceId);
+        });
+
+        if (!known)
             return;
-        }
 
         MpLog::Info(MpLog::Area::Instance, "Player {} added death to instance data {}", player->GetName(),
             playerDeaths);
@@ -207,12 +207,7 @@ public:
             return;
         }
 
-        Map* map = player->GetMap();
-        if (!map)
-        {
-            MpLog::Warn(MpLog::Area::Instance, "Player {} is not in a map", player->GetName());
-            return;
-        }
+        Map* map = player->GetMap(); // never null: GetMap() asserts
 
         // Track the bound instance on the player data, setting the player data up if needed
         ObjectGuid playerGuid = player->GetGUID();

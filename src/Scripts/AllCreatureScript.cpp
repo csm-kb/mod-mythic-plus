@@ -72,16 +72,16 @@ public:
         // record the death of our scaled creature; a corpse that comes back alive was respawned and is rescaled
         DeathState currentState = creature->getDeathState();
         bool respawned = false;
-        if (!sMpState->UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
-            {
-                if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
-                    data.lastDeathState = currentState;
-                else if (currentState == DeathState::Alive && data.lastDeathState == DeathState::Corpse)
-                    respawned = true;
-            }))
+        bool stillKnown = sMpState->UpdateCreatureData(creature, [currentState, &respawned](MpCreatureData& data)
         {
+            if (currentState == DeathState::Corpse && data.lastDeathState != DeathState::Corpse)
+                data.lastDeathState = currentState;
+            else if (currentState == DeathState::Alive && data.lastDeathState == DeathState::Corpse)
+                respawned = true;
+        });
+
+        if (!stillKnown)
             return;
-        }
 
         if (respawned)
         {

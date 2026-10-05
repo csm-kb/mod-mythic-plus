@@ -89,24 +89,14 @@ class MythicPlus_GroupScript : public GroupScript
     }
 
     // Get the difficulty for a player that is assigned
+    // Callers pass a non-null player
     MpDifficulty GetPlayerDifficulty(Player* player)
     {
-        if (!player)
-        {
-            return MP_DIFFICULTY_NORMAL;
-        }
-
-        std::optional<MpPlayerData> pd = sMpState->GetPlayerData(player->GetGUID());
-        if (pd)
-        {
+        if (std::optional<MpPlayerData> pd = sMpState->GetPlayerData(player->GetGUID()))
             return pd->difficulty;
-        }
-        else
-        {
-            return player->GetDifficulty(false) == Difficulty::DUNGEON_DIFFICULTY_NORMAL ? MP_DIFFICULTY_NORMAL : MP_DIFFICULTY_HEROIC;
-        }
 
-        return MP_DIFFICULTY_NORMAL;
+        return player->GetDifficulty(false) == Difficulty::DUNGEON_DIFFICULTY_NORMAL ? MP_DIFFICULTY_NORMAL :
+            MP_DIFFICULTY_HEROIC;
     }
 };
 

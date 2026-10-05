@@ -156,12 +156,7 @@ void MpRuntimeState::SetGroupData(Group* group, MpGroupData data)
         return;
     }
 
-    Map* map = leader->GetMap();
-    if (!map)
-    {
-        MpLog::Error(MpLog::Area::Instance, "SetGroupData called with null map for group leader");
-        return;
-    }
+    Map* map = leader->GetMap(); // never null: GetMap() asserts
 
     bool resetInstance = true;
     {

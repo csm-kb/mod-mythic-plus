@@ -44,7 +44,7 @@ public:
         }
 
         // if the item rewards are disabled skip
-        if (mythicSettings->itemRewards == false )
+        if (!mythicSettings->itemRewards)
         {
             return;
         }
