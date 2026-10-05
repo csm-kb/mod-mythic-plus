@@ -20,9 +20,6 @@ DELETE FROM `creature_equip_template` WHERE (`CreatureID` = 9500562);
 INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `ItemID2`, `ItemID3`, `VerifiedBuild`) VALUES
 (9500562, 1, 11684, 2565, 0, 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500562);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500562, 0, 9500562, 1, 1, 12340);
 
 
 --  Elowyn Threadbinder
@@ -30,9 +27,6 @@ DELETE FROM `creature_template` WHERE (`entry` = 9500563);
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`, `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`, `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`, `dynamicflags`, `family`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `HoverHeight`, `HealthModifier`, `ManaModifier`, `ArmorModifier`, `ExperienceModifier`, `RacialLeader`, `movementId`, `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`, `ScriptName`, `VerifiedBuild`) VALUES
 (9500563, 0, 0, 0, 0, 0, 'Elowyn Threadbinder', 'Mystic Artisan', NULL, 0, 85, 85, 0, 35, 1, 1, 1.14286, 1, 1, 30, 3, 0, 1, 2000, 2000, 1, 1, 8, 33024, 2048, 0, 0, 7, 32, 0, 0, 0, 0, 0, 0, 0, '', 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, '', 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500563);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500563, 0, 9500563, 1, 1, 12340);
 
 
 --  Shivey
@@ -44,9 +38,6 @@ DELETE FROM `creature_equip_template` WHERE (`CreatureID` = 9500564);
 INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `ItemID2`, `ItemID3`, `VerifiedBuild`) VALUES
 (9500564, 1, 28648, 2200, 0, 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500564);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500564, 0, 9500564, 1, 1, 0);
 
 -- Steve
 DELETE FROM `creature_template` WHERE (`entry` = 9500565);
@@ -57,9 +48,6 @@ DELETE FROM `creature_equip_template` WHERE (`CreatureID` = 9500565);
 INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `ItemID2`, `ItemID3`, `VerifiedBuild`) VALUES
 (9500565, 1, 51869, 38462, 0, 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500565);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500565, 0, 9500565, 1.25, 1, 0);
 
 -- Vaeric
 DELETE FROM `creature_template` WHERE (`entry` = 9500566);
@@ -70,9 +58,6 @@ DELETE FROM `creature_equip_template` WHERE (`CreatureID` = 9500566);
 INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `ItemID2`, `ItemID3`, `VerifiedBuild`) VALUES
 (9500566, 1, 38632, 0, 0, 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500566);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500566, 0, 9500566, 1.25, 1, 0);
 
 -- Agatha
 
@@ -80,9 +65,6 @@ DELETE FROM `creature_template` WHERE (`entry` = 9500567);
 INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`, `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`, `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`, `dynamicflags`, `family`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `HoverHeight`, `HealthModifier`, `ManaModifier`, `ArmorModifier`, `ExperienceModifier`, `RacialLeader`, `movementId`, `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`, `ScriptName`, `VerifiedBuild`) VALUES
 (9500567, 0, 0, 0, 0, 0, 'Agatha Veil', 'The Wise', NULL, 0, 85, 85, 2, 35, 1, 1, 1.14286, 1, 1, 1, 3, 0, 100, 2000, 2500, 1, 1, 1, 33024, 2048, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 1, 100, 1, 1, 1, 0, 0, 1, 0, 0, '', 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500567);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500567, 0, 9500567, 1.25, 1, 0);
 
 -- Sylvia
 
@@ -94,41 +76,6 @@ DELETE FROM `creature_equip_template` WHERE (`CreatureID` = 9500568);
 INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `ItemID2`, `ItemID3`, `VerifiedBuild`) VALUES
 (9500568, 1, 38200, 16887, 0, 0);
 
-DELETE FROM `creature_template_model` WHERE (`CreatureID` = 9500568);
-INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
-(9500568, 0, 9500568, 1.25, 1, 0);
-
-
---  Model Info Updates
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-VALUES (9500561, 0.35, 1.25, 0, 0);
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-SELECT 9500562, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender
-FROM creature_model_info
-WHERE DisplayID = 9500561;
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-SELECT 9500563, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender
-FROM creature_model_info
-WHERE DisplayID = 9500561;
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-SELECT 9500564, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender
-FROM creature_model_info
-WHERE DisplayID = 9500561;
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-VALUES (9500565, 0.35, 1.25, 0, 0);
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-VALUES (9500566, 0.35, 1.25, 0, 0);
-
-REPLACE INTO creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-VALUES (9500567, 0.35, 1.25, 1, 0);
-
-REPLACE INTO acore_world.creature_model_info (DisplayID, BoundingRadius, CombatReach, Gender, DisplayID_Other_Gender)
-VALUES (9500568, 0.35, 1.25, 1, 0);
 
 
 -- Supporting Cast Spawns
