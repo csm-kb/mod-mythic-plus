@@ -1,10 +1,20 @@
 # mod-mythic-plus configure-time hooks (included by modules/CMakeLists.txt, OPTIONAL).
 set(_mp_dir "${CMAKE_CURRENT_LIST_DIR}")
 
+# Linkage of this module (static, dynamic or disabled), resolved by modules/CMakeLists.txt before this include.
+ModuleNameToVariable("mod-mythic-plus" _mp_link_var)
+set(_mp_link "${${_mp_link_var}}")
+
 # --- Bot provider switch (spec §4): ON compiles the bot seam with no providers.
+# The definition attaches to the static `modules` target only. With MODULES=dynamic (or this module set to
+# dynamic) the module is its own shared library and the switch has no effect.
 option(MP_NO_BOT_PROVIDERS "mod-mythic-plus: compile the bot seam with no providers" OFF)
 if(MP_NO_BOT_PROVIDERS)
   target_compile_definitions(modules PRIVATE MP_NO_BOT_PROVIDERS)
+endif()
+if(NOT _mp_link STREQUAL "static")
+  message(STATUS "mod-mythic-plus: linkage is '${_mp_link}', not static; MP_NO_BOT_PROVIDERS (attached to the "
+    "static modules target) is not applied")
 endif()
 
 # --- Config sync (spec §3.4): keys AND default values in MpConfig.cpp must equal conf.dist.
@@ -73,6 +83,9 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # These options are set on this module's .cpp files only: the --system-header-prefix entries (which match any
   # include spelled "G3D/..." or "Group.h...") never apply to core or other modules' translation units.
+  # They are source properties of the modules/ directory (TARGET_DIRECTORY modules), not of the `modules` target.
+  # A dynamic module's shared library is created in that same directory, so they should apply there too, but only
+  # the static build (the docker default) is verified.
   set(_mp_sys_headers "--system-header-prefix=G3D/;--system-header-prefix=Group.h")
   file(GLOB_RECURSE _mp_tus "${_mp_dir}/src/*.cpp")
   set_source_files_properties(${_mp_tus} TARGET_DIRECTORY modules PROPERTIES
