@@ -343,8 +343,9 @@ bool AdvancementMgr::_ApplyUpgrade(Player* player, MpAdvancements advancement, u
     MpAdvancementRank* advancementRank = GetAdvancementRank(newRank, advancement);
     if (advancementRank == nullptr || !advancementRank->IsValid())
     {
-        MpLog::Error(MpLog::Area::Advancement, "Advancement rank could not be found. Rank: {} Advancement: {}", newRank,
-            static_cast<int>(advancement));
+        MpLog::Error(MpLog::Area::Advancement,
+            "event=advancement_failed reason=rank_not_found rank={} advancement={} player={} guid={}", newRank,
+            static_cast<int>(advancement), player->GetName(), player->GetGUID().ToString());
         return false;
     }
 
@@ -565,13 +566,15 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
     }
     catch (std::exception const& e)
     {
-        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: {}", player->GetName(),
-            e.what());
+        MpLog::Error(MpLog::Area::Advancement,
+            "event=advancement_failed reason=save_failed player={} guid={} detail={}", player->GetName(),
+            player->GetGUID().ToString(), e.what());
     }
     catch (...)
     {
-        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: unknown error",
-            player->GetName());
+        MpLog::Error(MpLog::Area::Advancement,
+            "event=advancement_failed reason=save_failed player={} guid={} detail=unknown", player->GetName(),
+            player->GetGUID().ToString());
     }
 
     try
@@ -600,12 +603,14 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
     }
     catch (std::exception const& e)
     {
-        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: {}",
-            player->GetName(), e.what());
+        MpLog::Error(MpLog::Area::Advancement,
+            "event=advancement_failed reason=history_save_failed player={} guid={} detail={}", player->GetName(),
+            player->GetGUID().ToString(), e.what());
     }
     catch (...)
     {
-        MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: unknown error",
-            player->GetName());
+        MpLog::Error(MpLog::Area::Advancement,
+            "event=advancement_failed reason=history_save_failed player={} guid={} detail=unknown",
+            player->GetName(), player->GetGUID().ToString());
     }
 }

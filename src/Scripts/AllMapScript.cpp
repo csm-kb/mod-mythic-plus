@@ -1,11 +1,33 @@
 #include "Chat.h"
+#include "Group.h"
+#include "MpBots.h"
+#include "MpConfig.h"
 #include "MpLog.h"
 #include "Map.h"
 #include "MpScaler.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+#include "StringFormat.h"
 
 #include <optional>
+#include <string>
+
+// Why a run did not get a tier. Bots enter in bulk, so their lines stay at DEBUG.
+static void LogUntiered(Map* map, Player* player, Group* group, char const* reason)
+{
+    bool bot = MpBots::IsBot(player);
+    if (!MpLog::Enabled(MpLog::Area::Instance, bot ? LOG_LEVEL_DEBUG : LOG_LEVEL_INFO))
+        return;
+
+    std::string line = Acore::StringFormat(
+        "event=instance_untiered map={} instance={} group={} leader={} player={} guid={} reason={}",
+        map->GetId(), map->GetInstanceId(), group ? group->GetGUID().GetCounter() : 0,
+        group ? group->GetLeaderName() : "-", player->GetName(), player->GetGUID().ToString(), reason);
+    if (bot)
+        MpLog::Debug(MpLog::Area::Instance, "{}", line);
+    else
+        MpLog::Info(MpLog::Area::Instance, "{}", line);
+}
 
 class MythicPlus_AllMapScript : public AllMapScript
 {
@@ -21,24 +43,22 @@ public:
      */
     void OnPlayerEnterAll(Map* map, Player* player) override
     {
-        if (!sMpScaler->IsMapEligible(map))
+        // not a dungeon: nothing to report
+        if (!map->IsDungeon())
         {
             return;
         }
 
-        if (!sMpScaler->IsDifficultySet(player))
+        if (!sMpConfig->enabled)
         {
+            LogUntiered(map, player, nullptr, "module_disabled");
             return;
         }
 
         Group* group = player->GetGroup();
-        if (group)
+        if (!group)
         {
-            MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(),
-                map->GetMapName(), group->GetLeaderName());
-        }
-        else
-        {
+            LogUntiered(map, player, nullptr, "no_group");
             return;
         }
 
@@ -46,8 +66,12 @@ public:
         std::optional<MpGroupData> groupData = sMpState->GetGroupData(group->GetGUID());
         if (!groupData)
         {
+            LogUntiered(map, player, group, "no_group_tier");
             return;
         }
+
+        MpLog::Debug(MpLog::Area::Instance, "Player {} entered map {} in groupLeader {}", player->GetName(),
+            map->GetMapName(), group->GetLeaderName());
 
         // Check if we already have mythic instance data set for this map and group
         if (sMpState->GetInstanceData(map->GetId(), map->GetInstanceId()))
@@ -64,7 +88,11 @@ public:
             return;
         }
 
-        sMpScaler->InitInstance(map, player, group, groupData->difficulty);
+        // a group difficulty without a configured tier is untiered too
+        if (!sMpScaler->InitInstance(map, player, group, groupData->difficulty))
+        {
+            LogUntiered(map, player, group, "no_group_tier");
+        }
     }
 
     // When an instance is destroyed remove the instance data from the data store

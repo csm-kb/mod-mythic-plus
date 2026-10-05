@@ -40,8 +40,9 @@ public:
         // if there are not mythic settings set for this group and map skip
         if (!mythicSettings)
         {
-            MpLog::Warn(MpLog::Area::Loot, "No mythic settings found for map {} instance {}", map->GetMapName(),
-                map->GetInstanceId());
+            MpLog::Warn(MpLog::Area::Loot,
+                "event=loot_failed reason=no_instance_settings map={} instance={} player={} guid={}", map->GetId(),
+                map->GetInstanceId(), player->GetName(), player->GetGUID().ToString());
             return;
         }
 

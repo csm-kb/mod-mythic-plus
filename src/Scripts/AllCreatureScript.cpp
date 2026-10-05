@@ -87,13 +87,17 @@ public:
             return;
         }
 
-        if (!sMpScaler->IsCreatureEligible(creature))
-        {
-            return;
-        }
-
         // if we have instance data about zone then just scale the creature otherwise add to be scaled once we do.
         std::optional<MpInstanceData> instanceData = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
+
+        if (char const* reason = sMpScaler->GetIneligibleReason(creature))
+        {
+            // tiered instances only: untiered ones would log every creature
+            if (instanceData && MpLog::Enabled(MpLog::Area::Scaling, LOG_LEVEL_DEBUG))
+                MpLog::Debug(MpLog::Area::Scaling, "event=creature_skipped map={} instance={} entry={} reason={}",
+                    map->GetId(), map->GetInstanceId(), creature->GetEntry(), reason);
+            return;
+        }
 
         if (instanceData)
         {

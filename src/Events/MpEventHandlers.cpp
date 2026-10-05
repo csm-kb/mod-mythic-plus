@@ -187,7 +187,7 @@ class GetPlayerRank : public MpEventInterface
             // Store the event data to send back to the client for parsing
             std::vector<std::string> eventData;
 
-            MpLog::Info(MpLog::Area::Events, "(EventProcessor) Executing {}}", EventName());
+            MpLog::Info(MpLog::Area::Events, "(EventProcessor) Executing {}", EventName());
             for (auto& arg : args)
             {
                 MpLog::Info(MpLog::Area::Events, "{} Arg: {}", EventName(), arg);

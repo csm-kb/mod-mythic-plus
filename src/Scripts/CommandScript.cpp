@@ -1,5 +1,6 @@
 #include "Chat.h"
 #include "AdvancementMgr.h"
+#include "Group.h"
 #include "MpScaler.h"
 #include "MpConfig.h"
 #include "MpConstants.h"
@@ -8,9 +9,19 @@
 #include "ScriptMgr.h"
 #include "StringConvert.h"
 
+#include <chrono>
+#include <mutex>
 #include <optional>
+#include <unordered_map>
 
 using namespace Acore::ChatCommands;
+
+// Why a .mp set was rejected; the chat text to the player is unchanged
+static void LogSetFailed(Player* player, char const* reason)
+{
+    MpLog::Info(MpLog::Area::Instance, "event=command_failed cmd=set reason={} player={} guid={}", reason,
+        player->GetName(), player->GetGUID().ToString());
+}
 
 class MythicPlus_CommandScript : public CommandScript
 {
@@ -69,13 +80,107 @@ public:
 
     static bool HandleDebug(ChatHandler* handler)
     {
-        Creature* target = handler->getSelectedCreature();
-        if (!target)
+        Player* player = handler->GetPlayer();
+        if (!DebugCooldownOk(player->GetGUID()))
         {
-            handler->PSendSysMessage("You must select a creature to debug.");
+            handler->PSendSysMessage("Mythic+: debug is rate-limited.");
             return true;
         }
 
+        if (Creature* target = handler->getSelectedCreature())
+        {
+            if (target->IsControlledByPlayer() && target->GetCharmerOrOwnerGUID() != player->GetGUID())
+            {
+                handler->PSendSysMessage("Mythic+ does not track player pets.");
+                return true;
+            }
+
+            return HandleDebugCreature(handler, target);
+        }
+
+        return HandleDebugInstance(handler, player);
+    }
+
+    // At most one debug reply per player every 2 seconds
+    static bool DebugCooldownOk(ObjectGuid guid)
+    {
+        static std::mutex lock;
+        static std::unordered_map<ObjectGuid, std::chrono::steady_clock::time_point> last;
+        auto now = std::chrono::steady_clock::now();
+        std::lock_guard<std::mutex> guard(lock);
+        auto [it, inserted] = last.try_emplace(guid, now);
+        if (!inserted && now - it->second < std::chrono::seconds(2))
+            return false;
+
+        it->second = now;
+        return true;
+    }
+
+    // The caller's own instance: tier, multipliers, creature counts and deaths of the live group members
+    static bool HandleDebugInstance(ChatHandler* handler, Player* player)
+    {
+        char const* hint = " Select a creature to see its stats.";
+        Map* map = player->GetMap();
+        if (!map->IsDungeon())
+        {
+            handler->PSendSysMessage("Mythic+ inactive: not in a dungeon.{}", hint);
+            return true;
+        }
+
+        if (!sMpConfig->enabled)
+        {
+            handler->PSendSysMessage("Mythic+ inactive: module disabled.{}", hint);
+            return true;
+        }
+
+        Group* group = player->GetGroup();
+        std::optional<MpGroupData> groupData;
+        if (group)
+            groupData = sMpState->GetGroupData(group->GetGUID());
+
+        std::optional<MpInstanceData> data = sMpState->GetInstanceData(map->GetId(), map->GetInstanceId());
+        if (!data)
+        {
+            if (groupData && sMpConfig->GetTier(groupData->difficulty))
+                handler->PSendSysMessage("Mythic+ inactive: group tier is {} but this instance predates it. "
+                    "Leave and reset instances.{}", MpDifficultyName(groupData->difficulty), hint);
+            else
+                handler->PSendSysMessage("Mythic+ inactive: your group has no tier. Leader: .mp set mythic "
+                    "outside, then enter.{}", hint);
+            return true;
+        }
+
+        MpCreatureCounts counts = sMpState->CountInstanceCreatures(map->GetId(), map->GetInstanceId());
+        handler->PSendSysMessage("Mythic+ {} ({} base) \xE2\x80\x94 {}, instance {}",
+            MpDifficultyName(data->difficulty), map->IsHeroic() ? "heroic" : "normal", map->GetMapName(),
+            map->GetInstanceId());
+        handler->PSendSysMessage("Trash x hp{} melee{} spell{} armor{}, lvl {}", data->creature.health,
+            data->creature.melee, data->creature.spell, data->creature.armor, uint32(data->creature.avgLevel));
+        handler->PSendSysMessage("Boss  x hp{} melee{} spell{} armor{}, lvl {}", data->boss.health,
+            data->boss.melee, data->boss.spell, data->boss.armor, uint32(data->boss.avgLevel));
+        handler->PSendSysMessage("Creatures: {} scaled, {} pending", counts.scaled, counts.pending);
+
+        std::string deaths;
+        uint32 total = 0;
+        if (group)
+        {
+            for (Group::MemberSlot const& slot : group->GetMemberSlots())
+            {
+                std::optional<MpPlayerData> pd = sMpState->GetPlayerData(slot.guid);
+                uint32 n = pd ? pd->GetDeaths(map->GetId(), map->GetInstanceId()) : 0;
+                total += n;
+                if (n)
+                    deaths += Acore::StringFormat("{}{} {}", deaths.empty() ? "" : ", ", slot.name, n);
+            }
+        }
+
+        handler->PSendSysMessage("Deaths {} (limit {}, not enforced){}{}", total, data->deathLimits,
+            deaths.empty() ? "" : ": ", deaths);
+        return true;
+    }
+
+    static bool HandleDebugCreature(ChatHandler* handler, Creature* target)
+    {
         CreatureTemplate const* creatureTemplate = target->GetCreatureTemplate();
         std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(target);
 
@@ -117,13 +222,14 @@ public:
 
         if (!group)
         {
-            MpLog::Debug(MpLog::Area::Instance, "HandleSetMythic() No Group for player: {}", player->GetName());
+            LogSetFailed(player, "no_group");
             handler->PSendSysMessage("|cFFFF0000 You must be in a group to be able to set a Mythic+ difficulty.");
             return true;
         }
 
         if (args.empty())
         {
+            LogSetFailed(player, "bad_arg");
             handler->PSendSysMessage(
                 "|cFFFF0000 You must specify a difficulty level. Expected values are 'mythic', 'legendary', or "
                 "'ascendant'.");
@@ -134,12 +240,14 @@ public:
 
         if (!group->IsLeader(player->GetGUID()))
         {
+            LogSetFailed(player, "not_leader");
             handler->PSendSysMessage("|cFFFF0000 You must be the group leader to set a Mythic+ difficulty.");
             return true;
         }
 
         if (player->GetMap()->IsDungeon())
         {
+            LogSetFailed(player, "inside_dungeon");
             player->ResetInstances(player->GetGUID(), INSTANCE_RESET_CHANGE_DIFFICULTY, false);
             player->SendResetInstanceSuccess(player->GetMap()->GetId());
             return true;
@@ -171,6 +279,7 @@ public:
         }
         else
         {
+            LogSetFailed(player, "bad_arg");
             handler->PSendSysMessage(
                 "|cFFFF0000 Invalid difficulty level. Expected values are 'normal', 'heroic', 'mythic', 'legendary', "
                 "or 'ascendant'.");

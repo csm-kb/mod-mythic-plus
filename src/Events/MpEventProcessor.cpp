@@ -123,7 +123,7 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, std::string
 
     handlerArgs.assign(parts.begin() + 3, parts.end());
 
-    MpLog::Info(MpLog::Area::Events, "Player {} sent a client event message {} for event: {} eventId: {} ",
+    MpLog::Info(MpLog::Area::Events, "Player {} sent a client event message {} on channel {} for event: {} eventId: {}",
         player->GetName(), msg, MP_DATA_CHAT_CHANNEL, parts[2], event);
     return EventParseRslt{event, player->GetGUID().GetCounter(), std::move(handlerArgs)};
 }

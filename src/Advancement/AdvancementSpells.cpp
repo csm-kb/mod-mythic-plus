@@ -32,7 +32,7 @@ public:
         }
 
         amount = static_cast<int32>(rank->bonus);
-        MpLog::Info(MpLog::Area::Advancement, "In Calc Amount Advancement {} to Player {} bonus {}", _label,
+        MpLog::Debug(MpLog::Area::Advancement, "In Calc Amount Advancement {} to Player {} bonus {}", _label,
             player->GetName(), amount);
     }
 

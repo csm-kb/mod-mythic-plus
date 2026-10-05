@@ -143,6 +143,65 @@ bool MpScaler::IsCreatureEligible(Creature* creature)
     return true;
 }
 
+// Keep in sync with IsCreatureEligible
+char const* MpScaler::GetIneligibleReason(Creature* creature)
+{
+    if (!creature)
+    {
+        return "null_creature";
+    }
+
+    if (creature->GetScriptName().starts_with("boss_") || creature->IsDungeonBoss() ||
+        creature->GetEntry() == HEADLESS_HORSEMAN)
+    {
+        return nullptr;
+    }
+
+    if ((creature->IsHunterPet() || creature->IsPet() || creature->IsSummon()) && creature->IsControlledByPlayer())
+    {
+        return "player_pet";
+    }
+
+    if (creature->IsCritter())
+    {
+        return "critter";
+    }
+
+    if (creature->IsTotem())
+    {
+        return "totem";
+    }
+
+    if (creature->IsTrigger())
+    {
+        return "trigger";
+    }
+
+    if (MpBots::IsNpcBot(creature))
+    {
+        return "npcbot";
+    }
+
+    if (MpBots::GetNpcBotOwner(creature))
+    {
+        return "npcbot_summon";
+    }
+
+    if (creature->IsVendor() ||
+        creature->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP) ||
+        creature->HasNpcFlag(UNIT_NPC_FLAG_QUESTGIVER) ||
+        creature->HasNpcFlag(UNIT_NPC_FLAG_TRAINER) ||
+        creature->HasNpcFlag(UNIT_NPC_FLAG_TRAINER_PROFESSION) ||
+        creature->HasNpcFlag(UNIT_NPC_FLAG_REPAIR) ||
+        creature->HasUnitFlag(UNIT_FLAG_IMMUNE_TO_PC) ||
+        creature->HasUnitFlag(UNIT_FLAG_NOT_SELECTABLE))
+    {
+        return "npc_flags";
+    }
+
+    return nullptr;
+}
+
 void MpScaler::AddCreatureForScaling(Creature* creature)
 {
     if (!IsCreatureEligible(creature))
@@ -200,21 +259,18 @@ std::optional<MpInstanceData> MpScaler::BuildInstanceData(MpDifficulty difficult
     return instanceData;
 }
 
-void MpScaler::InitInstance(Map* map, Player* player, Group const* group, MpDifficulty difficulty)
+bool MpScaler::InitInstance(Map* map, Player* player, Group const* group, MpDifficulty difficulty)
 {
     std::optional<MpInstanceData> instanceData = BuildInstanceData(difficulty);
     if (!instanceData)
-    {
-        MpLog::Debug(MpLog::Area::Instance, "No difficulty set for group {}", group->GetGUID().GetCounter());
-        return;
-    }
+        return false;
 
     // Make sure the map resolves to an InstanceMap; the record keeps only {mapId, instanceId}
     if (!dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId())))
     {
         MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.",
             map->GetId(), map->GetInstanceId());
-        return;
+        return true;
     }
 
     MpLog::Debug(MpLog::Area::Instance, "Setting up instance data for group {} for map {} instance {} data {}",
@@ -225,6 +281,16 @@ void MpScaler::InitInstance(Map* map, Player* player, Group const* group, MpDiff
     );
     sMpState->SetInstanceData(map->GetId(), map->GetInstanceId(), *instanceData);
 
+    MpLog::Info(MpLog::Area::Instance,
+        "event=instance_tier_applied map={} instance={} group={} leader={} tier={} base={} "
+        "trash=hp:{},melee:{},spell:{},armor:{},lvl:{} boss=hp:{},melee:{},spell:{},armor:{},lvl:{} death_limit={}",
+        map->GetId(), map->GetInstanceId(), group->GetGUID().GetCounter(), group->GetLeaderName(),
+        MpDifficultyName(difficulty), map->IsHeroic() ? "heroic" : "normal",
+        instanceData->creature.health, instanceData->creature.melee, instanceData->creature.spell,
+        instanceData->creature.armor, uint32(instanceData->creature.avgLevel),
+        instanceData->boss.health, instanceData->boss.melee, instanceData->boss.spell, instanceData->boss.armor,
+        uint32(instanceData->boss.avgLevel), instanceData->deathLimits);
+
     // Save the instance data for the user to the database
     if (player)
     {
@@ -234,6 +300,7 @@ void MpScaler::InitInstance(Map* map, Player* player, Group const* group, MpDiff
 
     // Once we have instance data set we can scale the remaining characters in our instance
     ScaleRemaining(player, *instanceData);
+    return true;
 }
 
 // Runs on the player's map thread: creatures are resolved on that map, unknown guids are skipped.
@@ -262,6 +329,9 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
         MpLog::Error(MpLog::Area::Scaling, "Invalid instance map ScaleCreature()");
         return;
     }
+
+    uint8 oldLevel = creature->GetLevel();
+    uint32 oldHealth = creature->GetMaxHealth();
 
     creature->SetLevel(level);
     CreatureBaseStats const* stats = sObjectMgr->GetCreatureBaseStats(
@@ -351,6 +421,12 @@ void MpScaler::ScaleCreature(uint8 level, Creature* creature, MpMultipliers cons
     // Scale up the armor with some variance also to make some tougher enemies in the mix
     uint32 armor = uint32(std::ceil(stats->BaseArmor * multipliers->armor * cInfo->ModArmor));
     creature->SetArmor(armor);
+
+    if (MpLog::Enabled(MpLog::Area::Scaling, LOG_LEVEL_DEBUG))
+        MpLog::Debug(MpLog::Area::Scaling,
+            "event=creature_scaled map={} instance={} entry={} level={}->{} hp={}->{}", mapId,
+            creature->GetInstanceId(), creature->GetEntry(), uint32(oldLevel), uint32(level), oldHealth,
+            creature->GetMaxHealth());
 }
 
 int32 MpScaler::CalculateSpellDamage(uint32 baseDamage, int originalLevel, int targetLevel)

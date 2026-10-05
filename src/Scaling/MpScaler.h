@@ -58,6 +58,9 @@ public:
     // The creature should be given Mythic+ scaling and powers check for pets, npcs, etc
     bool IsCreatureEligible(Creature* creature);
 
+    // Why IsCreatureEligible rejects the creature as a snake_case reason, or nullptr when it is eligible
+    char const* GetIneligibleReason(Creature* creature);
+
     // Adds the creature's record to sMpState if it is eligible to be scaled
     void AddCreatureForScaling(Creature* creature);
 
@@ -74,9 +77,10 @@ public:
 
     /**
      * Sets up a new instance's Mythic+ data from the entering group's difficulty: builds it, checks the map is an
-     * InstanceMap, stores and persists it, then scales the creatures already in the instance.
+     * InstanceMap, stores and persists it, then scales the creatures already in the instance. Returns false when
+     * the difficulty has no configured tier (nothing is set up), true otherwise.
      */
-    void InitInstance(Map* map, Player* player, Group const* group, MpDifficulty difficulty);
+    bool InitInstance(Map* map, Player* player, Group const* group, MpDifficulty difficulty);
 
     // Rescales all creatures for an instance based on set data
     void ScaleAll(Player* player, MpInstanceData const& instanceData);

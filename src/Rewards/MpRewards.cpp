@@ -118,8 +118,9 @@ void MpRewards::SubstituteLootItem(Loot const& loot, LootStoreItem* lootStoreIte
 
     if (!newItemTempl)
     {
-        MpLog::Warn(MpLog::Area::Loot, "New Loot Item not found for itemid {} original item: {} ({})", newItemId,
-            origItem->Name1, origItem->ItemId);
+        MpLog::Warn(MpLog::Area::Loot,
+            "event=loot_failed reason=offset_item_not_found new_item={} original_item={} name={}", newItemId,
+            origItem->ItemId, origItem->Name1);
         return;
     }
 
