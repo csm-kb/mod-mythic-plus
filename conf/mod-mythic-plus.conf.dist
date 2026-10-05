@@ -111,8 +111,8 @@ MythicPlus.Ascendant.DungeonBossLevel = 90
 ##########################################################
 #
 # Mythic+ Gameplay Settings
-# - If Death limit mode is enabled the below numbers set the max number of total deaths before players are kicked out and the
-#   that instance of the dungeon is failed.
+# - Death allowances: the intended maximum number of total deaths per run. Deaths are counted and shown in .mp status
+#   and .mp debug, but the limit is NOT enforced yet: no one is kicked and the run is never failed.
 #
 ##########################################################
 
