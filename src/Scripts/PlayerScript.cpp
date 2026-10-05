@@ -1,8 +1,8 @@
 #include "AdvancementMgr.h"
-#include "Formulas.h"
 #include "Group.h"
 #include "MpBots.h"
 #include "MpLog.h"
+#include "MpRewards.h"
 #include "MpScaler.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -98,40 +98,7 @@ public:
         std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature);
         if (!creatureData || !creatureData->IsScaled()) return;
 
-        // Different gold ranges based on creature rank
-        uint32 bossMinGold = 10000;
-        uint32 bossMaxGold = 13500;
-
-        uint32 minGold, maxGold;
-
-        // Determine gold range based on creature rank
-        if (creature->isWorldBoss() || creature->IsDungeonBoss())
-        {
-            // Boss: full range
-            minGold = bossMinGold;
-            maxGold = bossMaxGold;
-        }
-        else if (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_RARE ||
-                 creature->GetCreatureTemplate()->rank == CREATURE_ELITE_ELITE)
-        {
-            // Elite: 70% of boss range
-            minGold = uint32(bossMinGold * 0.7f);
-            maxGold = uint32(bossMaxGold * 0.7f);
-        }
-        else
-        {
-            // Normal: 40% of boss range
-            minGold = uint32(bossMinGold * 0.4f);
-            maxGold = uint32(bossMaxGold * 0.4f);
-        }
-
-        // Generate random gold amount in appropriate range
-        uint32 newGold = urand(minGold, maxGold);
-
-        // Apply server money rate
-        newGold = uint32(newGold * sWorld->getRate(RATE_DROP_MONEY));
-
-        loot->gold = newGold;
+        loot->gold = sMpRewards->RollCreatureGold(creature);
     }
 
     void OnPlayerGiveXP(Player* player, uint32& amount, Unit* victim, uint8 xpSource) override
@@ -150,23 +117,9 @@ public:
         std::optional<MpCreatureData> creatureData = sMpState->GetCreatureData(creature);
         if (!creatureData || !creatureData->IsScaled()) return;
 
-        // Recalculate XP using scaled level instead of original level
-        uint32 newBaseXP = Acore::XP::BaseGain(
-            player->GetLevel(),
-            creature->GetLevel(), // This is now the scaled level
-            GetContentLevelsForMapAndZone(creature->GetMapId(), creature->GetZoneId())
-        );
-
-        // Apply same modifiers as original calculation
-        float xpMod = 1.0f;
-        if (creature->isElite())
-        {
-            xpMod *= creature->GetMap()->IsDungeon() ? 2.75f : 2.0f;
-        }
-        xpMod *= creature->GetCreatureTemplate()->ModExperience;
-
-        amount = uint32(newBaseXP * xpMod * 1.5f); // flat bonus modifier for mythic dungeons
+        amount = sMpRewards->CalculateKillXP(player, creature);
     }
+
     void OnPlayerLogin(Player* player) override
     {
         MpLog::Info(MpLog::Area::Instance, "Player {} logged in", player->GetName());
