@@ -66,7 +66,7 @@ private:
     uint32 modifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
         uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr)
     {
-        return sMpCombatScaling->ModifyIncomingDmgHeal(eventType, target, attacker, damageOrHeal, spellInfo);
+        return sMpCombatScaling->ScaleIncomingDmgHeal(eventType, target, attacker, damageOrHeal, spellInfo);
     }
 };
 

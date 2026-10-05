@@ -34,14 +34,14 @@ public:
      * handles special cases for Melee scaling spells and AP scaling spells also so they
      * are not scaled up twice and murder all my friends
      *
-     * Defined in MpCombatScaling.cpp for DamageType int32 and uint32.
+     * Defined in MpCombatScaling.cpp, which explicitly instantiates DamageType int32 for other files.
      */
     template<typename DamageType>
     void ProcessSpellDamage(Unit* target, Unit* attacker, DamageType& damage, SpellInfo const* spellInfo,
         MpScaler::MP_UNIT_EVENT_TYPE eventType);
 
     // Returns the Mythic+ scaled damage or heal for one hit
-    uint32 ModifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
+    uint32 ScaleIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
         uint32 damageOrHeal, SpellInfo const* spellInfo = nullptr);
 
 private:

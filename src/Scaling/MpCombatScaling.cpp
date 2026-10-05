@@ -21,7 +21,7 @@ void MpCombatScaling::HandleNonCreatureAttacker(Unit* target, Unit* attacker, Da
         if (Creature* creatureAttacker = (*attackers.begin())->ToCreature())
         {
             if (sMpState->GetCreatureData(creatureAttacker))
-                damage = static_cast<DamageType>(ModifyIncomingDmgHeal(eventType, target, creatureAttacker,
+                damage = static_cast<DamageType>(ScaleIncomingDmgHeal(eventType, target, creatureAttacker,
                     static_cast<uint32>(damage), spellInfo)) * sMpConfig->nonCreatureSpellReducer;
 
             return;
@@ -114,7 +114,7 @@ void MpCombatScaling::ProcessSpellDamage(Unit* target, Unit* attacker, DamageTyp
         {
             uint32 meleeDamage = static_cast<uint32>(std::max(0, static_cast<int32>(damage)));
 
-            damage = ModifyIncomingDmgHeal(MpScaler::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
+            damage = ScaleIncomingDmgHeal(MpScaler::UNIT_EVENT_MELEE, target, attacker, meleeDamage);
         }
         else
         {
@@ -127,7 +127,7 @@ void MpCombatScaling::ProcessSpellDamage(Unit* target, Unit* attacker, DamageTyp
             uint32 apDmg = static_cast<uint32>(creatureData->originalStats->AttackPower * 0.10f);
             uint32 finalDmg = spellDmg + apDmg;
 
-            damage = ModifyIncomingDmgHeal(MpScaler::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
+            damage = ScaleIncomingDmgHeal(MpScaler::UNIT_EVENT_SPELL, target, attacker, finalDmg, spellInfo);
 
             // need to take into consideration if this is a stacking spell and multiply the final damage by the
             // number of stacks
@@ -163,7 +163,7 @@ void MpCombatScaling::ProcessSpellDamage(Unit* target, Unit* attacker, DamageTyp
     }
 
     // Apply Mythic+ scaling to the original base damage
-    damage = static_cast<DamageType>(ModifyIncomingDmgHeal(eventType, target, attacker,
+    damage = static_cast<DamageType>(ScaleIncomingDmgHeal(eventType, target, attacker,
         static_cast<uint32>(originalDamage), spellInfo));
 }
 
@@ -189,12 +189,12 @@ void MpCombatScaling::ScalePeriodicTick(Unit* target, Unit* attacker, uint32& da
     }
 
     if (isHot)
-        damage = ModifyIncomingDmgHeal(MpScaler::UNIT_EVENT_HOT, target, attacker, damage, spellInfo);
+        damage = ScaleIncomingDmgHeal(MpScaler::UNIT_EVENT_HOT, target, attacker, damage, spellInfo);
     else
         ProcessSpellDamage(target, attacker, damage, spellInfo, MpScaler::UNIT_EVENT_DOT);
 }
 
-uint32 MpCombatScaling::ModifyIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
+uint32 MpCombatScaling::ScaleIncomingDmgHeal(MpScaler::MP_UNIT_EVENT_TYPE eventType, Unit* target, Unit* attacker,
     uint32 damageOrHeal, SpellInfo const* spellInfo)
 {
     int32 alteredDmgHeal = 0;
