@@ -58,6 +58,13 @@ public:
             // If there is not a scaled up item and the item is a below quality green then set an invalid item_id so it
             // is not added to loot
             ItemTemplate const* nonMythicItem = sObjectMgr->GetItemTemplate(LootStoreItem->itemid);
+            if (!nonMythicItem)
+            {
+                MpLog::Debug(MpLog::Area::Loot, "No item template for loot item {}; keeping the original drop",
+                    LootStoreItem->itemid);
+                return;
+            }
+
             if (nonMythicItem->Quality < 2)
             {
                 LootStoreItem->itemid = 0;
