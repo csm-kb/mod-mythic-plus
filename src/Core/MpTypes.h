@@ -64,12 +64,12 @@ struct MpMultipliers
 
     std::string ToString() const
     {
-    return "MpMultipliers: { health: " + std::to_string(health) +
-            ", melee: " + std::to_string(melee) +
-            ", melee: " + std::to_string(baseDamage) +
-            ", spell: " + std::to_string(spell) +
-            ", armor: " + std::to_string(armor) +
-            ", avgLevel: " + std::to_string(avgLevel) + " }";
+        return "MpMultipliers: { health: " + std::to_string(health) +
+               ", melee: " + std::to_string(melee) +
+               ", melee: " + std::to_string(baseDamage) +
+               ", spell: " + std::to_string(spell) +
+               ", armor: " + std::to_string(armor) +
+               ", avgLevel: " + std::to_string(avgLevel) + " }";
     }
 };
 

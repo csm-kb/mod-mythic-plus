@@ -32,8 +32,8 @@ public:
         return &instance;
     }
 
-    MpScheduler(const MpScheduler&) = delete;
-    MpScheduler& operator=(const MpScheduler&) = delete;
+    MpScheduler(MpScheduler const&) = delete;
+    MpScheduler& operator=(MpScheduler const&) = delete;
 
     TaskScheduler& GetWorldScheduler()
     {

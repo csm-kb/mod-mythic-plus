@@ -50,11 +50,11 @@ public:
         return &instance;
     }
 
-    MpEventProcessor(const MpEventProcessor&) = delete;
-    MpEventProcessor& operator=(const MpEventProcessor&) = delete;
+    MpEventProcessor(MpEventProcessor const&) = delete;
+    MpEventProcessor& operator=(MpEventProcessor const&) = delete;
 
     // Process a message from a specific player
-    bool ProcessMessage(Player* player, const std::string& msg);
+    bool ProcessMessage(Player* player, std::string const& msg);
 
     // Registers a handler for a valid MpEvent specified in the MpEvent enum
     // In this design Event:Handler is 1:1
@@ -74,10 +74,10 @@ private:
     MpEvent _getEventByName(std::string_view eventName);
 
     // Parse a message from the player
-    EventParseRslt _parsePlayerMessage(Player* player, const std::string& msg);
+    EventParseRslt _parsePlayerMessage(Player* player, std::string const& msg);
 
     // Helper to break up a string into pieces used in parsing the message
-    std::vector<std::string> _splitString(const std::string& s, char delimiter = '|');
+    std::vector<std::string> _splitString(std::string const& s, char delimiter = '|');
 };
 
 #define sMpEventProcessor MpEventProcessor::instance()

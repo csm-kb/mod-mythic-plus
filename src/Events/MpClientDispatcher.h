@@ -17,8 +17,8 @@ public:
         return &instance;
     }
 
-    MpClientDispatcher(const MpClientDispatcher&) = delete;
-    MpClientDispatcher& operator=(const MpClientDispatcher&) = delete;
+    MpClientDispatcher(MpClientDispatcher const&) = delete;
+    MpClientDispatcher& operator=(MpClientDispatcher const&) = delete;
 
     // encode and send a message to the client for an event in the map
     bool Dispatch(MpClientEvent event, Player* player, std::vector<std::string>& args);

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-bool MpEventProcessor::ProcessMessage(Player* player, const std::string& msg)
+bool MpEventProcessor::ProcessMessage(Player* player, std::string const& msg)
 {
     if (!player)
     {
@@ -92,7 +92,7 @@ MpEvent MpEventProcessor::_getEventByName(std::string_view eventName)
 /**
  * Parse the incoming message into id, event, and handler arguments
  */
-EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, const std::string& msg)
+EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, std::string const& msg)
 {
     if (msg[0] != 'p')
     {
@@ -121,7 +121,7 @@ EventParseRslt MpEventProcessor::_parsePlayerMessage(Player* player, const std::
 }
 
 // Split the string passed in by delimiters
-std::vector<std::string> MpEventProcessor::_splitString(const std::string& s, char delimiter)
+std::vector<std::string> MpEventProcessor::_splitString(std::string const& s, char delimiter)
 {
     std::vector<std::string> tokens;
     size_t start = 0;

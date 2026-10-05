@@ -37,8 +37,8 @@ private:
     ~CreatureHooks() = default;
 
     // ensure we only ever have one instance of this class
-    CreatureHooks(const CreatureHooks&) = delete;
-    CreatureHooks& operator=(const CreatureHooks&) = delete;
+    CreatureHooks(CreatureHooks const&) = delete;
+    CreatureHooks& operator=(CreatureHooks const&) = delete;
 
     // Data members for storing event handlers
     std::unique_ptr<HandlerMap<Creature*>> _OnSpawnHandlers;

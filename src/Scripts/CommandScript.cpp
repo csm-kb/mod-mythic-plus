@@ -47,7 +47,7 @@ public:
         return commandTable;
     }
 
-    static bool HandleHelp(ChatHandler* handler, const std::vector<std::string>& /*args*/)
+    static bool HandleHelp(ChatHandler* handler, std::vector<std::string> const& /*args*/)
     {
         std::string helpText = "Mythic+ Commands:\n"
             "  .mp status - show current global settings of Mythic+ mod\n"
@@ -106,7 +106,7 @@ public:
     }
 
     // sets the difficluty for the group
-    static bool HandleSetDifficulty(ChatHandler* handler, const std::vector<std::string>& args)
+    static bool HandleSetDifficulty(ChatHandler* handler, std::vector<std::string> const& args)
     {
         Player* player = handler->GetSession()->GetPlayer();
         Group* group = player->GetGroup();
@@ -295,7 +295,7 @@ public:
         return true;
     }
 
-    static bool HandleChangeMelee(ChatHandler* handler,  const std::vector<std::string>& args)
+    static bool HandleChangeMelee(ChatHandler* handler, std::vector<std::string> const& args)
     {
         if (args.empty())
         {
@@ -334,7 +334,7 @@ public:
         return true;
     }
 
-    static bool HandleChangeSpell(ChatHandler* handler,  const std::vector<std::string>& args)
+    static bool HandleChangeSpell(ChatHandler* handler, std::vector<std::string> const& args)
     {
         if (args.empty())
         {
@@ -374,7 +374,7 @@ public:
         return true;
     }
 
-    static bool HandleChangeHealth(ChatHandler* handler,  const std::vector<std::string>& args)
+    static bool HandleChangeHealth(ChatHandler* handler, std::vector<std::string> const& args)
     {
         if (args.empty())
         {

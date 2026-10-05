@@ -50,7 +50,7 @@ std::string EventCodeToString(MP_EVENT_CODE code)
 }
 
 // Send an error event to the client
-bool SendEventError(Player* player, const std::string& /* method*/, MP_EVENT_CODE code, std::string message)
+bool SendEventError(Player* player, std::string const& /* method*/, MP_EVENT_CODE code, std::string message)
 {
     std::vector<std::string> clientError = { std::to_string(static_cast<int>(code)), message };
     MpLog::Error(MpLog::Area::Events, "(Event Processor) Sending client error: {} {}", code, message);
@@ -94,7 +94,7 @@ class UpgradeAdvancements : public MpEventInterface
             {
                 advancementId = std::stoi(args[0]);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
             }
@@ -108,7 +108,7 @@ class UpgradeAdvancements : public MpEventInterface
             {
                 diceLevel = std::stoi(args[1]);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid dice level format: " + args[1]);
             }
@@ -127,7 +127,7 @@ class UpgradeAdvancements : public MpEventInterface
                     return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Failed to upgrade advancement invalid request see error logs for player " + player->GetName());
                 }
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::FAILED_UPGRADE_ADV, "Failed to upgrade: " + std::string(e.what()) + " for player " + player->GetName());
             }
@@ -193,7 +193,7 @@ class GetPlayerRank : public MpEventInterface
             {
                 advancementId = std::stoi(args[0]);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
             }
@@ -252,7 +252,7 @@ class GetAdvancementRank : public MpEventInterface
             {
                 advancementId = std::stoi(args[0]);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid advancement id format: " + args[0]);
             }
@@ -266,7 +266,7 @@ class GetAdvancementRank : public MpEventInterface
             {
                 rank = std::stoi(args[1]);
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 return SendEventError(player, EventName(), MP_EVENT_CODE::INVALID_ARGUMENT, "Invalid rank format: " + args[1]);
             }

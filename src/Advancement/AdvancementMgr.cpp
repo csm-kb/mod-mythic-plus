@@ -515,7 +515,7 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 playerRank->diceSpent
             );
     }
-    catch (const std::exception& e)
+    catch (std::exception const& e)
     {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement for player {}: {}", player->GetName(), e.what());
     }
@@ -546,7 +546,7 @@ void AdvancementMgr::_SaveAdvancement(Player* player, MpAdvancementRank* advance
                 advancementRank->material3.second
             );
     }
-    catch (const std::exception& e)
+    catch (std::exception const& e)
     {
         MpLog::Error(MpLog::Area::Advancement, "Failed to save advancement history for player {}: {}", player->GetName(), e.what());
     }
