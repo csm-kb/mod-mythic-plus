@@ -204,7 +204,7 @@ void AdvancementMgr::ApplyAdvancementAuras(Player* player)
     for (uint32 i = 1; i <= 10; ++i)
     {
         uint32 spellId = 80000000 + i;
-        MpLog::Info(MpLog::Area::Instance, "Casting spell {} to player {}", spellId, player->GetName());
+        MpLog::Debug(MpLog::Area::Advancement, "Casting spell {} to player {}", spellId, player->GetName());
         player->AddAura(spellId, player);
     }
 }

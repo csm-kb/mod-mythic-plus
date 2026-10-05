@@ -38,7 +38,7 @@ public:
 
     void Register() override
     {
-        MpLog::Info(MpLog::Area::Advancement, "Registering {}", _scriptName);
+        MpLog::Debug(MpLog::Area::Advancement, "Registering {}", _scriptName);
         DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_mp_advancement_aura::HandleEffectCalcAmount, EFFECT_0,
             _auraType);
     }
