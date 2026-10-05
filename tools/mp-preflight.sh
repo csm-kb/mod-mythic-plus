@@ -31,6 +31,14 @@ mp_say "dbimport (module SQL) against $MP_DB_CONTAINER"
 mp_run_logged "$LOG" docker compose run --rm --no-deps -T "${ENVS[@]}" ac-db-import \
   || mp_fail "dbimport" $? "$LOG"
 mp_say "dbimport ok ($((SECONDS - T0))s)"
+# --dry-run exits before any runtime spawn, so check the spawn-id caps (0xFFFFFF, TCE00007) here.
+SPAWN_MAX=$(docker exec "$MP_DB_CONTAINER" mysql -uroot -p"$MP_DB_PW" -N -e \
+  "SELECT GREATEST((SELECT COALESCE(MAX(guid), 0) FROM acore_world.creature),
+                   (SELECT COALESCE(MAX(guid), 0) FROM acore_world.gameobject))" 2>/dev/null) \
+  || mp_fail "spawn-id cap query" $? "$LOG"
+if (( SPAWN_MAX >= 16777215 )); then
+  mp_fail "creature/gameobject spawn guid $SPAWN_MAX exceeds 0xFFFFFF (core shuts down on first spawn)" 1 "$LOG"
+fi
 if [[ $ONLY_DBIMPORT == 1 ]]; then mp_say "PASS preflight --dbimport-only"; exit 0; fi
 
 T0=$SECONDS; LOG="$MP_OUT/preflight-worldserver.log"
