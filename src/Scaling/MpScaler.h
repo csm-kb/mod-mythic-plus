@@ -10,6 +10,10 @@
 #include "SpellInfo.h"
 #include "Unit.h"
 
+#include <optional>
+
+class Group;
+
 /**
  * Scales instance creatures and their damage/heal output for Mythic+ instances.
  *
@@ -64,6 +68,15 @@ public:
      * the instance data from the group settings.
      */
     void ScaleRemaining(Player* player, MpInstanceData const& instanceData);
+
+    // Mythic+ settings for an instance at this difficulty, from its tier config; nullopt when the tier is not set
+    std::optional<MpInstanceData> BuildInstanceData(MpDifficulty difficulty) const;
+
+    /**
+     * Sets up a new instance's Mythic+ data from the entering group's difficulty: builds it, checks the map is an
+     * InstanceMap, stores and persists it, then scales the creatures already in the instance.
+     */
+    void InitInstance(Map* map, Player* player, Group const* group, MpDifficulty difficulty);
 
     // Rescales all creatures for an instance based on set data
     void ScaleAll(Player* player, MpInstanceData const& instanceData);

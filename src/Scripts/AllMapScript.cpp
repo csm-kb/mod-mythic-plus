@@ -1,8 +1,6 @@
 #include "Chat.h"
-#include "MpConfig.h"
 #include "MpLog.h"
 #include "Map.h"
-#include "MapMgr.h"
 #include "MpScaler.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -66,46 +64,7 @@ public:
             return;
         }
 
-        MpInstanceData instanceData;
-        MpTierConfig const* tier = sMpConfig->GetTier(groupData->difficulty);
-        if (!tier)
-        {
-            MpLog::Debug(MpLog::Area::Instance, "No difficulty set for group {}", group->GetGUID().GetCounter());
-            return;
-        }
-        instanceData.boss = tier->boss;
-        instanceData.creature = tier->dungeon;
-        instanceData.itemRewards = sMpConfig->enableItemRewards;
-        instanceData.deathLimits = tier->deathAllowance;
-        instanceData.itemOffset = tier->itemOffset;
-
-        instanceData.difficulty = groupData->difficulty;
-
-        // Make sure the map resolves to an InstanceMap; the record keeps only {mapId, instanceId}
-        if (!dynamic_cast<InstanceMap*>(sMapMgr->FindMap(map->GetId(), map->GetInstanceId())))
-        {
-            MpLog::Error(MpLog::Area::Instance, "Failed to find InstanceMap for map ID {} and instance ID {}.",
-                map->GetId(), map->GetInstanceId());
-            return;
-        }
-
-        MpLog::Debug(MpLog::Area::Instance, "Setting up instance data for group {} for map {} instance {} data {}",
-            group->GetGUID().GetCounter(),
-            map->GetMapName(),
-            map->GetInstanceId(),
-            instanceData.ToString()
-        );
-        sMpState->SetInstanceData(map->GetId(), map->GetInstanceId(), instanceData);
-
-        // Save the instance data for the user to the database
-        if (player)
-        {
-            sMpRepo->DBUpdatePlayerInstanceData(player->GetGUID(), groupData->difficulty, map->GetId(),
-                map->GetInstanceId(), 0);
-        }
-
-        // Once we have instance data set we can scale the remaining characters in our instance
-        sMpScaler->ScaleRemaining(player, instanceData);
+        sMpScaler->InitInstance(map, player, group, groupData->difficulty);
     }
 
     // When an instance is destroyed remove the instance data from the data store
