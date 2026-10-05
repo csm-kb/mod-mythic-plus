@@ -71,8 +71,13 @@ endif()
 # Two upstream headers declare overrides without `override` (G3D/MemoryManager.h, Roll in Group.h); they are
 # treated as system headers for module TUs so -Wsuggest-override only judges module code.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # These options are set on this module's .cpp files only: the --system-header-prefix entries (which match any
+  # include spelled "G3D/..." or "Group.h...") never apply to core or other modules' translation units.
   set(_mp_sys_headers "--system-header-prefix=G3D/;--system-header-prefix=Group.h")
   file(GLOB_RECURSE _mp_tus "${_mp_dir}/src/*.cpp")
   set_source_files_properties(${_mp_tus} TARGET_DIRECTORY modules PROPERTIES
     COMPILE_OPTIONS "-Werror=inconsistent-missing-override;-Werror=suggest-override;${_mp_sys_headers}")
+else()
+  message(STATUS "mod-mythic-plus: override checks (-Werror=suggest-override) are Clang-only; "
+    "skipped for ${CMAKE_CXX_COMPILER_ID}")
 endif()
